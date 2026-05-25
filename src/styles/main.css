@@ -1,0 +1,446 @@
+.cr2-main-screen {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  display: flex;
+}
+
+.cr2-main-bg {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  filter: brightness(0.4);
+  z-index: 0;
+}
+
+.cr2-main-left {
+  position: relative;
+  z-index: 1;
+  width: 720px;
+  height: calc(100% - 48px);
+  display: flex;
+  flex-direction: column;
+}
+
+.cr2-main-overlay-top {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  background: rgb(0 0 0 / 60%);
+  padding: 6px 10px;
+  font-size: 10px;
+  color: var(--cr2-lime);
+  display: flex;
+  gap: 16px;
+  z-index: 2;
+}
+
+.cr2-demand-area {
+  flex: 1;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  padding: 60px 20px 20px;
+}
+
+.cr2-demand-bubble {
+  background: rgb(0 0 0 / 75%);
+  border: 2px solid var(--cr2-lime);
+  border-radius: 50%;
+  width: 120px;
+  height: 120px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.cr2-demand-label { font-size: 10px; color: var(--cr2-green); }
+.cr2-demand-value { font-size: 16px; color: var(--cr2-lime); }
+
+.cr2-rival-bubble,
+.cr2-player-bubble {
+  background: rgb(0 0 0 / 80%);
+  border: 2px solid var(--cr2-green);
+  padding: 8px 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-width: 100px;
+}
+
+.cr2-rival-img,
+.cr2-player-img {
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+}
+
+.cr2-rival-name,
+.cr2-player-company {
+  font-size: 9px;
+  color: var(--cr2-lime);
+}
+
+.cr2-rival-company,
+.cr2-player-ceo,
+.cr2-rival-status {
+  font-size: 8px;
+  color: var(--cr2-gray);
+}
+
+.cr2-health-bar {
+  display: flex;
+  gap: 2px;
+  margin-top: 4px;
+}
+
+.cr2-health-cell {
+  width: 8px;
+  height: 8px;
+  border: 1px solid var(--cr2-green);
+}
+
+.cr2-momentum-label {
+  font-size: 8px;
+  color: var(--cr2-gold);
+}
+
+.cr2-advisor-mini-img {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+  border: 1px solid var(--cr2-green);
+}
+
+.cr2-main-bottom {
+  display: flex;
+  gap: 8px;
+  padding: 8px;
+  background: rgb(0 0 0 / 75%);
+  border-top: 1px solid var(--cr2-green);
+}
+
+.cr2-strategy-panel {
+  flex: 1;
+  font-size: 10px;
+}
+
+.cr2-strategy-title { color: var(--cr2-green); margin-bottom: 4px; }
+.cr2-strategy-content { color: var(--cr2-white); }
+.cr2-learning-hint { font-size: 8px; color: var(--cr2-gold); margin-top: 4px; }
+
+.cr2-finance-panel {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 2px;
+  font-size: 9px;
+}
+
+.cr2-finance-item { display: flex; flex-direction: column; gap: 1px; }
+.cr2-finance-label { color: var(--cr2-gray); }
+.cr2-finance-value { color: var(--cr2-white); }
+.cr2-finance-value.cr2-capital { font-size: 11px; }
+
+.cr2-capital-delta { font-size: 8px; margin-left: 2px; }
+
+.cr2-positive { color: var(--cr2-lime) !important; }
+.cr2-negative { color: var(--cr2-red) !important; }
+.cr2-gold { color: var(--cr2-gold) !important; }
+.cr2-gray { color: var(--cr2-gray) !important; }
+.cr2-lime { color: var(--cr2-lime) !important; }
+
+.cr2-tab-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 720px;
+  height: 48px;
+  display: flex;
+  z-index: 10;
+}
+
+.cr2-tab {
+  flex: 1;
+  background: var(--cr2-bg2);
+  border: 1px solid var(--cr2-green);
+  color: var(--cr2-green);
+  font-family: 'Press Start 2P', monospace;
+  font-size: 10px;
+  cursor: pointer;
+}
+
+.cr2-tab-active,
+.cr2-tab:hover {
+  background: rgb(0 170 0 / 20%);
+  color: var(--cr2-lime);
+  border-color: var(--cr2-lime);
+}
+
+.cr2-tab-next {
+  background: var(--cr2-lime);
+  color: #000;
+  border-color: var(--cr2-lime);
+}
+
+.cr2-tab-next:hover { background: #00cc35; }
+
+.cr2-right-panel {
+  position: relative;
+  z-index: 1;
+  width: 360px;
+  height: calc(100% - 48px);
+  background: rgb(0 0 0 / 85%);
+  border-left: 1px solid var(--cr2-green);
+  overflow-y: auto;
+}
+
+.cr2-right-panel-tabs,
+.cr2-subtab-bar,
+.cr2-price-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 8px;
+}
+
+.cr2-subtab {
+  flex: 1;
+  background: transparent;
+  border: 1px solid var(--cr2-green);
+  color: var(--cr2-green);
+  font-family: 'Press Start 2P', monospace;
+  font-size: 8px;
+  padding: 8px 4px;
+  cursor: pointer;
+}
+
+.cr2-subtab-active {
+  border-color: var(--cr2-lime);
+  color: var(--cr2-lime);
+  background: rgb(0 255 65 / 10%);
+}
+
+.cr2-panel-content {
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  font-size: 10px;
+  color: var(--cr2-white);
+}
+
+.cr2-panel-title { color: var(--cr2-lime); font-size: 14px; }
+.cr2-panel-desc { color: var(--cr2-gray); font-size: 9px; line-height: 1.5; }
+.cr2-panel-section { display: flex; flex-direction: column; gap: 6px; }
+
+.cr2-option-btn,
+.cr2-custom-input {
+  width: 100%;
+  background: var(--cr2-bg2);
+  border: 1px solid var(--cr2-green);
+  color: var(--cr2-white);
+  font-family: 'Press Start 2P', monospace;
+  font-size: 9px;
+  padding: 9px;
+}
+
+.cr2-option-btn {
+  cursor: pointer;
+  text-align: left;
+}
+
+.cr2-option-btn.cr2-selected,
+.cr2-quality-option.cr2-selected {
+  border-color: var(--cr2-lime);
+  color: var(--cr2-lime);
+  background: rgb(0 255 65 / 8%);
+}
+
+.cr2-simulation,
+.cr2-order-label,
+.cr2-rival-price-info,
+.cr2-rival-quality-info,
+.cr2-quality-current,
+.cr2-operation-info,
+.cr2-marketing-preview,
+.cr2-marketing-limit {
+  font-size: 9px;
+  color: var(--cr2-gray);
+  line-height: 1.5;
+}
+
+.cr2-order-section,
+.cr2-factory-section,
+.cr2-bank-section,
+.cr2-marketing-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.cr2-quality-option,
+.cr2-factory-option,
+.cr2-factory-reserved,
+.cr2-loan-item,
+.cr2-loan-new,
+.cr2-next-summary {
+  border: 1px solid var(--cr2-green);
+  background: var(--cr2-bg2);
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.cr2-quality-option,
+.cr2-factory-option { cursor: pointer; }
+.cr2-quality-option-label,
+.cr2-factory-option-title,
+.cr2-loan-list-title { color: var(--cr2-lime); }
+.cr2-btn-small { min-height: 30px; padding: 4px 8px; font-size: 8px; }
+.cr2-loan-btns,
+.cr2-loan-new-btns { display: flex; gap: 4px; }
+.cr2-next-divider { height: 1px; background: rgb(0 170 0 / 35%); margin: 4px 0; }
+.cr2-next-total { font-size: 11px; }
+.cr2-settle-btn { background: var(--cr2-lime); color: #000; border-color: var(--cr2-lime); }
+
+.cr2-rival-capital-bar {
+  position: absolute;
+  left: 8px;
+  bottom: 8px;
+  width: 360px;
+  background: rgb(0 0 0 / 85%);
+  border: 1px solid var(--cr2-red);
+  padding: 8px;
+  font-size: 9px;
+  z-index: 5;
+}
+
+.cr2-rival-bar-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 5px;
+}
+
+.cr2-rival-bar-label { color: var(--cr2-red); }
+.cr2-rival-bar-name { color: var(--cr2-white); }
+.cr2-rival-bar-track {
+  height: 8px;
+  background: rgb(255 255 255 / 10%);
+  margin-bottom: 5px;
+}
+.cr2-rival-bar { height: 100%; transition: width 0.3s; }
+
+.cr2-popup-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgb(0 0 0 / 80%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.cr2-stage-popup,
+.cr2-learning-popup {
+  background: var(--cr2-bg2);
+  border: 2px solid var(--cr2-red);
+  padding: 24px;
+  max-width: 400px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+  text-align: center;
+}
+
+.cr2-stage-popup-title { font-size: 14px; color: var(--cr2-red); }
+.cr2-stage-popup-img { width: 80px; height: 80px; object-fit: contain; }
+.cr2-stage-popup-name { font-size: 13px; color: var(--cr2-lime); }
+.cr2-stage-popup-company { font-size: 10px; color: var(--cr2-gray); }
+.cr2-stage-popup-message { font-size: 11px; color: var(--cr2-white); }
+.cr2-stage-popup-hint { font-size: 10px; color: var(--cr2-gold); }
+
+.cr2-learning-popup { border-color: var(--cr2-gold); }
+.cr2-learning-popup-title { font-size: 13px; color: var(--cr2-gold); }
+.cr2-learning-popup-hint { font-size: 11px; color: var(--cr2-white); }
+.cr2-learning-popup-monopol { font-size: 10px; color: var(--cr2-gray); }
+.cr2-learning-popup-btns { display: flex; gap: 8px; }
+
+.cr2-reward-screen,
+.cr2-achievement-screen {
+  width: 100%;
+  height: 100%;
+  background: var(--cr2-bg);
+  color: var(--cr2-white);
+  padding: 24px;
+}
+
+.cr2-reward-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+}
+
+.cr2-reward-grade { font-size: 26px; }
+.cr2-reward-title { font-size: 13px; color: var(--cr2-white); }
+.cr2-reward-options {
+  width: 620px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+.cr2-reward-option {
+  min-height: 110px;
+  border: 2px solid var(--cr2-green);
+  padding: 14px;
+  cursor: pointer;
+  background: var(--cr2-bg2);
+}
+.cr2-reward-option-label { color: var(--cr2-lime); font-size: 11px; margin-bottom: 8px; }
+.cr2-reward-option-desc { color: var(--cr2-gray); font-size: 9px; }
+.cr2-reward-confirm-btn { background: var(--cr2-lime); color: #000; border-color: var(--cr2-lime); }
+
+.cr2-achievement-header,
+.cr2-achievement-tabs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.cr2-achievement-title { color: var(--cr2-lime); font-size: 18px; margin-right: auto; }
+.cr2-achievement-progress {
+  border: 1px solid var(--cr2-green);
+  padding: 10px;
+  font-size: 10px;
+  margin-bottom: 12px;
+}
+.cr2-progress-bar-track { height: 8px; background: rgb(255 255 255 / 10%); margin: 8px 0; }
+.cr2-progress-bar { height: 100%; background: var(--cr2-lime); }
+.cr2-achievement-list { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+.cr2-achievement-item {
+  display: flex;
+  gap: 10px;
+  border: 1px solid var(--cr2-green);
+  background: var(--cr2-bg2);
+  padding: 10px;
+}
+.cr2-achievement-icon { width: 42px; height: 42px; object-fit: contain; }
+.cr2-achievement-name { font-size: 10px; margin-bottom: 5px; }
+.cr2-achievement-desc,
+.cr2-achievement-edu { font-size: 8px; line-height: 1.45; }
+
+@keyframes cr2-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+.cr2-blink { animation: cr2-blink 0.8s ease infinite; }

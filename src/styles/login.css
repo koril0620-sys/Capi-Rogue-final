@@ -1,0 +1,118 @@
+.cr2-login-screen {
+  width: 100%;
+  height: 100%;
+  background: var(--cr2-bg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+}
+
+.cr2-login-logo {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 36px;
+  color: var(--cr2-lime);
+  text-shadow: 0 0 20px var(--cr2-lime);
+}
+
+.cr2-login-card {
+  background: var(--cr2-bg2);
+  border: 2px solid var(--cr2-lime);
+  padding: 32px;
+  width: 420px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.cr2-login-title {
+  font-size: 20px;
+  color: var(--cr2-lime);
+  margin-bottom: 8px;
+}
+
+.cr2-login-label {
+  font-size: 11px;
+  color: var(--cr2-green);
+  margin-top: 4px;
+}
+
+.cr2-login-input {
+  background: #111;
+  border: 1px solid var(--cr2-green);
+  color: var(--cr2-white);
+  padding: 10px 12px;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 11px;
+  width: 100%;
+}
+
+.cr2-login-input:focus {
+  outline: none;
+  border-color: var(--cr2-lime);
+}
+
+.cr2-login-usertype {
+  display: flex;
+  gap: 8px;
+}
+
+.cr2-login-type-btn {
+  flex: 1;
+  background: transparent;
+  border: 1px solid var(--cr2-green);
+  color: var(--cr2-green);
+  padding: 8px;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 10px;
+  cursor: pointer;
+}
+
+.cr2-login-type-btn.cr2-selected {
+  border-color: var(--cr2-lime);
+  color: var(--cr2-lime);
+  background: rgb(0 255 65 / 10%);
+}
+
+.cr2-login-type-hint {
+  font-size: 9px;
+  color: var(--cr2-gray);
+}
+
+.cr2-login-remember {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 10px;
+  color: var(--cr2-green);
+  cursor: pointer;
+}
+
+.cr2-login-error {
+  font-size: 10px;
+  color: var(--cr2-red);
+  padding: 4px 0;
+}
+
+.cr2-login-btns {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.cr2-login-main-btn {
+  flex: 1;
+  background: var(--cr2-lime);
+  color: #000;
+  border-color: var(--cr2-lime);
+}
+
+.cr2-login-main-btn:hover {
+  background: #00cc35;
+}
+
+.cr2-login-main-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

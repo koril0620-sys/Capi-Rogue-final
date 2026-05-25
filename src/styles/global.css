@@ -1,0 +1,65 @@
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #000000;
+  font-family: 'Press Start 2P', monospace;
+}
+
+#root {
+  width: 1080px;
+  height: 720px;
+  position: absolute;
+  overflow: hidden;
+  background: #000000;
+}
+
+:root {
+  --cr2-bg: #000000;
+  --cr2-bg2: #0a0a0f;
+  --cr2-green: #00aa00;
+  --cr2-lime: #00ff41;
+  --cr2-red: #dc143c;
+  --cr2-gold: #ffd700;
+  --cr2-white: #f0f0f0;
+  --cr2-gray: #888888;
+}
+
+.cr2-btn {
+  font-family: 'Press Start 2P', monospace;
+  cursor: pointer;
+  min-width: 44px;
+  min-height: 44px;
+  background: transparent;
+  border: 2px solid var(--cr2-lime);
+  color: var(--cr2-lime);
+  padding: 8px 16px;
+}
+
+.cr2-btn:hover {
+  background: rgb(0 255 65 / 10%);
+}
+
+.cr2-scrollable {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.cr2-scrollable::-webkit-scrollbar {
+  width: 4px;
+}
+
+.cr2-scrollable::-webkit-scrollbar-thumb {
+  background: var(--cr2-green);
+}
