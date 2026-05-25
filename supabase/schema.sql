@@ -1,137 +1,56 @@
+-- player_accounts 테이블
 create table if not exists public.player_accounts (
   id uuid primary key default gen_random_uuid(),
   username text not null unique,
-  display_name text not null,
+  display_name text,
   password_hash text not null,
-  created_at timestamptz not null default now()
+  user_type text not null default 'general',
+  achievements jsonb default '[]'::jsonb,
+  education_progress jsonb default '{}'::jsonb,
+  created_at timestamptz default now()
 );
 
-alter table public.player_accounts enable row level security;
-
-drop policy if exists "Allow public game account read" on public.player_accounts;
-drop policy if exists "Allow public game account insert" on public.player_accounts;
-
-create policy "Allow public game account read"
-on public.player_accounts
-for select
-to anon
-using (true);
-
-create policy "Allow public game account insert"
-on public.player_accounts
-for insert
-to anon
-with check (true);
-
+-- game_saves 테이블
 create table if not exists public.game_saves (
   id uuid primary key default gen_random_uuid(),
-  user_id uuid not null references public.player_accounts(id) on delete cascade,
+  user_id uuid references public.player_accounts(id) on delete cascade,
   slot_number integer not null check (slot_number between 1 and 5),
   game_state_json jsonb not null,
-  updated_at timestamptz not null default now(),
-  unique (user_id, slot_number)
+  updated_at timestamptz default now(),
+  unique(user_id, slot_number)
 );
 
-do $$
-begin
-  if exists (
-    select 1 from information_schema.columns
-    where table_schema = 'public'
-      and table_name = 'game_saves'
-      and column_name = 'player_id'
-  ) and not exists (
-    select 1 from information_schema.columns
-    where table_schema = 'public'
-      and table_name = 'game_saves'
-      and column_name = 'user_id'
-  ) then
-    alter table public.game_saves rename column player_id to user_id;
-  end if;
-end $$;
-
-create unique index if not exists game_saves_user_id_slot_number_idx
-on public.game_saves (user_id, slot_number);
-
-alter table public.game_saves enable row level security;
-
-drop policy if exists "Allow public game save read" on public.game_saves;
-drop policy if exists "Allow public game save insert" on public.game_saves;
-drop policy if exists "Allow public game save update" on public.game_saves;
-drop policy if exists "Allow public game save delete" on public.game_saves;
-
-create policy "Allow public game save read"
-on public.game_saves
-for select
-to anon
-using (true);
-
-create policy "Allow public game save insert"
-on public.game_saves
-for insert
-to anon
-with check (true);
-
-create policy "Allow public game save update"
-on public.game_saves
-for update
-to anon
-using (true)
-with check (true);
-
-create policy "Allow public game save delete"
-on public.game_saves
-for delete
-to anon
-using (true);
-
+-- records 테이블
 create table if not exists public.records (
   id uuid primary key default gen_random_uuid(),
-  user_id uuid not null references public.player_accounts(id) on delete cascade,
-  playtime integer,
-  clear_floor integer,
+  user_id uuid references public.player_accounts(id) on delete cascade,
+  result_type text not null default 'CLEAR',
+  clear_grade text,
   advisor_id text,
-  final_capital numeric,
-  credit_grade text,
+  final_capital bigint,
+  clear_floor integer,
+  playtime integer,
   profit_turns integer,
   loss_turns integer,
-  max_share numeric,
+  max_share float,
   bankruptcy_count integer,
   external_events integer,
-  event_success_rate numeric,
+  event_success_rate float,
   rival_dominated integer,
-  created_at timestamptz not null default now()
+  monopol_clears jsonb default '[]'::jsonb,
+  created_at timestamptz default now()
 );
 
-do $$
-begin
-  if exists (
-    select 1 from information_schema.columns
-    where table_schema = 'public'
-      and table_name = 'records'
-      and column_name = 'player_id'
-  ) and not exists (
-    select 1 from information_schema.columns
-    where table_schema = 'public'
-      and table_name = 'records'
-      and column_name = 'user_id'
-  ) then
-    alter table public.records rename column player_id to user_id;
-  end if;
-end $$;
-
+-- RLS 정책
+alter table public.player_accounts enable row level security;
+alter table public.game_saves enable row level security;
 alter table public.records enable row level security;
 
-drop policy if exists "Allow public records read" on public.records;
-drop policy if exists "Allow public records insert" on public.records;
+create policy "본인 계정 접근" on public.player_accounts
+  for all using (true);
 
-create policy "Allow public records read"
-on public.records
-for select
-to anon
-using (true);
+create policy "본인 저장 데이터 접근" on public.game_saves
+  for all using (true);
 
-create policy "Allow public records insert"
-on public.records
-for insert
-to anon
-with check (true);
+create policy "본인 기록 접근" on public.records
+  for all using (true);
