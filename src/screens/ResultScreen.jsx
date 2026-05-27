@@ -316,26 +316,71 @@ function RevenueChart({ gameState }) {
   const revenues = gameState.revenueHistory || []
   const profits = gameState.profitHistory || []
 
-  if (revenues.length === 0) return null
+  const SLOTS = 8
+  const data = revenues.slice(-SLOTS)
+  const profData = profits.slice(-SLOTS)
 
-  const allVals = [...revenues, ...profits.map(Math.abs)]
+  const paddedRevenues = [
+    ...Array(Math.max(0, SLOTS - data.length)).fill(null),
+    ...data,
+  ]
+  const paddedProfits = [
+    ...Array(Math.max(0, SLOTS - profData.length)).fill(null),
+    ...profData,
+  ]
+
+  const allVals = [...data, ...profData.map(Math.abs)].filter(value => value !== null)
   const maxVal = Math.max(...allVals, 1)
-  const data = revenues.slice(-8)
-  const profData = profits.slice(-8)
+  const chartH = 60
 
   return (
     <div style={{
       display: 'flex',
       alignItems: 'flex-end',
       gap: '3px',
-      height: '60px',
+      height: `${chartH + 16}px`,
       padding: '4px 0',
     }}>
-      {data.map((rev, i) => {
-        const profit = profData[i] || 0
-        const revH = Math.max((rev / maxVal) * 52, 2)
-        const profH = Math.max((Math.abs(profit) / maxVal) * 52, 2)
-        const isNeg = profit < 0
+      {paddedRevenues.map((rev, i) => {
+        const profit = paddedProfits[i]
+        const isEmpty = rev === null
+
+        if (isEmpty) {
+          return (
+            <div
+              key={i}
+              style={{
+                flex: 1,
+                height: '100%',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'flex-end',
+                gap: '2px',
+              }}
+            >
+              <div style={{
+                width: '1px',
+                height: '40px',
+                background: 'rgba(255,255,255,0.1)',
+                borderLeft: '1px dashed rgba(255,255,255,0.15)',
+              }} />
+              <div style={{
+                fontSize: '6px',
+                color: 'rgba(255,255,255,0.2)',
+                fontFamily: 'monospace',
+              }}>
+                -
+              </div>
+            </div>
+          )
+        }
+
+        const revH = Math.max((rev / maxVal) * (chartH - 10), 2)
+        const profH = Math.max((Math.abs(profit || 0) / maxVal) * (chartH - 10), 2)
+        const isNeg = (profit || 0) < 0
+        const turnNum = data.length - (SLOTS - 1 - i)
+
         return (
           <div
             key={i}
@@ -349,35 +394,34 @@ function RevenueChart({ gameState }) {
               justifyContent: 'flex-end',
             }}
           >
-            {/* 매출 바 (연두 반투명) */}
             <div style={{
               width: '100%',
               height: `${revH}px`,
-              background: 'rgba(0,255,65,0.35)',
+              background: 'rgba(0,255,65,0.3)',
               position: 'relative',
+              minHeight: '2px',
             }}>
-              {/* 순이익 바 (진한 연두 or 빨강) */}
               <div style={{
                 position: 'absolute',
                 bottom: 0,
-                left: '25%',
-                width: '50%',
+                left: '20%',
+                width: '60%',
                 height: `${profH}px`,
-                background: isNeg ? 'var(--cr2-red)' : 'var(--cr2-lime)',
+                background: isNeg ? '#DC143C' : '#00FF41',
+                minHeight: '2px',
               }} />
             </div>
             <div style={{
               fontSize: '6px',
-              color: 'var(--cr2-gray)',
+              color: 'rgba(255,255,255,0.4)',
               fontFamily: 'monospace',
             }}>
-              {i + 1}
+              {turnNum}
             </div>
           </div>
         )
       })}
 
-      {/* 범례 */}
       <div style={{
         display: 'flex',
         flexDirection: 'column',
@@ -388,12 +432,12 @@ function RevenueChart({ gameState }) {
         paddingBottom: '14px',
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
-          <div style={{ width: '8px', height: '8px', background: 'rgba(0,255,65,0.35)' }} />
-          <span style={{ color: 'var(--cr2-gray)' }}>매출</span>
+          <div style={{ width: '8px', height: '8px', background: 'rgba(0,255,65,0.3)' }} />
+          <span style={{ color: 'rgba(255,255,255,0.5)' }}>매출</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
-          <div style={{ width: '8px', height: '8px', background: 'var(--cr2-lime)' }} />
-          <span style={{ color: 'var(--cr2-gray)' }}>순이익</span>
+          <div style={{ width: '8px', height: '8px', background: '#00FF41' }} />
+          <span style={{ color: 'rgba(255,255,255,0.5)' }}>순익</span>
         </div>
       </div>
     </div>
