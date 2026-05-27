@@ -195,119 +195,163 @@ export default function MainScreen() {
         </div>
 
         <div className="cr2-game-area">
-          <div
-            className="cr2-rival-card"
-            style={{
-              position: 'absolute',
-              top: '110px',
-              left: '12px',
-              background: 'rgba(0,0,0,0.8)',
-              border: '2px solid var(--cr2-red)',
-              padding: '10px 12px',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              gap: '4px',
-              minWidth: '110px',
-              backdropFilter: 'blur(4px)',
-            }}
-          >
+          <div style={{
+            position: 'absolute',
+            top: '110px',
+            left: '12px',
+            background: 'rgba(0,0,0,0.85)',
+            border: '2px solid var(--cr2-red)',
+            padding: '8px 10px',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: '3px',
+            width: '100px',
+            backdropFilter: 'blur(4px)',
+            boxShadow: '0 0 10px rgba(220,20,60,0.3)',
+            zIndex: 3,
+          }}>
             {stage ? (
               <>
                 <img
                   src={getRivalProfileImage(stage.rival)}
                   alt={stage.rivalName}
-                  className="cr2-rival-card-img"
+                  style={{
+                    width: '72px',
+                    height: '90px',
+                    objectFit: 'contain',
+                    objectPosition: 'top',
+                  }}
                 />
-                <div className="cr2-rival-card-name">{stage.rivalName}</div>
-                <div className="cr2-rival-card-company">{stage.company}</div>
-                <div className="cr2-rival-card-tier">[{stage.tier}]</div>
+                <div style={{ fontSize: '10px', color: 'var(--cr2-red)', textAlign: 'center' }}>
+                  {stage.rivalName}
+                </div>
+                <div style={{ fontSize: '7px', color: 'var(--cr2-gray)', textAlign: 'center' }}>
+                  {stage.company}
+                </div>
+                <div style={{
+                  fontSize: '7px',
+                  color: getTierColor(stage.tier),
+                  textAlign: 'center',
+                }}>
+                  [{stage.tier}]
+                </div>
               </>
             ) : (
-              <div className="cr2-rival-card-empty cr2-gray">라이벌 없음</div>
+              <div style={{ fontSize: '9px', color: 'var(--cr2-gray)', padding: '16px 8px' }}>
+                라이벌 없음
+              </div>
             )}
           </div>
 
-          <div
-            className="cr2-demand-bubble"
-            style={{
-              position: 'absolute',
-              top: '50%',
-              left: '12px',
-              transform: 'translateY(-50%)',
-              background: 'rgba(0,0,0,0.8)',
-              border: '2px solid var(--cr2-lime)',
-              borderRadius: '50%',
-              width: '110px',
-              height: '110px',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '4px',
-              backdropFilter: 'blur(4px)',
-              boxShadow: '0 0 16px rgba(0,255,65,0.2)',
-            }}
-          >
-            <div className="cr2-demand-label">수요</div>
-            <div className="cr2-demand-value">
+          <div style={{
+            position: 'absolute',
+            top: '330px',
+            left: '16px',
+            background: 'rgba(0,0,0,0.85)',
+            border: '2px solid var(--cr2-lime)',
+            borderRadius: '50%',
+            width: '90px',
+            height: '90px',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '3px',
+            backdropFilter: 'blur(4px)',
+            boxShadow: '0 0 12px rgba(0,255,65,0.2)',
+            zIndex: 3,
+          }}>
+            <div style={{ fontSize: '8px', color: 'var(--cr2-green)' }}>수요</div>
+            <div style={{ fontSize: '13px', color: 'var(--cr2-lime)' }}>
               {Math.floor(10000 * getDemandMultiplier(gameState.econPhase)).toLocaleString()}
             </div>
-            <button className="cr2-tooltip-btn cr2-gray">?</button>
           </div>
 
-          <div
-            className="cr2-player-card"
-            style={{
-              position: 'absolute',
-              bottom: '60px',
-              left: '12px',
-              background: 'rgba(0,0,0,0.8)',
-              border: '2px solid var(--cr2-lime)',
-              padding: '10px 12px',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              gap: '4px',
-              minWidth: '110px',
-              backdropFilter: 'blur(4px)',
-            }}
-          >
+          <div style={{
+            position: 'absolute',
+            bottom: '60px',
+            left: '12px',
+            background: 'rgba(0,0,0,0.85)',
+            border: '2px solid var(--cr2-lime)',
+            padding: '8px 10px',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: '3px',
+            width: '100px',
+            backdropFilter: 'blur(4px)',
+            zIndex: 3,
+          }}>
             <img
-              src={getPlayerAvatarImage(gameState.playerProfile)}
-              alt="내 회사"
-              className="cr2-player-card-img"
+              src={gameState.playerProfile?.avatar || '/assets/player_male_a_profile-_nb4zKZU.png'}
+              alt="플레이어"
+              style={{
+                width: '56px',
+                height: '56px',
+                objectFit: 'contain',
+              }}
             />
-            <div className="cr2-player-card-company cr2-lime">
+            <div style={{ fontSize: '9px', color: 'var(--cr2-lime)', textAlign: 'center' }}>
               {gameState.playerProfile?.company || '내 회사'}
             </div>
-            <div className="cr2-player-card-ceo cr2-gray">
+            <div style={{ fontSize: '7px', color: 'var(--cr2-gray)', textAlign: 'center' }}>
               {gameState.playerProfile?.name || ''}
             </div>
-            <div className="cr2-health-bar">
-              {Array.from({ length: gameState.maxHealth || 10 }).map((_, index) => (
+
+            <div style={{
+              display: 'flex',
+              gap: '2px',
+              flexWrap: 'wrap',
+              justifyContent: 'center',
+              maxWidth: '80px',
+              marginTop: '2px',
+            }}>
+              {Array.from({ length: gameState.maxHealth || 10 }).map((_, i) => (
                 <div
-                  key={`health-${index}`}
-                  className="cr2-health-cell"
+                  key={i}
                   style={{
-                    background: index < gameState.health
-                      ? gameState.health <= 3 ? 'var(--cr2-red)' : 'var(--cr2-lime)'
+                    width: '6px',
+                    height: '6px',
+                    background: i < (gameState.health || 0)
+                      ? (gameState.health <= 3 ? 'var(--cr2-red)' : 'var(--cr2-lime)')
                       : 'rgba(255,255,255,0.1)',
-                    border: `1px solid ${index < gameState.health ? 'var(--cr2-green)' : 'rgba(255,255,255,0.2)'}`,
+                    border: `1px solid ${i < (gameState.health || 0)
+                      ? 'var(--cr2-green)' : 'rgba(255,255,255,0.15)'}`,
                   }}
                 />
               ))}
             </div>
-            <div className={`cr2-momentum-label ${getMomentumColor(gameState.momentum)}`}>
+
+            <div style={{
+              fontSize: '8px',
+              marginTop: '2px',
+              color: gameState.momentum >= 3 ? 'var(--cr2-lime)'
+                : gameState.momentum >= 1 ? 'var(--cr2-green)'
+                  : gameState.momentum === 0 ? 'var(--cr2-gray)'
+                    : gameState.momentum >= -2 ? 'var(--cr2-gold)'
+                      : 'var(--cr2-red)',
+            }}>
               {getMomentumLabel(gameState.momentum)}
             </div>
-            <div className="cr2-advisor-mini">
+
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '3px',
+              marginTop: '2px',
+            }}>
               <img
                 src={getAdvisorProfileImage(gameState.selectedAdvisor)}
                 alt="어드바이저"
-                className="cr2-advisor-mini-img"
+                style={{
+                  width: '20px',
+                  height: '20px',
+                  objectFit: 'contain',
+                  border: '1px solid var(--cr2-green)',
+                }}
               />
-              <span className="cr2-advisor-mini-name cr2-gray">
+              <span style={{ fontSize: '7px', color: 'var(--cr2-gray)' }}>
                 {getAdvisorShortName(gameState.selectedAdvisor)}
               </span>
             </div>
@@ -563,12 +607,14 @@ function getMomentumLabel(momentum) {
   return '침체'
 }
 
-function getMomentumColor(momentum) {
-  if (momentum >= 3) return 'cr2-positive'
-  if (momentum >= 1) return 'cr2-lime'
-  if (momentum === 0) return 'cr2-gray'
-  if (momentum >= -2) return 'cr2-gold'
-  return 'cr2-negative'
+function getTierColor(tier) {
+  const map = {
+    ENTRY: 'var(--cr2-green)',
+    MID: 'var(--cr2-lime)',
+    SENIOR: 'var(--cr2-gold)',
+    CHAMPION: 'var(--cr2-red)',
+  }
+  return map[tier] || 'var(--cr2-gold)'
 }
 
 function getRewardLabel(floor) {
@@ -617,20 +663,6 @@ function getCreditColor(score) {
 
 function getRivalProfileImage(rivalId) {
   return RIVALS.find(rival => rival.id === rivalId)?.profileImage || '/assets/logo_image-f7z3e97D.png'
-}
-
-function getPlayerAvatarImage(playerProfile) {
-  const profileToFull = {
-    '/assets/player_male_a_profile-_nb4zKZU.png': '/assets/player_male_a_full-DF6j0EBQ.png',
-    '/assets/player_male_b_profile-DqCZ6-iC.png': '/assets/player_male_b_full-BNlwZp8L.png',
-    '/assets/player_female_a_profile-VQBwtxfm.png': '/assets/player_female_a_full-CBD6AZpe.png',
-    '/assets/player_female_b_profile-Ca7EZ6ok.png': '/assets/player_female_b_full-D8QzBvRn.png',
-  }
-
-  return playerProfile?.avatarFull
-    || profileToFull[playerProfile?.avatar]
-    || playerProfile?.avatar
-    || '/assets/player_male_a_full-DF6j0EBQ.png'
 }
 
 function getAdvisorProfileImage(id) {
