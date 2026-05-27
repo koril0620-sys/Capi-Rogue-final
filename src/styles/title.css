@@ -53,28 +53,55 @@
 .cr2-title-menu {
   position: relative;
   z-index: 1;
-  background: rgba(0,0,0,0.75);
-  border: 2px solid var(--cr2-red);
+  background: rgba(4, 4, 6, 0.95);
+  border: 1px solid var(--cr2-red);
   padding: 24px 32px;
   display: flex;
   flex-direction: column;
   gap: 8px;
   min-width: 280px;
+  box-shadow: 0 0 15px var(--cr2-red-glow);
 }
 
 .cr2-title-menu-item {
+  position: relative;
   background: transparent;
   border: none;
   color: var(--cr2-green);
   font-family: 'Press Start 2P', monospace;
   font-size: 14px;
-  padding: 10px 8px;
+  padding: 10px 8px 10px 24px;
   cursor: pointer;
   text-align: left;
-  transition: color 0.15s;
+  transition: color 0.15s, transform 0.1s;
 }
 
-.cr2-title-menu-item:hover { color: var(--cr2-lime); }
+.cr2-title-menu-item::before {
+  content: ">";
+  position: absolute;
+  left: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--cr2-lime);
+  opacity: 0;
+  transition: opacity 0.15s, left 0.15s;
+  will-change: transform, opacity;
+}
+
+.cr2-title-menu-item:hover {
+  color: var(--cr2-lime);
+  text-shadow: 0 0 6px var(--cr2-lime-glow);
+}
+
+.cr2-title-menu-item:hover::before {
+  opacity: 1;
+  left: 8px;
+}
+
+.cr2-title-menu-item:active {
+  transform: scale(0.98);
+  will-change: transform;
+}
 
 .cr2-title-guest {
   position: absolute;
@@ -99,7 +126,7 @@
 
 .cr2-title-intro-box {
   background: var(--cr2-bg2);
-  border: 2px solid var(--cr2-red);
+  border: 1px solid var(--cr2-red);
   padding: 32px;
   max-width: 480px;
   width: 90%;
@@ -108,6 +135,7 @@
   gap: 20px;
   align-items: center;
   text-align: center;
+  box-shadow: 0 0 20px var(--cr2-red-glow);
 }
 
 .cr2-title-intro-text {

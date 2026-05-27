@@ -63,11 +63,12 @@
 .cr2-stat-value { font-size: 13px; color: var(--cr2-white); }
 
 .cr2-result-income-stmt {
-  background: var(--cr2-bg2);
-  border: 1px solid var(--cr2-green);
-  padding: 10px;
+  background: rgba(4, 8, 4, 0.3);
+  border: 1px solid rgba(0, 170, 0, 0.4);
+  padding: 12px;
   font-size: 11px;
   margin-bottom: 12px;
+  box-shadow: 0 0 10px var(--cr2-green-glow);
 }
 
 .cr2-income-row {
@@ -128,10 +129,11 @@
 }
 
 .cr2-result-advisor-panel {
-  background: rgb(220 20 60 / 10%);
-  border: 1px solid var(--cr2-red);
-  padding: 10px;
+  background: rgba(12, 4, 4, 0.9);
+  border: 1px solid rgba(220, 20, 60, 0.5);
+  padding: 12px;
   flex: 1;
+  box-shadow: 0 0 12px var(--cr2-red-glow);
 }
 
 .cr2-result-advisor-name { font-size: 11px; color: var(--cr2-red); margin-bottom: 8px; }
@@ -183,13 +185,27 @@
 }
 
 .cr2-next-floor-btn {
+  font-family: 'Press Start 2P', 'Noto Sans KR', sans-serif;
   background: var(--cr2-lime);
-  color: #000;
-  border-color: var(--cr2-lime);
+  color: #000000;
+  border: 1px solid var(--cr2-lime);
   width: 100%;
   padding: 12px;
   font-size: 13px;
   margin-top: auto;
+  cursor: pointer;
+  box-shadow: 0 0 10px var(--cr2-lime-glow);
+  transition: background 0.15s, box-shadow 0.15s, transform 0.1s;
+}
+
+.cr2-next-floor-btn:hover {
+  background: #00e63a;
+  box-shadow: 0 0 16px var(--cr2-lime-glow);
+}
+
+.cr2-next-floor-btn:active {
+  transform: scale(0.98);
+  will-change: transform;
 }
 
 .cr2-revenue-chart {

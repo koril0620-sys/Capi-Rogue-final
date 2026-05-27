@@ -17,13 +17,14 @@
 }
 
 .cr2-login-card {
-  background: var(--cr2-bg2);
-  border: 2px solid var(--cr2-lime);
+  background: rgba(4, 6, 4, 0.95);
+  border: 1px solid var(--cr2-lime);
   padding: 32px;
   width: 420px;
   display: flex;
   flex-direction: column;
   gap: 10px;
+  box-shadow: 0 0 16px var(--cr2-lime-glow);
 }
 
 .cr2-login-title {
@@ -51,6 +52,7 @@
 .cr2-login-input:focus {
   outline: none;
   border-color: var(--cr2-lime);
+  box-shadow: 0 0 6px var(--cr2-lime-glow);
 }
 
 .cr2-login-usertype {
@@ -87,6 +89,11 @@
   font-size: 10px;
   color: var(--cr2-green);
   cursor: pointer;
+  transition: color 0.15s;
+}
+
+.cr2-login-remember:hover {
+  color: var(--cr2-lime);
 }
 
 .cr2-login-error {
@@ -102,24 +109,35 @@
 }
 
 .cr2-login-main-btn {
+  font-family: 'Press Start 2P', sans-serif;
   flex: 1;
   background: var(--cr2-lime);
-  color: #000;
-  border-color: var(--cr2-lime);
+  color: #000000;
+  border: 1px solid var(--cr2-lime);
+  box-shadow: 0 0 8px var(--cr2-lime-glow);
+  transition: background 0.15s, box-shadow 0.15s, transform 0.1s;
+  cursor: pointer;
 }
 
-.cr2-login-main-btn:hover {
-  background: #00cc35;
+.cr2-login-main-btn:hover:not(:disabled) {
+  background: #00e63a;
+  box-shadow: 0 0 14px var(--cr2-lime-glow);
+}
+
+.cr2-login-main-btn:active:not(:disabled) {
+  transform: scale(0.97);
+  will-change: transform;
 }
 
 .cr2-login-main-btn:disabled {
-  opacity: 0.5;
+  opacity: 0.4;
   cursor: not-allowed;
+  box-shadow: none;
 }
 
 .cr2-guest-warning {
-  background: var(--cr2-bg2);
-  border: 2px solid var(--cr2-gold);
+  background: rgba(12, 10, 4, 0.95);
+  border: 1px solid var(--cr2-gold);
   padding: 24px;
   max-width: 320px;
   display: flex;
@@ -127,6 +145,7 @@
   gap: 14px;
   align-items: center;
   text-align: center;
+  box-shadow: 0 0 16px var(--cr2-gold-glow);
 }
 
 .cr2-guest-warning-title {

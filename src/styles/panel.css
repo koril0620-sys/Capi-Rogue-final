@@ -80,8 +80,8 @@
 
 .cr2-price-cell.cr2-selected {
   border-color: var(--cr2-lime);
-  background: rgba(0, 255, 65, 0.12);
-  box-shadow: 0 0 6px rgba(0, 255, 65, 0.2);
+  background: rgba(0, 255, 65, 0.1);
+  box-shadow: 0 0 8px var(--cr2-lime-glow);
 }
 
 .cr2-price-cell-label {
@@ -111,6 +111,7 @@
 .cr2-sale-direct-input:focus {
   outline: none;
   border-color: var(--cr2-lime);
+  box-shadow: 0 0 6px var(--cr2-lime-glow);
 }
 
 .cr2-sale-direct-input::placeholder {
@@ -154,8 +155,8 @@
 
 .cr2-order-cell.cr2-selected {
   border-color: var(--cr2-lime);
-  background: rgba(0, 255, 65, 0.12);
-  box-shadow: 0 0 6px rgba(0, 255, 65, 0.2);
+  background: rgba(0, 255, 65, 0.1);
+  box-shadow: 0 0 8px var(--cr2-lime-glow);
 }
 
 .cr2-order-cell-label {
@@ -195,8 +196,8 @@
 
 .cr2-quality-cell.cr2-selected {
   border-color: var(--cr2-lime);
-  background: rgba(0, 255, 65, 0.12);
-  box-shadow: 0 0 6px rgba(0, 255, 65, 0.2);
+  background: rgba(0, 255, 65, 0.1);
+  box-shadow: 0 0 8px var(--cr2-lime-glow);
 }
 
 .cr2-quality-cell-label {
@@ -284,7 +285,11 @@
   width: 100%;
 }
 
-.cr2-custom-input:focus { outline: none; border-color: var(--cr2-lime); }
+.cr2-custom-input:focus {
+  outline: none;
+  border-color: var(--cr2-lime);
+  box-shadow: 0 0 6px var(--cr2-lime-glow);
+}
 
 .cr2-order-section { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; }
 .cr2-order-label { font-size: 9px; color: var(--cr2-gray); }
@@ -395,16 +400,28 @@
 .cr2-next-desc { font-size: 9px; }
 
 .cr2-settle-btn {
+  font-family: 'Press Start 2P', 'Noto Sans KR', sans-serif;
   background: var(--cr2-lime);
-  color: #000;
-  border-color: var(--cr2-lime);
+  color: #000000;
+  border: 1px solid var(--cr2-lime);
   width: 100%;
   padding: 14px;
   font-size: 14px;
   margin-top: 8px;
+  cursor: pointer;
+  box-shadow: 0 0 10px var(--cr2-lime-glow);
+  transition: background 0.15s, box-shadow 0.15s, transform 0.1s;
 }
 
-.cr2-settle-btn:hover { background: #00cc35; }
+.cr2-settle-btn:hover {
+  background: #00e63a;
+  box-shadow: 0 0 16px var(--cr2-lime-glow);
+}
+
+.cr2-settle-btn:active {
+  transform: scale(0.98);
+  will-change: transform;
+}
 
 .cr2-rival-capital-bar {
   background: rgba(0,0,0,0.8);
