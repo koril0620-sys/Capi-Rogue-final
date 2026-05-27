@@ -13,6 +13,7 @@ export default function LoginScreen() {
   const [rememberMe, setRememberMe] = useState(true)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [showGuestWarning, setShowGuestWarning] = useState(false)
 
   const handleLogin = async () => {
     if (!username || !password) {
@@ -63,7 +64,14 @@ export default function LoginScreen() {
     }
   }
 
-  const handleGuest = () => setCurrentScreen('title')
+  const handleGuest = () => {
+    setShowGuestWarning(true)
+  }
+
+  const handleGuestConfirm = () => {
+    setShowGuestWarning(false)
+    setCurrentScreen('title')
+  }
 
   return (
     <div className="cr2-login-screen">
@@ -165,6 +173,33 @@ export default function LoginScreen() {
           )}
         </div>
       </div>
+
+      {showGuestWarning && (
+        <div className="cr2-popup-overlay">
+          <div className="cr2-guest-warning">
+            <div className="cr2-guest-warning-title">⚠️ 게스트 모드</div>
+            <div className="cr2-guest-warning-text">
+              게스트 모드에서는 진행 상황이<br />
+              저장되지 않습니다.<br />
+              브라우저를 닫으면 데이터가 사라집니다.
+            </div>
+            <div className="cr2-guest-warning-btns">
+              <button
+                className="cr2-btn cr2-btn-ghost"
+                onClick={handleGuestConfirm}
+              >
+                그래도 게스트로
+              </button>
+              <button
+                className="cr2-btn"
+                onClick={() => setShowGuestWarning(false)}
+              >
+                돌아가기
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

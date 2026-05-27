@@ -116,3 +116,31 @@
   opacity: 0.5;
   cursor: not-allowed;
 }
+
+.cr2-guest-warning {
+  background: var(--cr2-bg2);
+  border: 2px solid var(--cr2-gold);
+  padding: 24px;
+  max-width: 320px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  align-items: center;
+  text-align: center;
+}
+
+.cr2-guest-warning-title {
+  font-size: 13px;
+  color: var(--cr2-gold);
+}
+
+.cr2-guest-warning-text {
+  font-size: 10px;
+  color: var(--cr2-white);
+  line-height: 2;
+}
+
+.cr2-guest-warning-btns {
+  display: flex;
+  gap: 8px;
+}

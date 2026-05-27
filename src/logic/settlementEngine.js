@@ -16,7 +16,7 @@ import {
   checkBossClearCondition,
 } from './monopolEngine'
 import { OPERATING_COSTS } from '../constants/economy'
-import { isBossStage } from '../constants/monopol'
+import { getCurrentStage, isBossStage } from '../constants/monopol'
 
 export function settle(gameState) {
   const state = {
@@ -93,6 +93,7 @@ export function settle(gameState) {
   result.operatingCost = totalOperatingCost
   result.netProfit = netProfit
   result.shareAfter = share
+  result.prevShare = (state.playerShareHistory || []).at(-1) || 0
   result.isProfit = netProfit > 0
   result.actualSales = actualSales
   result.orderAmount = orderAmount
@@ -129,7 +130,6 @@ export function settle(gameState) {
 
   state.econPhase = transitionPhase(state.econPhase, state.activeEffects, state.floor, state.selectedAdvisor)
   state.activeEffects = tickActiveEffects(state.activeEffects)
-  state.stats = updateStats(state.stats, result, state)
 
   const updatedRival = settleRival(
     {
@@ -150,6 +150,13 @@ export function settle(gameState) {
   result.rivalBankrupt = checkRivalBankrupt(updatedRival)
   state.rivalBankrupt = result.rivalBankrupt
 
+  if (result.rivalBankrupt) {
+    const stage = getCurrentStage(state.floor)
+    if (stage && !state.metRivals?.includes(stage.rival)) {
+      state.metRivals = [...(state.metRivals || []), stage.rival]
+    }
+  }
+
   const intervention = checkMarketIntervention(state.floor, state.stageTurn)
   if (intervention) {
     state.activeEffects = [
@@ -168,6 +175,8 @@ export function settle(gameState) {
   if (specialAbility) {
     result.rivalSpecialAbility = specialAbility
   }
+
+  state.stats = updateStats(state.stats, result, state)
 
   if (isBossStage(state.floor)) {
     const bossShare = 1 - share
@@ -201,16 +210,52 @@ function isRepeatingStrategy(currentStrategy = {}, lastStrategy = null) {
 }
 
 function updateStats(stats, result, state) {
+  const newPhasesExperienced = [...(stats.phasesExperienced || [])]
+  if (!newPhasesExperienced.includes(state.econPhase)) {
+    newPhasesExperienced.push(state.econPhase)
+  }
+
   return {
     ...stats,
     playtime: (stats.playtime || 0) + 1,
-    profitTurns: result.isProfit ? (stats.profitTurns || 0) + 1 : (stats.profitTurns || 0),
-    lossTurns: !result.isProfit ? (stats.lossTurns || 0) + 1 : (stats.lossTurns || 0),
+    profitTurns: result.isProfit
+      ? (stats.profitTurns || 0) + 1
+      : stats.profitTurns || 0,
+    lossTurns: !result.isProfit
+      ? (stats.lossTurns || 0) + 1
+      : stats.lossTurns || 0,
     maxShare: Math.max(stats.maxShare || 0, result.shareAfter || 0),
-    profitStreak: result.isProfit ? (stats.profitStreak || 0) + 1 : 0,
+    profitStreak: result.isProfit
+      ? (stats.profitStreak || 0) + 1
+      : 0,
+    shareFirstStreak: result.shareAfter > 0.5
+      ? (stats.shareFirstStreak || 0) + 1
+      : 0,
     bankruptcyCount: state.bankruptcyTurns === 1
       ? (stats.bankruptcyCount || 0) + 1
-      : (stats.bankruptcyCount || 0),
+      : stats.bankruptcyCount || 0,
+    phasesExperienced: newPhasesExperienced,
+    interestPaidCount: result.interestPaid
+      ? (stats.interestPaidCount || 0) + 1
+      : stats.interestPaidCount || 0,
+    marketingCount: (result.marketingCost || 0) > 0
+      ? (stats.marketingCount || 0) + 1
+      : stats.marketingCount || 0,
+    shareOverSustained: result.shareAfter >= 0.5
+      ? (stats.shareOverSustained || 0) + 1
+      : 0,
+    healthLossCount: !result.isProfit
+      ? (stats.healthLossCount || 0) + 1
+      : stats.healthLossCount || 0,
+    priceShareUp: (result.shareAfter || 0) > (result.prevShare || 0)
+      ? (stats.priceShareUp || 0) + 1
+      : stats.priceShareUp || 0,
+    rivalsDefeated: result.rivalBankrupt
+      ? (stats.rivalsDefeated || 0) + 1
+      : stats.rivalsDefeated || 0,
+    externalEventCount: result.monopolIntervention
+      ? (stats.externalEventCount || 0) + 1
+      : stats.externalEventCount || 0,
   }
 }
 

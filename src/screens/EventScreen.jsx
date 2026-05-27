@@ -50,6 +50,24 @@ export default function EventScreen() {
 
     const outcome = resolveChoice(choice, gameState, gameState.selectedAdvisor)
     applyOutcome(outcome)
+    const isSuccess = outcome.capitalChange?.startsWith('+') ||
+      (!outcome.capitalChange && !outcome.healthChange)
+
+    useGameStore.setState(state => ({
+      stats: {
+        ...(state.stats || {}),
+        eventTotalCount: (state.stats?.eventTotalCount || 0) + 1,
+        eventSuccessCount: isSuccess
+          ? (state.stats?.eventSuccessCount || 0) + 1
+          : state.stats?.eventSuccessCount || 0,
+        absurdStreak: choice.type === 'ABSURD' && isSuccess
+          ? (state.stats?.absurdStreak || 0) + 1
+          : 0,
+        gambleFailSafeRecover: choice.type === 'GAMBLE' && !isSuccess
+          ? (state.stats?.gambleFailSafeRecover || 0) + 1
+          : state.stats?.gambleFailSafeRecover || 0,
+      },
+    }))
     setResult({ choice, outcome })
 
     const cashDelta = outcome.capitalChange

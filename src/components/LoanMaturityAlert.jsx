@@ -12,12 +12,15 @@ export default function LoanMaturityAlert({ loan, onClose }) {
   const handleRepay = () => {
     const result = repayLoan(loan.id, gameState)
     if (result.success) {
-      useGameStore.setState({
+      useGameStore.setState(state => ({
         capital: result.newCapital,
         debt: result.newDebt,
         loans: result.newLoans,
         creditScore: Math.min(gameState.creditScore + 5, 100),
-      })
+        stats: result.statsUpdate
+          ? { ...(state.stats || {}), ...result.statsUpdate }
+          : state.stats,
+      }))
       playSFX('profit')
       onClose()
     }

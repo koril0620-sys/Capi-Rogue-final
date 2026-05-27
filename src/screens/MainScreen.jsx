@@ -23,7 +23,7 @@ export default function MainScreen() {
 
   const [stagePopup, setStagePopup] = useState(null)
   const [learningPopup, setLearningPopup] = useState(null)
-  const [activePanelTab, setActivePanelTab] = useState('sale')
+  const [activeTab, setActiveTab] = useState('sale')
   const prevFloorRef = useRef(gameState.floor)
 
   useEffect(() => {
@@ -272,27 +272,36 @@ export default function MainScreen() {
       </div>
 
       <RightPanel
-        activeTab={activePanelTab}
-        onTabChange={setActivePanelTab}
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
         onSettle={handleSettle}
       />
 
       <div className="cr2-tab-bar">
         <button
-          className={`cr2-tab cr2-tab-sale ${activePanelTab === 'sale' ? 'cr2-tab-active' : ''}`}
-          onClick={() => setActivePanelTab('sale')}
+          className={`cr2-tab cr2-tab-sale ${activeTab === 'sale' ? 'cr2-tab-active' : ''}`}
+          onClick={() => {
+            setActiveTab('sale')
+            playSFX('click')
+          }}
         >
           판매 ❓
         </button>
         <button
-          className={`cr2-tab cr2-tab-quality ${activePanelTab === 'quality' ? 'cr2-tab-active' : ''}`}
-          onClick={() => setActivePanelTab('quality')}
+          className={`cr2-tab cr2-tab-quality ${activeTab === 'quality' ? 'cr2-tab-active' : ''}`}
+          onClick={() => {
+            setActiveTab('quality')
+            playSFX('click')
+          }}
         >
           품질 ❓
         </button>
         <button
-          className={`cr2-tab cr2-tab-operation ${activePanelTab === 'operation' ? 'cr2-tab-active' : ''}`}
-          onClick={() => setActivePanelTab('operation')}
+          className={`cr2-tab cr2-tab-operation ${activeTab === 'operation' ? 'cr2-tab-active' : ''}`}
+          onClick={() => {
+            setActiveTab('operation')
+            playSFX('click')
+          }}
         >
           운영 ❓
         </button>

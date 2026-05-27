@@ -81,6 +81,9 @@ export function repayLoan(loanId, gameState) {
     newLoans: gameState.loans.filter(item => item.id !== loanId),
     newDebt: gameState.debt - loan.principal,
     loanRepaid: true,
+    statsUpdate: {
+      loanRepaidCount: (gameState.stats?.loanRepaidCount || 0) + 1,
+    },
   }
 }
 

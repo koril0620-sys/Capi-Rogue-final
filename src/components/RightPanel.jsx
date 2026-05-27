@@ -9,20 +9,17 @@ import { getCurrentStage } from '../constants/monopol'
 import { LOAN_TYPES } from '../constants/creditScore'
 import { playSFX } from '../logic/audioEngine'
 
-export default function RightPanel({ onSettle, activeTab: controlledTab, onTabChange }) {
+export default function RightPanel({ activeTab, setActiveTab, onSettle }) {
   const gameState = useGameStore(state => state)
   const setCurrentStrategy = useGameStore(state => state.setCurrentStrategy)
   const setFactoryAction = useGameStore(state => state.setFactoryAction)
-  const [localTab, setLocalTab] = useState('sale')
 
-  const activeTab = controlledTab || localTab
   const stage = getCurrentStage(gameState.floor)
   const rivalPrice = stage ? gameState.rivalPrice || 10000 : null
 
   const handleTabChange = (tab) => {
     playSFX('click')
-    setLocalTab(tab)
-    if (onTabChange) onTabChange(tab)
+    setActiveTab(tab)
   }
 
   return (
@@ -440,11 +437,14 @@ function BankSection({ gameState }) {
   const handleRepayLoan = (loanId) => {
     const result = repayLoan(loanId, gameState)
     if (result.success) {
-      useGameStore.setState({
+      useGameStore.setState(state => ({
         capital: result.newCapital,
         debt: result.newDebt,
         loans: result.newLoans,
-      })
+        stats: result.statsUpdate
+          ? { ...(state.stats || {}), ...result.statsUpdate }
+          : state.stats,
+      }))
       playSFX('click')
     }
   }
