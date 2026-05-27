@@ -112,11 +112,6 @@ export default function ResultScreen() {
             </div>
           </div>
 
-          <div className="cr2-result-section">
-            <div className="cr2-result-section-title">매출 / 순이익</div>
-            <RevenueChart gameState={gameState} />
-          </div>
-
           <div className="cr2-result-grid">
             <div className="cr2-result-stat">
               <div className="cr2-stat-label">시장 점유율</div>
@@ -138,15 +133,15 @@ export default function ResultScreen() {
 
           <div className="cr2-result-income-stmt">
             <div className="cr2-income-row cr2-income-revenue">
-              <span>매출액</span>
+              <span style={{ fontFamily: "'Noto Sans KR','Malgun Gothic',sans-serif" }}>매출액</span>
               <span className="cr2-positive">+{(revenue / 10000).toFixed(0)}만원</span>
             </div>
             <div className="cr2-income-row">
-              <span>(-) 생산비</span>
+              <span style={{ fontFamily: "'Noto Sans KR','Malgun Gothic',sans-serif" }}>(-) 생산비</span>
               <span className="cr2-negative">-{(totalCost / 10000).toFixed(0)}만원</span>
             </div>
             <div className="cr2-income-row cr2-income-gross">
-              <span>= 매출총이익</span>
+              <span style={{ fontFamily: "'Noto Sans KR','Malgun Gothic',sans-serif" }}>= 매출총이익</span>
               <span className={(revenue - totalCost) >= 0 ? 'cr2-positive' : 'cr2-negative'}>
                 {((revenue - totalCost) / 10000).toFixed(0)}만원
               </span>
@@ -157,32 +152,51 @@ export default function ResultScreen() {
               <div>기타: -{(200000 / 10000).toFixed(0)}만원</div>
             </div>
             <div className="cr2-income-row">
-              <span>(-) 운영비</span>
+              <span style={{ fontFamily: "'Noto Sans KR','Malgun Gothic',sans-serif" }}>(-) 운영비</span>
               <span className="cr2-negative">-{(operatingCost / 10000).toFixed(0)}만원</span>
             </div>
             <div className="cr2-income-row">
-              <span>(-) 마케팅비</span>
+              <span style={{ fontFamily: "'Noto Sans KR','Malgun Gothic',sans-serif" }}>(-) 마케팅비</span>
               <span className="cr2-negative">-{(marketingCost / 10000).toFixed(0)}만원</span>
             </div>
             {interestAmount > 0 && (
               <div className="cr2-income-row">
-                <span>(-) 이자비용</span>
+                <span style={{ fontFamily: "'Noto Sans KR','Malgun Gothic',sans-serif" }}>(-) 이자비용</span>
                 <span className="cr2-negative">-{(interestAmount / 10000).toFixed(0)}만원</span>
               </div>
             )}
             <div className="cr2-income-row cr2-income-net">
-              <span>= 순이익</span>
+              <span style={{ fontFamily: "'Noto Sans KR','Malgun Gothic',sans-serif" }}>= 순이익</span>
               <span className={isProfit ? 'cr2-positive' : 'cr2-negative'}>
                 {isProfit ? '+' : ''}{(netProfit / 10000).toFixed(0)}만원
               </span>
             </div>
             <div className="cr2-income-row cr2-income-capital">
-              <span>자본 변화</span>
+              <span style={{ fontFamily: "'Noto Sans KR','Malgun Gothic',sans-serif" }}>자본 변화</span>
               <span className={gameState.capital >= 0 ? 'cr2-positive' : 'cr2-negative'}>
                 {(gameState.capital / 10000).toFixed(0)}만원
               </span>
             </div>
           </div>
+
+          {/* 매출/순이익 그래프 - 손익계산서 아래 */}
+          {(gameState.revenueHistory?.length || 0) > 0 && (
+            <div style={{
+              marginTop: '8px',
+              padding: '8px',
+              background: 'rgba(0,0,0,0.3)',
+              border: '1px solid rgba(0,170,0,0.3)',
+            }}>
+              <div style={{
+                fontSize: '8px',
+                color: 'var(--cr2-green)',
+                marginBottom: '4px',
+              }}>
+                최근 매출 / 순이익 추이
+              </div>
+              <RevenueChart gameState={gameState} />
+            </div>
+          )}
 
           {factoryResult && (
             <FactoryResultSection result={factoryResult} />
@@ -268,20 +282,89 @@ export default function ResultScreen() {
 }
 
 function RevenueChart({ gameState }) {
-  const history = gameState.playerShareHistory || []
-  const maxVal = Math.max(...history.map(Math.abs), 1)
+  const revenues = gameState.revenueHistory || []
+  const profits = gameState.profitHistory || []
+
+  if (revenues.length === 0) return null
+
+  const allVals = [...revenues, ...profits.map(Math.abs)]
+  const maxVal = Math.max(...allVals, 1)
+  const data = revenues.slice(-8)
+  const profData = profits.slice(-8)
 
   return (
-    <div className="cr2-revenue-chart">
-      {history.slice(-10).map((value, index) => (
-        <div key={`chart-${index}`} className="cr2-chart-bar-wrap">
+    <div style={{
+      display: 'flex',
+      alignItems: 'flex-end',
+      gap: '3px',
+      height: '60px',
+      padding: '4px 0',
+    }}>
+      {data.map((rev, i) => {
+        const profit = profData[i] || 0
+        const revH = Math.max((rev / maxVal) * 52, 2)
+        const profH = Math.max((Math.abs(profit) / maxVal) * 52, 2)
+        const isNeg = profit < 0
+        return (
           <div
-            className={`cr2-chart-bar ${value >= 0 ? 'cr2-chart-profit' : 'cr2-chart-loss'}`}
-            style={{ height: `${(Math.abs(value) / maxVal) * 100}%` }}
-          />
-          <div className="cr2-chart-label">{history.length - 9 + index}F</div>
+            key={i}
+            style={{
+              flex: 1,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '2px',
+              height: '100%',
+              justifyContent: 'flex-end',
+            }}
+          >
+            {/* 매출 바 (연두 반투명) */}
+            <div style={{
+              width: '100%',
+              height: `${revH}px`,
+              background: 'rgba(0,255,65,0.35)',
+              position: 'relative',
+            }}>
+              {/* 순이익 바 (진한 연두 or 빨강) */}
+              <div style={{
+                position: 'absolute',
+                bottom: 0,
+                left: '25%',
+                width: '50%',
+                height: `${profH}px`,
+                background: isNeg ? 'var(--cr2-red)' : 'var(--cr2-lime)',
+              }} />
+            </div>
+            <div style={{
+              fontSize: '6px',
+              color: 'var(--cr2-gray)',
+              fontFamily: 'monospace',
+            }}>
+              {i + 1}
+            </div>
+          </div>
+        )
+      })}
+
+      {/* 범례 */}
+      <div style={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '3px',
+        marginLeft: '4px',
+        fontSize: '7px',
+        justifyContent: 'flex-end',
+        paddingBottom: '14px',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
+          <div style={{ width: '8px', height: '8px', background: 'rgba(0,255,65,0.35)' }} />
+          <span style={{ color: 'var(--cr2-gray)' }}>매출</span>
         </div>
-      ))}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
+          <div style={{ width: '8px', height: '8px', background: 'var(--cr2-lime)' }} />
+          <span style={{ color: 'var(--cr2-gray)' }}>순이익</span>
+        </div>
+      </div>
     </div>
   )
 }
