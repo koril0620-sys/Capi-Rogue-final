@@ -55,8 +55,10 @@ export default function CharacterCreateScreen() {
 
     playSFX('click')
 
+    const selectedAvatar = AVATARS.find(a => a.id === avatar)
     const profile = {
-      avatar: AVATARS.find(a => a.id === avatar)?.src,
+      avatar: selectedAvatar?.src,
+      avatarFull: selectedAvatar?.fullSrc,
       name: ceoName.trim(),
       company: companyName.trim(),
     }

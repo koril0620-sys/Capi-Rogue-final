@@ -178,9 +178,10 @@
 }
 
 .cr2-player-card-img {
-  width: 56px;
-  height: 56px;
+  width: 72px;
+  height: 72px;
   object-fit: contain;
+  object-position: center bottom;
 }
 
 .cr2-player-card-company {

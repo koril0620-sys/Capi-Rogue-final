@@ -16,6 +16,210 @@
   background: rgba(220,20,60,0.1);
 }
 
+/* 판매 탭 전체 */
+.cr2-sale-tab {
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.cr2-sale-rival-info {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  font-size: 9px;
+  padding: 4px 8px;
+  background: rgba(220, 20, 60, 0.08);
+  border: 1px solid rgba(220, 20, 60, 0.3);
+}
+
+.cr2-sale-section {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.cr2-sale-section-title {
+  font-size: 10px;
+  color: var(--cr2-lime);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cr2-sale-section-sub {
+  font-size: 8px;
+  color: var(--cr2-gray);
+}
+
+.cr2-price-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+}
+
+.cr2-price-cell {
+  background: var(--cr2-bg2);
+  border: 1px solid var(--cr2-green);
+  color: var(--cr2-white);
+  font-family: 'Press Start 2P', monospace;
+  padding: 7px 6px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  transition: all 0.12s;
+}
+
+.cr2-price-cell:hover {
+  border-color: var(--cr2-lime);
+  background: rgba(0, 255, 65, 0.06);
+}
+
+.cr2-price-cell.cr2-selected {
+  border-color: var(--cr2-lime);
+  background: rgba(0, 255, 65, 0.12);
+  box-shadow: 0 0 6px rgba(0, 255, 65, 0.2);
+}
+
+.cr2-price-cell-label {
+  font-size: 11px;
+  color: var(--cr2-lime);
+}
+
+.cr2-price-cell-sub {
+  font-size: 8px;
+  color: var(--cr2-gray);
+}
+
+.cr2-sale-direct-row {
+  display: flex;
+}
+
+.cr2-sale-direct-input {
+  width: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(0, 170, 0, 0.4);
+  color: var(--cr2-white);
+  padding: 6px 10px;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 9px;
+}
+
+.cr2-sale-direct-input:focus {
+  outline: none;
+  border-color: var(--cr2-lime);
+}
+
+.cr2-sale-direct-input::placeholder {
+  color: rgba(255, 255, 255, 0.2);
+  font-size: 8px;
+}
+
+.cr2-sale-sim {
+  display: flex;
+  gap: 10px;
+  font-size: 9px;
+  padding: 4px 6px;
+  background: rgba(0, 0, 0, 0.4);
+  border-left: 2px solid var(--cr2-lime);
+}
+
+.cr2-order-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 4px;
+}
+
+.cr2-order-cell {
+  background: var(--cr2-bg2);
+  border: 1px solid var(--cr2-green);
+  color: var(--cr2-white);
+  font-family: 'Press Start 2P', monospace;
+  padding: 7px 4px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  transition: all 0.12s;
+}
+
+.cr2-order-cell:hover {
+  border-color: var(--cr2-lime);
+  background: rgba(0, 255, 65, 0.06);
+}
+
+.cr2-order-cell.cr2-selected {
+  border-color: var(--cr2-lime);
+  background: rgba(0, 255, 65, 0.12);
+  box-shadow: 0 0 6px rgba(0, 255, 65, 0.2);
+}
+
+.cr2-order-cell-label {
+  font-size: 10px;
+  color: var(--cr2-lime);
+}
+
+.cr2-order-cell-sub {
+  font-size: 7px;
+  color: var(--cr2-gray);
+}
+
+.cr2-quality-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 4px;
+}
+
+.cr2-quality-cell {
+  background: var(--cr2-bg2);
+  border: 1px solid var(--cr2-green);
+  color: var(--cr2-white);
+  font-family: 'Press Start 2P', monospace;
+  padding: 7px 4px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  transition: all 0.12s;
+}
+
+.cr2-quality-cell:hover {
+  border-color: var(--cr2-lime);
+  background: rgba(0, 255, 65, 0.06);
+}
+
+.cr2-quality-cell.cr2-selected {
+  border-color: var(--cr2-lime);
+  background: rgba(0, 255, 65, 0.12);
+  box-shadow: 0 0 6px rgba(0, 255, 65, 0.2);
+}
+
+.cr2-quality-cell-label {
+  font-size: 10px;
+  color: var(--cr2-lime);
+}
+
+.cr2-quality-cell-cost {
+  font-size: 7px;
+  color: var(--cr2-gray);
+}
+
+.cr2-quality-current-info {
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(0, 170, 0, 0.3);
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-size: 10px;
+  color: var(--cr2-white);
+}
+
 .cr2-price-tabs, .cr2-subtab-bar {
   display: flex;
   gap: 4px;

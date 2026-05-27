@@ -6,16 +6,13 @@ import { getSuccessRate, QUALITY_UPGRADE, COST_REDUCTION } from '../logic/factor
 import { getGrade, getLoanLimit } from '../logic/creditEngine'
 import { takeLoan, repayLoan, extendLoan } from '../logic/loanEngine'
 import { getCurrentStage } from '../constants/monopol'
+import { RIVALS } from '../constants/rivals'
 import { LOAN_TYPES } from '../constants/creditScore'
 import { playSFX } from '../logic/audioEngine'
 
 export default function RightPanel({ activeTab, setActiveTab, onSettle }) {
   const gameState = useGameStore(state => state)
   const setCurrentStrategy = useGameStore(state => state.setCurrentStrategy)
-  const setFactoryAction = useGameStore(state => state.setFactoryAction)
-
-  const stage = getCurrentStage(gameState.floor)
-  const rivalPrice = stage ? gameState.rivalPrice || 10000 : null
 
   const handleTabChange = (tab) => {
     playSFX('click')
@@ -36,7 +33,7 @@ export default function RightPanel({ activeTab, setActiveTab, onSettle }) {
               : tab === 'sale'
                 ? '판매'
                 : tab === 'quality'
-                  ? '품질'
+                  ? '공장'
                   : tab === 'operation'
                     ? '운영'
                     : '정산'}
@@ -50,22 +47,18 @@ export default function RightPanel({ activeTab, setActiveTab, onSettle }) {
       {activeTab === 'sale' && (
         <SaleTab
           gameState={gameState}
-          rivalPrice={rivalPrice}
           setCurrentStrategy={setCurrentStrategy}
         />
       )}
       {activeTab === 'quality' && (
         <QualityTab
           gameState={gameState}
-          rivalPrice={rivalPrice}
-          setCurrentStrategy={setCurrentStrategy}
         />
       )}
       {activeTab === 'operation' && (
         <OperationTab
           gameState={gameState}
           setCurrentStrategy={setCurrentStrategy}
-          setFactoryAction={setFactoryAction}
         />
       )}
       {activeTab === 'next' && (
@@ -78,216 +71,390 @@ export default function RightPanel({ activeTab, setActiveTab, onSettle }) {
   )
 }
 
-function SaleTab({ gameState, rivalPrice, setCurrentStrategy }) {
+function SaleTab({ gameState, setCurrentStrategy }) {
   const [selectedPrice, setSelectedPrice] = useState(null)
+  const [selectedOrder, setSelectedOrder] = useState(null)
+  const [selectedQuality, setSelectedQuality] = useState('maintain')
   const [customPrice, setCustomPrice] = useState('')
-  const cost = gameState.cost || 3000
+  const [customOrder, setCustomOrder] = useState('')
 
-  const priceOptions = [
-    { label: '원가 × 1.3', price: Math.floor(cost * 1.3) },
-    { label: '원가 × 2', price: Math.floor(cost * 2) },
-    { label: '원가 × 3', price: Math.floor(cost * 3) },
+  const cost = gameState.cost || 3000
+  const maxOrder = getMaxOrderAmount(gameState.capital, cost, gameState.orderCap)
+  const rivalPrice = gameState.rivalPrice || null
+
+  const fixedCost = 1500000 + (gameState.loans || []).reduce(
+    (sum, loan) => sum + Math.floor(loan.principal * (loan.interestRate || 0.065) / 12),
+    0,
+  )
+
+  const getBreakeven = (price) => {
+    const margin = price - cost
+    return margin > 0 ? Math.ceil(fixedCost / margin) : null
+  }
+
+  const getRivalDiff = (price) => {
+    if (!rivalPrice) return null
+    return (((price - rivalPrice) / rivalPrice) * 100).toFixed(1)
+  }
+
+  const priceOpts = [
+    { key: 'x13', label: '×1.3', price: Math.floor(cost * 1.3) },
+    { key: 'x2',  label: '×2',   price: Math.floor(cost * 2)   },
+    { key: 'x3',  label: '×3',   price: Math.floor(cost * 3)   },
+    { key: 'x4',  label: '×4',   price: Math.floor(cost * 4)   },
   ]
 
-  const calcSimulation = (price) => {
-    if (!price || price <= 0) return null
+  const orderOpts = [
+    { key: 'con', label: '보수적', amount: Math.floor(maxOrder * 0.5) },
+    { key: 'std', label: '표준',   amount: Math.floor(maxOrder * 0.7) },
+    { key: 'agg', label: '공격적', amount: Math.floor(maxOrder * 0.9) },
+    { key: 'max', label: '최대',   amount: maxOrder                   },
+  ]
 
-    const fixedCost = 1500000 + (gameState.loans || []).reduce((sum, loan) =>
-      sum + Math.floor((loan.principal * loan.interestRate) / 12), 0)
-    const margin = price - cost
-    if (margin <= 0) return null
+  const qualOpts = [
+    { key: 'reduce',   label: '절감', cost: Math.floor(cost * 0.8),  color: 'var(--cr2-lime)'  },
+    { key: 'maintain', label: '유지', cost,                           color: 'var(--cr2-white)' },
+    { key: 'upgrade',  label: '고급', cost: Math.floor(cost * 1.25), color: 'var(--cr2-red)'   },
+  ]
 
-    const breakeven = Math.ceil(fixedCost / margin)
-    const rivalDiff = rivalPrice
-      ? (((price - rivalPrice) / rivalPrice) * 100).toFixed(1)
-      : null
-    return { breakeven, rivalDiff }
-  }
-
-  const handlePriceSelect = (price) => {
-    playSFX('click')
-    setSelectedPrice(price)
+  const handlePrice = (price, key) => {
+    setSelectedPrice(key)
+    setCustomPrice('')
     setCurrentStrategy({ price })
+    playSFX('click')
   }
 
-  const sim = calcSimulation(selectedPrice)
+  const handleOrder = (amount, key) => {
+    setSelectedOrder(key)
+    setCustomOrder('')
+    setCurrentStrategy({ orderAmount: amount })
+    playSFX('click')
+  }
+
+  const handleQuality = (key) => {
+    setSelectedQuality(key)
+    setCurrentStrategy({ qualityMode: key })
+    playSFX('click')
+  }
+
+  const currentPrice = selectedPrice
+    ? priceOpts.find(option => option.key === selectedPrice)?.price
+      || parseInt(customPrice, 10)
+    : null
 
   return (
-    <div className="cr2-panel-content">
-      <div className="cr2-panel-title">판매</div>
-      <div className="cr2-panel-desc">가격과 판매 계획을 정합니다. 실제 결과는 정산에서 공개됩니다.</div>
+    <div style={{
+      padding: '10px 12px',
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '8px',
+      height: '100%',
+      overflowY: 'auto',
+    }}>
 
-      {rivalPrice && (
-        <div className="cr2-rival-price-info">
-          {`${getCurrentStage(gameState.floor)?.rivalName || '라이벌'} 가격: ${rivalPrice.toLocaleString()}원`}
-        </div>
-      )}
-
-      <div className="cr2-price-tabs">
-        <button
-          className={`cr2-subtab ${selectedPrice === null ? 'cr2-subtab-active' : ''}`}
-          onClick={() => setSelectedPrice(null)}
-        >
-          가격
-        </button>
-        <button className="cr2-subtab">판매 개수</button>
+      <div style={{
+        display: 'flex',
+        gap: '10px',
+        fontSize: '9px',
+        padding: '4px 8px',
+        background: 'rgba(220,20,60,0.08)',
+        border: '1px solid rgba(220,20,60,0.3)',
+      }}>
+        <span style={{ color: 'var(--cr2-gray)' }}>원가</span>
+        <span style={{ color: 'var(--cr2-white)' }}>{cost.toLocaleString()}원</span>
+        {rivalPrice && (
+          <>
+            <span style={{ color: 'var(--cr2-gray)' }}>·</span>
+            <span style={{ color: 'var(--cr2-gray)' }}>라이벌</span>
+            <span style={{ color: 'var(--cr2-red)' }}>{rivalPrice.toLocaleString()}원</span>
+          </>
+        )}
       </div>
 
-      {priceOptions.map(option => (
-        <div key={option.label} className="cr2-panel-section">
-          <button
-            className={`cr2-option-btn ${selectedPrice === option.price ? 'cr2-selected' : ''}`}
-            onClick={() => handlePriceSelect(option.price)}
-          >
-            {option.label}
-          </button>
-
-          {selectedPrice === option.price && sim && (
-            <div className="cr2-simulation">
-              <div>선택 판매가: {option.price.toLocaleString()}원</div>
-              {rivalPrice && (
-                <div className={parseFloat(sim.rivalDiff) < 0 ? 'cr2-positive' : 'cr2-negative'}>
-                  라이벌 대비 {sim.rivalDiff}%
-                </div>
-              )}
-              <div>손익분기점: {sim.breakeven.toLocaleString()}개</div>
-            </div>
-          )}
+      <div>
+        <div style={{ fontSize: '9px', color: 'var(--cr2-lime)', marginBottom: '5px' }}>
+          가격 선택
         </div>
-      ))}
 
-      <div className="cr2-panel-section">
-        <button
-          className={`cr2-option-btn ${customPrice && selectedPrice === parseInt(customPrice, 10) ? 'cr2-selected' : ''}`}
-          onClick={() => {
-            const price = parseInt(customPrice, 10)
-            if (price > 0) handlePriceSelect(price)
-          }}
-        >
-          직접 입력
-        </button>
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: '1fr 1fr',
+          gap: '4px',
+          marginBottom: '4px',
+        }}>
+          {priceOpts.map(opt => (
+            <button
+              key={opt.key}
+              onClick={() => handlePrice(opt.price, opt.key)}
+              style={{
+                background: selectedPrice === opt.key
+                  ? 'rgba(0,255,65,0.15)' : 'var(--cr2-bg2)',
+                border: `1px solid ${selectedPrice === opt.key
+                  ? 'var(--cr2-lime)' : 'var(--cr2-green)'}`,
+                color: 'var(--cr2-white)',
+                fontFamily: "'Press Start 2P', 'Noto Sans KR', monospace",
+                padding: '8px 4px',
+                cursor: 'pointer',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: '3px',
+                boxShadow: selectedPrice === opt.key
+                  ? '0 0 6px rgba(0,255,65,0.25)' : 'none',
+              }}
+            >
+              <span style={{ fontSize: '11px', color: 'var(--cr2-lime)' }}>
+                {opt.label}
+              </span>
+              <span style={{ fontSize: '8px', color: 'var(--cr2-gray)' }}>
+                {opt.price.toLocaleString()}원
+              </span>
+            </button>
+          ))}
+        </div>
+
         <input
-          className="cr2-custom-input"
           type="number"
           value={customPrice}
-          onChange={event => setCustomPrice(event.target.value)}
-          placeholder="판매가 직접 입력"
+          placeholder="직접 입력 (원)"
+          onChange={event => {
+            setCustomPrice(event.target.value)
+            setSelectedPrice('custom')
+            const price = parseInt(event.target.value, 10)
+            if (price > 0) setCurrentStrategy({ price })
+          }}
+          style={{
+            width: '100%',
+            background: selectedPrice === 'custom'
+              ? 'rgba(0,255,65,0.08)' : 'rgba(0,0,0,0.5)',
+            border: `1px solid ${selectedPrice === 'custom'
+              ? 'var(--cr2-lime)' : 'rgba(0,170,0,0.4)'}`,
+            color: 'var(--cr2-white)',
+            padding: '6px 10px',
+            fontFamily: "'Press Start 2P', 'Noto Sans KR', monospace",
+            fontSize: '9px',
+          }}
+        />
+
+        {currentPrice && currentPrice > cost && (
+          <div style={{
+            display: 'flex',
+            gap: '8px',
+            flexWrap: 'wrap',
+            fontSize: '9px',
+            padding: '4px 6px',
+            background: 'rgba(0,0,0,0.4)',
+            borderLeft: '2px solid var(--cr2-lime)',
+            marginTop: '4px',
+          }}>
+            {rivalPrice && (
+              <span style={{
+                color: parseFloat(getRivalDiff(currentPrice)) < 0
+                  ? 'var(--cr2-lime)' : 'var(--cr2-red)',
+              }}>
+                라이벌 대비 {getRivalDiff(currentPrice)}%
+              </span>
+            )}
+            <span style={{ color: 'var(--cr2-gold)' }}>
+              손익분기 {getBreakeven(currentPrice)?.toLocaleString()}개
+            </span>
+          </div>
+        )}
+      </div>
+
+      <div>
+        <div style={{
+          fontSize: '9px',
+          color: 'var(--cr2-lime)',
+          marginBottom: '5px',
+          display: 'flex',
+          gap: '6px',
+        }}>
+          <span>발주량</span>
+          <span style={{ color: 'var(--cr2-gray)' }}>최대 {maxOrder.toLocaleString()}개</span>
+        </div>
+
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: '1fr 1fr',
+          gap: '4px',
+          marginBottom: '4px',
+        }}>
+          {orderOpts.map(opt => (
+            <button
+              key={opt.key}
+              onClick={() => handleOrder(opt.amount, opt.key)}
+              style={{
+                background: selectedOrder === opt.key
+                  ? 'rgba(0,255,65,0.15)' : 'var(--cr2-bg2)',
+                border: `1px solid ${selectedOrder === opt.key
+                  ? 'var(--cr2-lime)' : 'var(--cr2-green)'}`,
+                color: 'var(--cr2-white)',
+                fontFamily: "'Press Start 2P', 'Noto Sans KR', monospace",
+                padding: '8px 4px',
+                cursor: 'pointer',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: '3px',
+                boxShadow: selectedOrder === opt.key
+                  ? '0 0 6px rgba(0,255,65,0.25)' : 'none',
+              }}
+            >
+              <span style={{ fontSize: '10px', color: 'var(--cr2-lime)' }}>
+                {opt.label}
+              </span>
+              <span style={{ fontSize: '8px', color: 'var(--cr2-gray)' }}>
+                {opt.amount.toLocaleString()}개
+              </span>
+            </button>
+          ))}
+        </div>
+
+        <input
+          type="number"
+          value={customOrder}
+          placeholder={`직접 입력 (최대 ${maxOrder.toLocaleString()})`}
+          onChange={event => {
+            const amount = Math.min(parseInt(event.target.value, 10) || 0, maxOrder)
+            setCustomOrder(event.target.value)
+            setSelectedOrder('custom')
+            setCurrentStrategy({ orderAmount: amount })
+          }}
+          style={{
+            width: '100%',
+            background: selectedOrder === 'custom'
+              ? 'rgba(0,255,65,0.08)' : 'rgba(0,0,0,0.5)',
+            border: `1px solid ${selectedOrder === 'custom'
+              ? 'var(--cr2-lime)' : 'rgba(0,170,0,0.4)'}`,
+            color: 'var(--cr2-white)',
+            padding: '6px 10px',
+            fontFamily: "'Press Start 2P', 'Noto Sans KR', monospace",
+            fontSize: '9px',
+          }}
         />
       </div>
 
-      <OrderSection gameState={gameState} setCurrentStrategy={setCurrentStrategy} />
+      <div>
+        <div style={{
+          fontSize: '9px',
+          color: 'var(--cr2-lime)',
+          marginBottom: '5px',
+          display: 'flex',
+          gap: '6px',
+        }}>
+          <span>품질 수준</span>
+          <span style={{ color: 'var(--cr2-gray)' }}>현재 {gameState.quality}</span>
+        </div>
+
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: '1fr 1fr 1fr',
+          gap: '4px',
+        }}>
+          {qualOpts.map(opt => (
+            <button
+              key={opt.key}
+              onClick={() => handleQuality(opt.key)}
+              style={{
+                background: selectedQuality === opt.key
+                  ? 'rgba(0,255,65,0.15)' : '#0A0A0F',
+                border: `2px solid ${selectedQuality === opt.key
+                  ? opt.color : 'var(--cr2-green)'}`,
+                color: 'var(--cr2-white)',
+                fontFamily: "'Press Start 2P', 'Noto Sans KR', monospace",
+                padding: '8px 4px',
+                cursor: 'pointer',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: '3px',
+              }}
+            >
+              <span style={{ fontSize: '10px', color: opt.color }}>
+                {opt.label}
+              </span>
+              <span style={{ fontSize: '7px', color: 'var(--cr2-gray)' }}>
+                {opt.cost.toLocaleString()}원
+              </span>
+            </button>
+          ))}
+        </div>
+      </div>
+
     </div>
   )
 }
 
-function OrderSection({ gameState, setCurrentStrategy }) {
-  const maxOrder = getMaxOrderAmount(gameState.capital, gameState.cost, gameState.orderCap)
-  const [orderMode, setOrderMode] = useState('표준')
-
-  const orderOptions = [
-    { label: '보수적', amount: Math.floor(maxOrder * 0.5) },
-    { label: '표준', amount: Math.floor(maxOrder * 0.7) },
-    { label: '공격적', amount: Math.floor(maxOrder * 0.9) },
-    { label: `최대 (${maxOrder.toLocaleString()}개)`, amount: maxOrder },
-  ]
-
+function QualityTab({ gameState }) {
   return (
-    <div className="cr2-order-section">
-      <div className="cr2-order-label">
-        최대 발주 가능: <span className="cr2-lime">{maxOrder.toLocaleString()}개</span>
-        <span className="cr2-gray"> (보유 자본 기준)</span>
+    <div style={{ padding: '12px' }}>
+      <div style={{
+        fontSize: '13px',
+        color: 'var(--cr2-lime)',
+        marginBottom: '8px',
+      }}>
+        공장 관리
       </div>
-      {orderOptions.map(option => (
-        <button
-          key={option.label}
-          className={`cr2-option-btn ${orderMode === option.label ? 'cr2-selected' : ''}`}
-          onClick={() => {
-            setOrderMode(option.label)
-            setCurrentStrategy({ orderAmount: option.amount })
-            playSFX('click')
-          }}
-        >
-          {option.label}
-        </button>
-      ))}
-      <input
-        className="cr2-custom-input"
-        type="number"
-        placeholder="직접 입력"
-        onChange={event => setCurrentStrategy({ orderAmount: parseInt(event.target.value, 10) || 0 })}
+      <div style={{
+        fontSize: '9px',
+        color: 'var(--cr2-gray)',
+        marginBottom: '12px',
+        lineHeight: '1.6',
+      }}>
+        품질 강화·원가 절감은 영구 효과입니다.
+        이번 달 판매할 품질 수준은 판매 탭에서 선택하세요.
+      </div>
+      <div style={{
+        fontSize: '10px',
+        color: 'var(--cr2-white)',
+        marginBottom: '10px',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '4px',
+      }}>
+        <div>
+          현재 품질:
+          <span style={{ color: 'var(--cr2-lime)', marginLeft: '6px' }}>
+            {gameState.quality}
+          </span>
+        </div>
+        <div>
+          현재 원가:
+          <span style={{ color: 'var(--cr2-white)', marginLeft: '6px' }}>
+            {gameState.cost?.toLocaleString()}원
+          </span>
+        </div>
+        <div>
+          누적 원가 절감:
+          <span style={{ color: 'var(--cr2-positive, var(--cr2-lime))', marginLeft: '6px' }}>
+            {((gameState.costReductionTotal || 0) * 100).toFixed(1)}%
+          </span>
+          <span style={{ color: 'var(--cr2-gray)' }}> / 40%</span>
+        </div>
+      </div>
+      <FactorySection
+        gameState={gameState}
+        setFactoryAction={useGameStore.getState().setFactoryAction}
       />
     </div>
   )
 }
 
-function QualityTab({ gameState, rivalPrice, setCurrentStrategy }) {
-  const stage = getCurrentStage(gameState.floor)
-  const [selectedQuality, setSelectedQuality] = useState('maintain')
-
-  const qualityOptions = [
-    { id: 'maintain', label: '품질 유지', cost: gameState.cost, change: 0, desc: '변화 없음' },
-    { id: 'upgrade', label: '품질 업그레이드', cost: Math.floor(gameState.cost * 1.25), change: Math.floor(gameState.cost * 0.25), desc: '+25% 원가' },
-    { id: 'reduce', label: '품질 절감', cost: Math.floor(gameState.cost * 0.8), change: -Math.floor(gameState.cost * 0.2), desc: '-20% 원가' },
-  ]
-
-  return (
-    <div className="cr2-panel-content">
-      <div className="cr2-panel-title">품질</div>
-      <div className="cr2-panel-desc">품질은 매력도와 원가에 함께 영향을 줍니다.</div>
-
-      {stage && (
-        <div className="cr2-rival-quality-info">
-          {stage.rivalName} — 가격 {rivalPrice?.toLocaleString() || '?'}원 / 품질 {gameState.rivals?.find(rival => rival.id === stage.rival)?.stats?.quality || '?'}
-        </div>
-      )}
-
-      <div className="cr2-quality-current">
-        예상 품질 {gameState.quality} &nbsp; 예상 원가 {gameState.cost?.toLocaleString()}원
-      </div>
-
-      {qualityOptions.map(option => (
-        <div
-          key={option.id}
-          className={`cr2-quality-option ${selectedQuality === option.id ? 'cr2-selected' : ''}`}
-          onClick={() => {
-            setSelectedQuality(option.id)
-            setCurrentStrategy({ qualityMode: option.id })
-            playSFX('click')
-          }}
-        >
-          <div className="cr2-quality-option-label">{option.label}</div>
-          <div className="cr2-quality-option-cost">
-            예상 원가: {option.cost.toLocaleString()}원
-            {option.change !== 0 && (
-              <span className={option.change > 0 ? 'cr2-negative' : 'cr2-positive'}>
-                &nbsp;{option.change > 0 ? '+' : ''}{option.change.toLocaleString()}원
-              </span>
-            )}
-          </div>
-          {option.id !== 'maintain' && (
-            <div className="cr2-quality-option-desc">{option.desc}</div>
-          )}
-        </div>
-      ))}
-    </div>
-  )
-}
-
-function OperationTab({ gameState, setCurrentStrategy, setFactoryAction }) {
-  const [subTab, setSubTab] = useState('factory')
+function OperationTab({ gameState, setCurrentStrategy }) {
+  const [subTab, setSubTab] = useState('bank')
 
   return (
     <div className="cr2-panel-content">
       <div className="cr2-panel-title">운영</div>
-      <div className="cr2-panel-desc">이번 달의 설비 투자, 은행 거래, 마케팅을 정합니다.</div>
+      <div className="cr2-panel-desc">이번 달의 은행 거래와 마케팅을 정합니다.</div>
 
       <div className="cr2-operation-info">
-        <div>예상 품질 {gameState.quality} &nbsp; 예상 원가 {gameState.cost?.toLocaleString()}원</div>
         <div>예상 부채 {(gameState.debt || 0).toLocaleString()}원</div>
       </div>
 
       <div className="cr2-subtab-bar">
-        {['factory', 'bank', 'marketing'].map(tab => (
+        {['bank', 'marketing'].map(tab => (
           <button
             key={tab}
             className={`cr2-subtab ${subTab === tab ? 'cr2-subtab-active' : ''}`}
@@ -296,17 +463,11 @@ function OperationTab({ gameState, setCurrentStrategy, setFactoryAction }) {
               playSFX('click')
             }}
           >
-            {tab === 'factory' ? '공장 관리' : tab === 'bank' ? '은행 업무' : '마케팅'}
+            {tab === 'bank' ? '은행 업무' : '마케팅'}
           </button>
         ))}
       </div>
 
-      {subTab === 'factory' && (
-        <FactorySection
-          gameState={gameState}
-          setFactoryAction={setFactoryAction}
-        />
-      )}
       {subTab === 'bank' && (
         <BankSection gameState={gameState} />
       )}
@@ -551,7 +712,7 @@ function RivalTab({ gameState }) {
 
       <div className="cr2-rival-tab-profile">
         <img
-          src={`/assets/${getRivalAssetFilename(stage.rival)}`}
+          src={getRivalProfileImage(stage.rival)}
           alt={stage.rivalName}
           className="cr2-rival-tab-img"
         />
@@ -996,20 +1157,8 @@ function NextTab({ gameState, onSettle }) {
   )
 }
 
-function getRivalAssetFilename(rivalId) {
-  const map = {
-    junhyuk: 'rival_entry_junhyuk-CHIAhbxg.png',
-    sua: 'rival_entry_sua-Ng4BiHqL.png',
-    sungjin: 'rival_mid_sungjin-D6YbcSZf.png',
-    jieun: 'rival_mid_sunseo-D7JBcSZf.png',
-    junseo: 'rival_senior_junseo-D7JBRjRD.png',
-    seoyeon: 'rival_senior_seoyeon-DQw87pvW.png',
-    taejun: 'rival_senior_taejun-NZJ6s3M.png',
-    cheolmin: 'rival_champion_cheolmin-DQI-_sih.png',
-    dogan: 'rival_champion_dogon-BRN0GlPx.png',
-    hyekyung: 'rival_champion_hyegyeong-Cuy8B_O2.png',
-  }
-  return map[rivalId] || 'logo_image-f7z3e97D.png'
+function getRivalProfileImage(rivalId) {
+  return RIVALS.find(rival => rival.id === rivalId)?.profileImage || '/assets/logo_image-f7z3e97D.png'
 }
 
 function getTierColor(tier) {

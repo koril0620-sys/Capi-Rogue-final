@@ -11,6 +11,7 @@ export default function EventScreen() {
   const setCurrentScreen = useGameStore(state => state.setCurrentScreen)
   const [selectedChoice, setSelectedChoice] = useState(null)
   const [result, setResult] = useState(null)
+  const [settling, setSettling] = useState(false)
 
   const externalEvent = gameState.currentExternalEvent
   const internalEvent = gameState.currentInternalEvent
@@ -121,24 +122,39 @@ export default function EventScreen() {
   }
 
   const proceedToSettle = async () => {
-    const latestState = useGameStore.getState()
-    const { updatedState, settlementResult } = settle(latestState)
+    setSettling(true)
+    const currentState = useGameStore.getState()
+    const { updatedState, settlementResult } = settle(currentState)
 
     useGameStore.setState({
       ...updatedState,
       lastSettlementResult: settlementResult,
       playerShareHistory: [
-        ...(latestState.playerShareHistory || []),
+        ...(currentState.playerShareHistory || []),
         settlementResult.shareAfter,
+      ],
+      revenueHistory: [
+        ...(currentState.revenueHistory || []).slice(-9),
+        settlementResult.revenue || 0,
+      ],
+      profitHistory: [
+        ...(currentState.profitHistory || []).slice(-9),
+        settlementResult.netProfit || 0,
+      ],
+      capitalHistory: [
+        ...(currentState.capitalHistory || []).slice(-9),
+        updatedState.capital,
       ],
     })
 
-    if (settlementResult.newlyUnlocked?.length > 0 && latestState.playerId) {
-      await saveAchievements(latestState.playerId, settlementResult.newlyUnlocked)
+    if (settlementResult.newlyUnlocked?.length > 0) {
       useGameStore.setState({ newAchievements: settlementResult.newlyUnlocked })
+      if (currentState.playerId) {
+        void saveAchievements(currentState.playerId, settlementResult.newlyUnlocked)
+      }
     }
 
-    if (settlementResult.isGameOver) {
+    if (updatedState.isGameOver || settlementResult.isGameOver) {
       setCurrentScreen('gameOver')
       return
     }
@@ -146,7 +162,9 @@ export default function EventScreen() {
       setCurrentScreen('ending')
       return
     }
-    setCurrentScreen('result')
+    setTimeout(() => {
+      setCurrentScreen('result')
+    }, 0)
   }
 
   if (externalEvent && !result) {
@@ -225,7 +243,18 @@ export default function EventScreen() {
     )
   }
 
-  return null
+  return (
+    <div className="cr2-event-screen">
+      <div className="cr2-event-card cr2-event-result">
+        <div className="cr2-event-title">
+          {settling ? '정산 중...' : '정산 준비 중...'}
+        </div>
+        <div className="cr2-event-result-text cr2-gray">
+          잠시만 기다려 주세요.
+        </div>
+      </div>
+    </div>
+  )
 }
 
 function formatEffect(effect) {

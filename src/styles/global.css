@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Noto+Sans+KR:wght@400;700&display=swap');
 
 * {
   box-sizing: border-box;
@@ -14,7 +14,7 @@ body {
   height: 100%;
   overflow: hidden;
   background: #000000;
-  font-family: 'Press Start 2P', monospace;
+  font-family: 'Press Start 2P', 'Noto Sans KR', 'Malgun Gothic', sans-serif;
 }
 
 #root {
@@ -37,7 +37,7 @@ body {
 }
 
 .cr2-btn {
-  font-family: 'Press Start 2P', monospace;
+  font-family: 'Press Start 2P', 'Noto Sans KR', 'Malgun Gothic', sans-serif;
   cursor: pointer;
   min-width: 44px;
   min-height: 44px;

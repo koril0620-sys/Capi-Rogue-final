@@ -5,6 +5,7 @@ import { rollExternalEvent, rollInternalEvent } from '../logic/eventEngine'
 import { getRivalInitialCapital } from '../logic/monopolEngine'
 import { getCurrentStage, isNewStage } from '../constants/monopol'
 import { getLearningGoal } from '../constants/learningGoals'
+import { RIVALS } from '../constants/rivals'
 import { saveAchievements } from '../logic/achievementEngine'
 import { playSFX, playBGM } from '../logic/audioEngine'
 import { getUpcomingMaturityLoans } from '../logic/loanEngine'
@@ -77,13 +78,16 @@ export default function MainScreen() {
   const handleSettle = async () => {
     playSFX('nextfloor')
 
-    const externalEvent = rollExternalEvent(gameState.floor, gameState.activeEffects)
+    const externalEvent = rollExternalEvent(
+      gameState.floor,
+      gameState.activeEffects,
+    )
     const internalEvent = rollInternalEvent(gameState)
 
     if (externalEvent || internalEvent) {
       useGameStore.setState({
-        currentExternalEvent: externalEvent,
-        currentInternalEvent: internalEvent,
+        currentExternalEvent: externalEvent || null,
+        currentInternalEvent: internalEvent || null,
       })
       setCurrentScreen('event')
       return
@@ -97,6 +101,18 @@ export default function MainScreen() {
       playerShareHistory: [
         ...(gameState.playerShareHistory || []),
         settlementResult.shareAfter,
+      ],
+      revenueHistory: [
+        ...(gameState.revenueHistory || []).slice(-9),
+        settlementResult.revenue || 0,
+      ],
+      profitHistory: [
+        ...(gameState.profitHistory || []).slice(-9),
+        settlementResult.netProfit || 0,
+      ],
+      capitalHistory: [
+        ...(gameState.capitalHistory || []).slice(-9),
+        updatedState.capital,
       ],
     })
 
@@ -115,11 +131,9 @@ export default function MainScreen() {
       return
     }
 
-    if (settlementResult.rivalBankrupt) {
-      playSFX('clear')
-    }
-
-    setCurrentScreen('result')
+    setTimeout(() => {
+      setCurrentScreen('result')
+    }, 0)
   }
 
   const background = getBackground(gameState.econPhase)
@@ -160,7 +174,7 @@ export default function MainScreen() {
             {stage ? (
               <>
                 <img
-                  src={`/assets/${getRivalAssetFilename(stage.rival)}`}
+                  src={getRivalProfileImage(stage.rival)}
                   alt={stage.rivalName}
                   className="cr2-rival-card-img"
                 />
@@ -184,7 +198,7 @@ export default function MainScreen() {
 
           <div className="cr2-player-card">
             <img
-              src={gameState.playerProfile?.avatar || '/assets/player_male_a_profile-nb4zKZU.png'}
+              src={getPlayerAvatarImage(gameState.playerProfile)}
               alt="내 회사"
               className="cr2-player-card-img"
             />
@@ -295,7 +309,7 @@ export default function MainScreen() {
             playSFX('click')
           }}
         >
-          품질
+          공장
         </button>
         <button
           className={`cr2-tab ${activeTab === 'operation' ? 'cr2-tab-active' : ''}`}
@@ -323,7 +337,7 @@ export default function MainScreen() {
             <div className="cr2-stage-popup-title">MONOPOL 조직원 등장</div>
             <div className="cr2-stage-popup-info">
               <img
-                src={`/assets/${getRivalAssetFilename(stagePopup.rival)}`}
+                src={getRivalProfileImage(stagePopup.rival)}
                 alt={stagePopup.rivalName}
                 className="cr2-stage-popup-img"
               />
@@ -460,20 +474,22 @@ function calcMonthlyInterest(loans = []) {
   ), 0)
 }
 
-function getRivalAssetFilename(rivalId) {
-  const map = {
-    junhyuk: 'rival_entry_junhyuk-CHIAhbxg.png',
-    sua: 'rival_entry_sua-Ng4BiHqL.png',
-    sungjin: 'rival_mid_sungjin-D6YbcSZf.png',
-    jieun: 'rival_mid_sunseo-D7JBcSZf.png',
-    junseo: 'rival_senior_junseo-D7JBRjRD.png',
-    seoyeon: 'rival_senior_seoyeon-DQw87pvW.png',
-    taejun: 'rival_senior_taejun-NZJ6s3M.png',
-    cheolmin: 'rival_champion_cheolmin-DQI-_sih.png',
-    dogan: 'rival_champion_dogon-BRN0GlPx.png',
-    hyekyung: 'rival_champion_hyegyeong-Cuy8B_O2.png',
+function getRivalProfileImage(rivalId) {
+  return RIVALS.find(rival => rival.id === rivalId)?.profileImage || '/assets/logo_image-f7z3e97D.png'
+}
+
+function getPlayerAvatarImage(playerProfile) {
+  const profileToFull = {
+    '/assets/player_male_a_profile-_nb4zKZU.png': '/assets/player_male_a_full-DF6j0EBQ.png',
+    '/assets/player_male_b_profile-DqCZ6-iC.png': '/assets/player_male_b_full-BNlwZp8L.png',
+    '/assets/player_female_a_profile-VQBwtxfm.png': '/assets/player_female_a_full-CBD6AZpe.png',
+    '/assets/player_female_b_profile-Ca7EZ6ok.png': '/assets/player_female_b_full-D8QzBvRn.png',
   }
-  return map[rivalId] || 'logo_image-f7z3e97D.png'
+
+  return playerProfile?.avatarFull
+    || profileToFull[playerProfile?.avatar]
+    || playerProfile?.avatar
+    || '/assets/player_male_a_full-DF6j0EBQ.png'
 }
 
 function getAdvisorProfileImage(id) {

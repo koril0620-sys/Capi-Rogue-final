@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useGameStore } from '../store/useGameStore'
 import { generateReport } from '../logic/reportEngine'
 import { saveOnFloorEnter } from '../logic/saveEngine'
@@ -14,13 +14,49 @@ export default function ResultScreen() {
   const gameState = useGameStore(state => state)
   const setCurrentScreen = useGameStore(state => state.setCurrentScreen)
   const setFloor = useGameStore(state => state.setFloor)
+  const settlementResult = gameState.lastSettlementResult
   const [saving, setSaving] = useState(false)
-
-  const settlementResult = gameState.lastSettlementResult || {}
-  const report = generateReport(gameState, settlementResult, gameState.selectedAdvisor)
   const maturedLoans = getMaturedLoans(gameState.loans || [])
   const [showAlert, setShowAlert] = useState(maturedLoans.length > 0)
   const [alertLoan, setAlertLoan] = useState(maturedLoans[0] || null)
+
+  useEffect(() => {
+    if (!settlementResult) {
+      setCurrentScreen('main')
+    }
+  }, [settlementResult, setCurrentScreen])
+
+  if (!settlementResult) {
+    return (
+      <div style={{
+        width: '100%',
+        height: '100%',
+        background: '#000',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        fontFamily: "'Press Start 2P', monospace",
+        color: 'var(--cr2-lime)',
+        fontSize: '12px',
+      }}>
+        불러오는 중...
+      </div>
+    )
+  }
+
+  const netProfit = settlementResult.netProfit || 0
+  const shareAfter = settlementResult.shareAfter || 0
+  const revenue = settlementResult.revenue || 0
+  const totalCost = settlementResult.totalCost || 0
+  const operatingCost = settlementResult.operatingCost || 0
+  const marketingCost = settlementResult.marketingCost || 0
+  const interestAmount = settlementResult.interestAmount || 0
+  const totalDemand = settlementResult.totalDemand || 0
+  const actualSales = settlementResult.actualSales || 0
+  const orderAmount = settlementResult.orderAmount || 0
+  const isProfit = settlementResult.isProfit || false
+  const factoryResult = settlementResult.factoryResult || null
+  const report = generateReport(gameState, settlementResult, gameState.selectedAdvisor)
 
   const handleNextFloor = async () => {
     setSaving(true)
@@ -62,8 +98,8 @@ export default function ResultScreen() {
       <div className="cr2-result-header">
         <div className="cr2-result-floor">FLOOR {gameState.floor} REPORT</div>
         <div className="cr2-result-title">MONTHLY SETTLEMENT &nbsp; 월말 정산</div>
-        <div className={`cr2-result-profit ${settlementResult.isProfit ? 'cr2-positive' : 'cr2-negative'}`}>
-          이번 달 최종 순이익: {((settlementResult.netProfit || 0) / 10000).toFixed(0)}만원
+        <div className={`cr2-result-profit ${isProfit ? 'cr2-positive' : 'cr2-negative'}`}>
+          이번 달 최종 순이익: {(netProfit / 10000).toFixed(0)}만원
         </div>
       </div>
 
@@ -72,7 +108,7 @@ export default function ResultScreen() {
           <div className="cr2-result-section">
             <div className="cr2-result-section-title">점유율</div>
             <div className="cr2-result-share">
-              {Math.round((settlementResult.shareAfter || 0) * 100)}%
+              {Math.round(shareAfter * 100)}%
             </div>
           </div>
 
@@ -84,35 +120,35 @@ export default function ResultScreen() {
           <div className="cr2-result-grid">
             <div className="cr2-result-stat">
               <div className="cr2-stat-label">시장 점유율</div>
-              <div className="cr2-stat-value">{Math.round((settlementResult.shareAfter || 0) * 100)}%</div>
+              <div className="cr2-stat-value">{Math.round(shareAfter * 100)}%</div>
             </div>
             <div className="cr2-result-stat">
               <div className="cr2-stat-label">총수요</div>
-              <div className="cr2-stat-value">{(settlementResult.totalDemand || 0).toLocaleString()}</div>
+              <div className="cr2-stat-value">{totalDemand.toLocaleString()}</div>
             </div>
             <div className="cr2-result-stat">
               <div className="cr2-stat-label">생산량</div>
-              <div className="cr2-stat-value">{(settlementResult.orderAmount || 0).toLocaleString()}</div>
+              <div className="cr2-stat-value">{orderAmount.toLocaleString()}</div>
             </div>
             <div className="cr2-result-stat">
               <div className="cr2-stat-label">실제 판매</div>
-              <div className="cr2-stat-value">{(settlementResult.actualSales || 0).toLocaleString()}</div>
+              <div className="cr2-stat-value">{actualSales.toLocaleString()}</div>
             </div>
           </div>
 
           <div className="cr2-result-income-stmt">
             <div className="cr2-income-row cr2-income-revenue">
               <span>매출액</span>
-              <span className="cr2-positive">+{((settlementResult.revenue || 0) / 10000).toFixed(0)}만원</span>
+              <span className="cr2-positive">+{(revenue / 10000).toFixed(0)}만원</span>
             </div>
             <div className="cr2-income-row">
               <span>(-) 생산비</span>
-              <span className="cr2-negative">-{((settlementResult.totalCost || 0) / 10000).toFixed(0)}만원</span>
+              <span className="cr2-negative">-{(totalCost / 10000).toFixed(0)}만원</span>
             </div>
             <div className="cr2-income-row cr2-income-gross">
               <span>= 매출총이익</span>
-              <span className={((settlementResult.revenue || 0) - (settlementResult.totalCost || 0)) >= 0 ? 'cr2-positive' : 'cr2-negative'}>
-                {(((settlementResult.revenue || 0) - (settlementResult.totalCost || 0)) / 10000).toFixed(0)}만원
+              <span className={(revenue - totalCost) >= 0 ? 'cr2-positive' : 'cr2-negative'}>
+                {((revenue - totalCost) / 10000).toFixed(0)}만원
               </span>
             </div>
             <div className="cr2-income-sub">
@@ -122,22 +158,22 @@ export default function ResultScreen() {
             </div>
             <div className="cr2-income-row">
               <span>(-) 운영비</span>
-              <span className="cr2-negative">-{((settlementResult.operatingCost || 0) / 10000).toFixed(0)}만원</span>
+              <span className="cr2-negative">-{(operatingCost / 10000).toFixed(0)}만원</span>
             </div>
             <div className="cr2-income-row">
               <span>(-) 마케팅비</span>
-              <span className="cr2-negative">-{((settlementResult.marketingCost || 0) / 10000).toFixed(0)}만원</span>
+              <span className="cr2-negative">-{(marketingCost / 10000).toFixed(0)}만원</span>
             </div>
-            {(settlementResult.interestAmount || 0) > 0 && (
+            {interestAmount > 0 && (
               <div className="cr2-income-row">
                 <span>(-) 이자비용</span>
-                <span className="cr2-negative">-{((settlementResult.interestAmount || 0) / 10000).toFixed(0)}만원</span>
+                <span className="cr2-negative">-{(interestAmount / 10000).toFixed(0)}만원</span>
               </div>
             )}
             <div className="cr2-income-row cr2-income-net">
               <span>= 순이익</span>
-              <span className={settlementResult.isProfit ? 'cr2-positive' : 'cr2-negative'}>
-                {settlementResult.isProfit ? '+' : ''}{((settlementResult.netProfit || 0) / 10000).toFixed(0)}만원
+              <span className={isProfit ? 'cr2-positive' : 'cr2-negative'}>
+                {isProfit ? '+' : ''}{(netProfit / 10000).toFixed(0)}만원
               </span>
             </div>
             <div className="cr2-income-row cr2-income-capital">
@@ -148,8 +184,8 @@ export default function ResultScreen() {
             </div>
           </div>
 
-          {settlementResult.factoryResult && (
-            <FactoryResultSection result={settlementResult.factoryResult} />
+          {factoryResult && (
+            <FactoryResultSection result={factoryResult} />
           )}
 
           <MonopolSection gameState={gameState} settlementResult={settlementResult} />
