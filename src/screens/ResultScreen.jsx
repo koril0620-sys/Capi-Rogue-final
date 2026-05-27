@@ -4,7 +4,7 @@ import { generateReport } from '../logic/reportEngine'
 import { saveOnFloorEnter } from '../logic/saveEngine'
 import { getClearGrade } from '../logic/rewardEngine'
 import { getCurrentStage, isBossStage } from '../constants/monopol'
-import { playSFX } from '../logic/audioEngine'
+import { playBGM, playSFX } from '../logic/audioEngine'
 import { getMaturedLoans } from '../logic/loanEngine'
 import AchievementToast from '../components/AchievementToast'
 import LoanMaturityAlert from '../components/LoanMaturityAlert'
@@ -25,6 +25,11 @@ export default function ResultScreen() {
       setCurrentScreen('main')
     }
   }, [settlementResult, setCurrentScreen])
+
+  useEffect(() => {
+    if (!settlementResult) return
+    playBGM(settlementResult.isProfit ? 'growth' : 'contraction')
+  }, [settlementResult])
 
   if (!settlementResult) {
     return (

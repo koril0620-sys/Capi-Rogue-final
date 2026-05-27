@@ -26,6 +26,10 @@ export default function MainScreen() {
   const prevFloorRef = useRef(gameState.floor)
 
   useEffect(() => {
+    playBGM(gameState.econPhase)
+  }, [gameState.econPhase])
+
+  useEffect(() => {
     const prevFloor = prevFloorRef.current
     const currentFloor = gameState.floor
 

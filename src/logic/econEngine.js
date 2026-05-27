@@ -10,6 +10,13 @@ function onPhaseChange(phase) {
   if (onPhaseChangeCb) onPhaseChangeCb(phase)
 }
 
+function emitPhaseChange(currentPhase, newPhase) {
+  if (newPhase !== currentPhase) {
+    onPhaseChange(newPhase)
+  }
+  return newPhase
+}
+
 export function transitionPhase(currentPhase, activeEffects = [], floor) {
   const monopolSuppress = activeEffects.find(
     effect => effect.source === 'MONOPOL' && effect.type === 'ECONOMY_SUPPRESS',
@@ -18,8 +25,7 @@ export function transitionPhase(currentPhase, activeEffects = [], floor) {
     const order = ['boom', 'growth', 'stable', 'contraction', 'recession']
     const idx = order.indexOf(currentPhase)
     const newPhase = order[Math.min(Math.max(idx, 0) + 1, order.length - 1)]
-    if (newPhase !== currentPhase) onPhaseChange(newPhase)
-    return newPhase
+    return emitPhaseChange(currentPhase, newPhase)
   }
 
   const monopolChaos = activeEffects.find(
@@ -28,21 +34,18 @@ export function transitionPhase(currentPhase, activeEffects = [], floor) {
   if (monopolChaos) {
     const phases = Object.keys(ECO_PHASES)
     const newPhase = phases[Math.floor(Math.random() * phases.length)]
-    if (newPhase !== currentPhase) onPhaseChange(newPhase)
-    return newPhase
+    return emitPhaseChange(currentPhase, newPhase)
   }
 
   if (floor === 120) {
     const worst = Math.random() > 0.5 ? 'recession' : 'contraction'
-    if (worst !== currentPhase) onPhaseChange(worst)
-    return worst
+    return emitPhaseChange(currentPhase, worst)
   }
 
   const forceEffect = activeEffects.find(effect => effect.forcePhase)
   if (forceEffect) {
     const newPhase = forceEffect.forcePhase
-    if (newPhase !== currentPhase) onPhaseChange(newPhase)
-    return newPhase
+    return emitPhaseChange(currentPhase, newPhase)
   }
 
   const transitions = MARKOV_MATRIX[currentPhase] || MARKOV_MATRIX.stable
@@ -52,8 +55,7 @@ export function transitionPhase(currentPhase, activeEffects = [], floor) {
   for (const [phase, prob] of Object.entries(transitions)) {
     cumulative += prob
     if (roll < cumulative) {
-      if (phase !== currentPhase) onPhaseChange(phase)
-      return phase
+      return emitPhaseChange(currentPhase, phase)
     }
   }
 

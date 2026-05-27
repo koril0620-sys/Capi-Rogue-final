@@ -1,9 +1,9 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useGameStore } from '../store/useGameStore'
 import { resolveChoice, resolveCashAmount } from '../logic/eventEngine'
 import { settle } from '../logic/settlementEngine'
 import { saveAchievements } from '../logic/achievementEngine'
-import { playSFX } from '../logic/audioEngine'
+import { playBGM, playSFX } from '../logic/audioEngine'
 import '../styles/event.css'
 
 export default function EventScreen() {
@@ -15,6 +15,10 @@ export default function EventScreen() {
 
   const externalEvent = gameState.currentExternalEvent
   const internalEvent = gameState.currentInternalEvent
+
+  useEffect(() => {
+    playBGM('tension')
+  }, [])
 
   const handleExternalConfirm = () => {
     if (!externalEvent) {

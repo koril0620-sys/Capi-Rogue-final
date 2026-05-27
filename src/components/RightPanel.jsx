@@ -49,6 +49,11 @@ function SaleTab({ gameState, setCurrentStrategy }) {
   const [selectedQuality, setSelectedQuality] = useState('maintain')
   const [customPrice, setCustomPrice] = useState('')
   const [customOrder, setCustomOrder] = useState('')
+  const [qualCustomVal, setQualCustomVal] = useState('')
+
+  const [priceError, setPriceError] = useState('')
+  const [orderError, setOrderError] = useState('')
+  const [qualError, setQualError] = useState('')
 
   const cost = gameState.cost || 3000
   const maxOrder = getMaxOrderAmount(gameState.capital, cost, gameState.orderCap)
@@ -67,6 +72,34 @@ function SaleTab({ gameState, setCurrentStrategy }) {
   const getRivalDiff = (price) => {
     if (!rivalPrice) return null
     return (((price - rivalPrice) / rivalPrice) * 100).toFixed(1)
+  }
+
+  const validatePrice = (raw) => {
+    if (raw === '') return ''
+    const val = parseInt(raw, 10)
+    if (isNaN(val)) return '숫자만 입력하세요.'
+    if (val <= 0) return '0원보다 커야 합니다.'
+    if (val < cost) return `원가(${cost.toLocaleString()}원)보다 낮으면 적자입니다.`
+    if (val > cost * 10) return `원가의 10배(${(cost * 10).toLocaleString()}원) 이하로 입력하세요.`
+    return ''
+  }
+
+  const validateOrder = (raw) => {
+    if (raw === '') return ''
+    const val = parseInt(raw, 10)
+    if (isNaN(val)) return '숫자만 입력하세요.'
+    if (val <= 0) return '1개 이상 입력하세요.'
+    if (val > maxOrder) return `최대 발주 가능 수량은 ${maxOrder.toLocaleString()}개입니다.`
+    return ''
+  }
+
+  const validateQual = (raw) => {
+    if (raw === '') return ''
+    const val = parseFloat(raw)
+    if (isNaN(val)) return '숫자만 입력하세요.'
+    if (val < 0.5) return '최소 0.5 이상 입력하세요.'
+    if (val > 1.5) return '최대 1.5 이하 입력하세요.'
+    return ''
   }
 
   const priceOpts = [
@@ -111,6 +144,7 @@ function SaleTab({ gameState, setCurrentStrategy }) {
   const handlePrice = (price, key) => {
     setSelectedPrice(key)
     setCustomPrice('')
+    setPriceError('')
     setCurrentStrategy({ price })
     playSFX('click')
   }
@@ -118,12 +152,15 @@ function SaleTab({ gameState, setCurrentStrategy }) {
   const handleOrder = (amount, key) => {
     setSelectedOrder(key)
     setCustomOrder('')
+    setOrderError('')
     setCurrentStrategy({ orderAmount: amount })
     playSFX('click')
   }
 
   const handleQuality = (key) => {
     setSelectedQuality(key)
+    setQualCustomVal('')
+    setQualError('')
     setCurrentStrategy({ qualityMode: key })
     playSFX('click')
   }
@@ -204,30 +241,63 @@ function SaleTab({ gameState, setCurrentStrategy }) {
           ))}
         </div>
 
-        <input
-          type="number"
-          value={customPrice}
-          placeholder="직접 입력 (원)"
-          onChange={event => {
-            setCustomPrice(event.target.value)
-            setSelectedPrice('custom')
-            const price = parseInt(event.target.value, 10)
-            if (price > 0) setCurrentStrategy({ price })
-          }}
-          style={{
-            width: '100%',
-            background: selectedPrice === 'custom'
-              ? 'rgba(0,255,65,0.08)' : 'rgba(0,0,0,0.5)',
-            border: `1px solid ${selectedPrice === 'custom'
-              ? 'var(--cr2-lime)' : 'rgba(0,170,0,0.4)'}`,
-            color: 'var(--cr2-white)',
-            padding: '6px 10px',
-            fontFamily: "'Press Start 2P', 'Noto Sans KR', monospace",
-            fontSize: '9px',
-          }}
-        />
+        <div style={{ marginTop: '4px' }}>
+          <input
+            type="number"
+            value={customPrice}
+            placeholder="판매가 직접 입력 (원)"
+            onChange={event => {
+              const raw = event.target.value
+              setCustomPrice(raw)
+              const err = validatePrice(raw)
+              setPriceError(err)
+              if (!err && raw !== '') {
+                setSelectedPrice('custom')
+                setCurrentStrategy({ price: parseInt(raw, 10) })
+                playSFX('click')
+              }
+            }}
+            style={{
+              width: '100%',
+              background: selectedPrice === 'custom'
+                ? 'rgba(0,255,65,0.08)'
+                : priceError ? 'rgba(220,20,60,0.08)'
+                  : 'rgba(0,0,0,0.5)',
+              border: `1px solid ${
+                priceError ? 'var(--cr2-red)'
+                  : selectedPrice === 'custom' ? 'var(--cr2-lime)'
+                    : 'rgba(0,170,0,0.4)'
+              }`,
+              color: 'var(--cr2-white)',
+              padding: '6px 10px',
+              fontFamily: "'Press Start 2P', 'Noto Sans KR', monospace",
+              fontSize: '9px',
+              boxSizing: 'border-box',
+            }}
+          />
+          {priceError && (
+            <div style={{
+              fontSize: '8px',
+              color: 'var(--cr2-red)',
+              marginTop: '3px',
+              fontFamily: "'Noto Sans KR', sans-serif",
+            }}>
+              ⚠️ {priceError}
+            </div>
+          )}
+          {!priceError && selectedPrice === 'custom' && customPrice && (
+            <div style={{
+              fontSize: '8px',
+              color: 'var(--cr2-gold)',
+              marginTop: '3px',
+            }}>
+              손익분기: {getBreakeven(parseInt(customPrice, 10))?.toLocaleString()}개
+              {rivalPrice && ` · 라이벌 대비 ${getRivalDiff(parseInt(customPrice, 10))}%`}
+            </div>
+          )}
+        </div>
 
-        {currentPrice && currentPrice > cost && (
+        {selectedPrice !== 'custom' && currentPrice && currentPrice > cost && (
           <div style={{
             display: 'flex',
             gap: '8px',
@@ -302,28 +372,60 @@ function SaleTab({ gameState, setCurrentStrategy }) {
           ))}
         </div>
 
-        <input
-          type="number"
-          value={customOrder}
-          placeholder={`직접 입력 (최대 ${maxOrder.toLocaleString()})`}
-          onChange={event => {
-            const amount = Math.min(parseInt(event.target.value, 10) || 0, maxOrder)
-            setCustomOrder(event.target.value)
-            setSelectedOrder('custom')
-            setCurrentStrategy({ orderAmount: amount })
-          }}
-          style={{
-            width: '100%',
-            background: selectedOrder === 'custom'
-              ? 'rgba(0,255,65,0.08)' : 'rgba(0,0,0,0.5)',
-            border: `1px solid ${selectedOrder === 'custom'
-              ? 'var(--cr2-lime)' : 'rgba(0,170,0,0.4)'}`,
-            color: 'var(--cr2-white)',
-            padding: '6px 10px',
-            fontFamily: "'Press Start 2P', 'Noto Sans KR', monospace",
-            fontSize: '9px',
-          }}
-        />
+        <div style={{ marginTop: '4px' }}>
+          <input
+            type="number"
+            value={customOrder}
+            placeholder={`직접 입력 (최대 ${maxOrder.toLocaleString()})`}
+            onChange={event => {
+              const raw = event.target.value
+              setCustomOrder(raw)
+              const err = validateOrder(raw)
+              setOrderError(err)
+              if (!err && raw !== '') {
+                setSelectedOrder('custom')
+                setCurrentStrategy({ orderAmount: parseInt(raw, 10) })
+                playSFX('click')
+              }
+            }}
+            style={{
+              width: '100%',
+              background: selectedOrder === 'custom'
+                ? 'rgba(0,255,65,0.08)'
+                : orderError ? 'rgba(220,20,60,0.08)'
+                  : 'rgba(0,0,0,0.5)',
+              border: `1px solid ${
+                orderError ? 'var(--cr2-red)'
+                  : selectedOrder === 'custom' ? 'var(--cr2-lime)'
+                    : 'rgba(0,170,0,0.4)'
+              }`,
+              color: 'var(--cr2-white)',
+              padding: '6px 10px',
+              fontFamily: "'Press Start 2P', 'Noto Sans KR', monospace",
+              fontSize: '9px',
+              boxSizing: 'border-box',
+            }}
+          />
+          {orderError && (
+            <div style={{
+              fontSize: '8px',
+              color: 'var(--cr2-red)',
+              marginTop: '3px',
+              fontFamily: "'Noto Sans KR', sans-serif",
+            }}>
+              ⚠️ {orderError}
+            </div>
+          )}
+          {!orderError && selectedOrder === 'custom' && customOrder && (
+            <div style={{
+              fontSize: '8px',
+              color: 'var(--cr2-gold)',
+              marginTop: '3px',
+            }}>
+              생산비: {(parseInt(customOrder, 10) * cost * (1 - (gameState.costReductionTotal || 0)) / 10000).toFixed(0)}만원
+            </div>
+          )}
+        </div>
       </div>
 
       <div>
@@ -379,6 +481,72 @@ function SaleTab({ gameState, setCurrentStrategy }) {
               </span>
             </button>
           ))}
+        </div>
+
+        <div style={{ marginTop: '4px' }}>
+          <input
+            type="number"
+            value={qualCustomVal}
+            placeholder="배율 직접 입력 (0.5 ~ 1.5)"
+            step="0.1"
+            onChange={event => {
+              const raw = event.target.value
+              setQualCustomVal(raw)
+              const err = validateQual(raw)
+              setQualError(err)
+              if (!err && raw !== '') {
+                setSelectedQuality('custom')
+                setCurrentStrategy({
+                  qualityMode: 'custom',
+                  qualityMultiplier: parseFloat(raw),
+                })
+                playSFX('click')
+              }
+            }}
+            style={{
+              width: '100%',
+              background: selectedQuality === 'custom'
+                ? 'rgba(0,255,65,0.08)'
+                : qualError
+                  ? 'rgba(220,20,60,0.08)'
+                  : 'rgba(0,0,0,0.5)',
+              border: `1px solid ${
+                qualError
+                  ? 'var(--cr2-red)'
+                  : selectedQuality === 'custom'
+                    ? 'var(--cr2-lime)'
+                    : 'rgba(0,170,0,0.4)'
+              }`,
+              color: 'var(--cr2-white)',
+              padding: '6px 10px',
+              fontFamily: "'Press Start 2P', 'Noto Sans KR', monospace",
+              fontSize: '9px',
+              boxSizing: 'border-box',
+            }}
+          />
+
+          {qualError && (
+            <div style={{
+              fontSize: '8px',
+              color: 'var(--cr2-red)',
+              marginTop: '3px',
+              fontFamily: "'Noto Sans KR', sans-serif",
+            }}>
+              ⚠️ {qualError}
+            </div>
+          )}
+
+          {!qualError && selectedQuality === 'custom' && qualCustomVal && (
+            <div style={{
+              fontSize: '8px',
+              color: 'var(--cr2-gold)',
+              marginTop: '3px',
+            }}>
+              예상 원가: {Math.floor(cost * parseFloat(qualCustomVal)).toLocaleString()}원
+              &nbsp;·&nbsp;
+              품질: {Math.floor((gameState.quality || 8) * parseFloat(qualCustomVal))}
+            </div>
+          )}
         </div>
       </div>
 
@@ -747,35 +915,69 @@ function RivalTab({ gameState }) {
 
 function MarketingSection({ gameState, setCurrentStrategy }) {
   const [budget, setBudget] = useState(0)
+  const [marketingError, setMarketingError] = useState('')
   const limit = getMarketingLimit(gameState.capital, gameState.settings?.marketingLimitMode || 'ratio')
-  const expectedAwareness = updateAwareness(gameState.awareness, budget, gameState.brand)
+
+  const validateMarketing = (raw) => {
+    const val = parseInt(raw, 10)
+    if (isNaN(val)) return '숫자만 입력하세요.'
+    if (val < 0) return '0원 이상 입력하세요.'
+    if (val > limit) return `한도(${(limit / 10000).toFixed(0)}만원) 초과입니다.`
+    if (val > gameState.capital) return '보유 자본보다 많습니다.'
+    return ''
+  }
 
   return (
-    <div className="cr2-marketing-section">
-      <div className="cr2-marketing-limit">
-        마케팅 투자 한도: <span className="cr2-lime">{(limit / 10000).toFixed(0)}만원</span>
-        <span className="cr2-gray"> (자본 × 0.3)</span>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+      <div style={{ fontSize: '9px', color: 'var(--cr2-gray)' }}>
+        한도: <span style={{ color: 'var(--cr2-lime)' }}>{(limit / 10000).toFixed(0)}만원</span>
+        <span style={{ color: 'var(--cr2-gray)' }}> (자본 × 0.3)</span>
       </div>
 
-      <div className="cr2-marketing-input-label">마케팅 투자금</div>
       <input
-        className="cr2-custom-input"
         type="number"
-        value={budget}
+        value={budget || ''}
+        placeholder="마케팅 투자금 입력"
         onChange={event => {
-          const value = Math.min(parseInt(event.target.value, 10) || 0, limit)
-          setBudget(value)
-          setCurrentStrategy({ marketingBudget: value })
+          const raw = event.target.value
+          const err = validateMarketing(raw)
+          setMarketingError(err)
+          if (!err) {
+            const val = Math.min(parseInt(raw, 10) || 0, limit)
+            setBudget(val)
+            setCurrentStrategy({ marketingBudget: val })
+          }
         }}
-        placeholder="투자 금액 입력"
+        style={{
+          width: '100%',
+          background: marketingError ? 'rgba(220,20,60,0.08)' : 'rgba(0,0,0,0.5)',
+          border: `1px solid ${marketingError ? 'var(--cr2-red)' : 'rgba(0,170,0,0.4)'}`,
+          color: 'var(--cr2-white)',
+          padding: '6px 10px',
+          fontFamily: "'Press Start 2P', 'Noto Sans KR', monospace",
+          fontSize: '9px',
+          boxSizing: 'border-box',
+        }}
       />
 
-      <div className="cr2-marketing-preview">
-        예상 인지도: <span className="cr2-lime">{expectedAwareness.toFixed(1)}%</span>
-        <span className="cr2-gray"> (현재 {gameState.awareness.toFixed(1)}%)</span>
-        <br />
-        인지도 최대치: {Math.min(100, gameState.brand * 2).toFixed(0)}%
-      </div>
+      {marketingError && (
+        <div style={{
+          fontSize: '8px',
+          color: 'var(--cr2-red)',
+          fontFamily: "'Noto Sans KR', sans-serif",
+        }}>
+          ⚠️ {marketingError}
+        </div>
+      )}
+
+      {!marketingError && budget > 0 && (
+        <div style={{ fontSize: '8px', color: 'var(--cr2-gold)' }}>
+          예상 인지도: {updateAwareness(gameState.awareness, budget, gameState.brand).toFixed(1)}%
+          <span style={{ color: 'var(--cr2-gray)' }}>
+            &nbsp;(현재 {gameState.awareness?.toFixed(1)}%)
+          </span>
+        </div>
+      )}
     </div>
   )
 }

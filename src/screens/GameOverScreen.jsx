@@ -1,10 +1,10 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useGameStore } from '../store/useGameStore'
 import { saveRecord } from '../logic/saveEngine'
 import { getCurrentStage } from '../constants/monopol'
 import { RIVALS } from '../constants/rivals'
 import { getGrade } from '../logic/creditEngine'
-import { playSFX } from '../logic/audioEngine'
+import { playBGM, playSFX } from '../logic/audioEngine'
 import '../styles/gameOver.css'
 
 export default function GameOverScreen() {
@@ -13,6 +13,10 @@ export default function GameOverScreen() {
   const resetGame = useGameStore(state => state.resetGame)
   const [page, setPage] = useState(1)
   const [saved, setSaved] = useState(false)
+
+  useEffect(() => {
+    playBGM('recession')
+  }, [])
 
   const stage = getCurrentStage(gameState.floor)
   const currentRival = stage ? RIVALS.find(rival => rival.id === stage.rival) : null

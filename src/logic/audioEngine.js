@@ -95,6 +95,7 @@ export function playSFX(key) {
 }
 
 export function onPhaseChange(newPhase) {
+  if (currentBGMKey === newPhase) return
   playBGM(newPhase)
 }
 

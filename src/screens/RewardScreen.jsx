@@ -1,7 +1,7 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useGameStore } from '../store/useGameStore'
 import { getRewardGrade, getRewardOptions, applyReward } from '../logic/rewardEngine'
-import { playSFX } from '../logic/audioEngine'
+import { playBGM, playSFX } from '../logic/audioEngine'
 
 export default function RewardScreen() {
   const gameState = useGameStore(state => state)
@@ -9,6 +9,10 @@ export default function RewardScreen() {
   const [grade] = useState(() => getRewardGrade(gameState.momentum, gameState.momentumHistory))
   const [selected, setSelected] = useState(null)
   const options = getRewardOptions(grade, gameState)
+
+  useEffect(() => {
+    playBGM('strategy')
+  }, [])
 
   const gradeColors = {
     NORMAL: 'var(--cr2-green)',

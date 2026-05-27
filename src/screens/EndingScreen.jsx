@@ -1,9 +1,9 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useGameStore } from '../store/useGameStore'
 import { saveRecord } from '../logic/saveEngine'
 import { getClearGrade } from '../logic/rewardEngine'
 import { getGrade } from '../logic/creditEngine'
-import { playSFX } from '../logic/audioEngine'
+import { playBGM, playSFX } from '../logic/audioEngine'
 import { ADVISORS } from '../constants/advisors'
 import { RIVALS } from '../constants/rivals'
 import '../styles/ending.css'
@@ -14,6 +14,10 @@ export default function EndingScreen() {
   const resetGame = useGameStore(state => state.resetGame)
   const [page, setPage] = useState(1)
   const [saved, setSaved] = useState(false)
+
+  useEffect(() => {
+    playBGM('boom')
+  }, [])
 
   const grade = gameState.clearGrade || getClearGrade(gameState)
   const gradeColors = { S: '#FFD700', A: '#00FF41', B: '#00AA00', C: '#DC143C' }
