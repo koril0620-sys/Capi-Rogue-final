@@ -13,6 +13,7 @@ import { playSFX } from '../logic/audioEngine'
 export default function RightPanel({ activeTab, setActiveTab, onSettle }) {
   const gameState = useGameStore(state => state)
   const setCurrentStrategy = useGameStore(state => state.setCurrentStrategy)
+  const setFactoryAction = useGameStore(state => state.setFactoryAction)
 
   const handleTabChange = (tab) => {
     playSFX('click')
@@ -22,7 +23,7 @@ export default function RightPanel({ activeTab, setActiveTab, onSettle }) {
   return (
     <div className="cr2-right-panel">
       <div className="cr2-right-panel-tabs">
-        {['rival', 'sale', 'quality', 'operation', 'next'].map(tab => (
+        {['rival', 'sale', 'operation', 'next'].map(tab => (
           <button
             key={tab}
             className={`cr2-subtab ${activeTab === tab ? 'cr2-subtab-active' : ''}`}
@@ -32,11 +33,9 @@ export default function RightPanel({ activeTab, setActiveTab, onSettle }) {
               ? '라이벌'
               : tab === 'sale'
                 ? '판매'
-                : tab === 'quality'
-                  ? '공장'
-                  : tab === 'operation'
-                    ? '운영'
-                    : '정산'}
+                : tab === 'operation'
+                  ? '운영'
+                  : '정산확인'}
           </button>
         ))}
       </div>
@@ -50,15 +49,11 @@ export default function RightPanel({ activeTab, setActiveTab, onSettle }) {
           setCurrentStrategy={setCurrentStrategy}
         />
       )}
-      {activeTab === 'quality' && (
-        <QualityTab
-          gameState={gameState}
-        />
-      )}
       {activeTab === 'operation' && (
         <OperationTab
           gameState={gameState}
           setCurrentStrategy={setCurrentStrategy}
+          setFactoryAction={setFactoryAction}
         />
       )}
       {activeTab === 'next' && (
@@ -386,75 +381,21 @@ function SaleTab({ gameState, setCurrentStrategy }) {
   )
 }
 
-function QualityTab({ gameState }) {
-  return (
-    <div style={{ padding: '12px' }}>
-      <div style={{
-        fontSize: '13px',
-        color: 'var(--cr2-lime)',
-        marginBottom: '8px',
-      }}>
-        공장 관리
-      </div>
-      <div style={{
-        fontSize: '9px',
-        color: 'var(--cr2-gray)',
-        marginBottom: '12px',
-        lineHeight: '1.6',
-      }}>
-        품질 강화·원가 절감은 영구 효과입니다.
-        이번 달 판매할 품질 수준은 판매 탭에서 선택하세요.
-      </div>
-      <div style={{
-        fontSize: '10px',
-        color: 'var(--cr2-white)',
-        marginBottom: '10px',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '4px',
-      }}>
-        <div>
-          현재 품질:
-          <span style={{ color: 'var(--cr2-lime)', marginLeft: '6px' }}>
-            {gameState.quality}
-          </span>
-        </div>
-        <div>
-          현재 원가:
-          <span style={{ color: 'var(--cr2-white)', marginLeft: '6px' }}>
-            {gameState.cost?.toLocaleString()}원
-          </span>
-        </div>
-        <div>
-          누적 원가 절감:
-          <span style={{ color: 'var(--cr2-positive, var(--cr2-lime))', marginLeft: '6px' }}>
-            {((gameState.costReductionTotal || 0) * 100).toFixed(1)}%
-          </span>
-          <span style={{ color: 'var(--cr2-gray)' }}> / 40%</span>
-        </div>
-      </div>
-      <FactorySection
-        gameState={gameState}
-        setFactoryAction={useGameStore.getState().setFactoryAction}
-      />
-    </div>
-  )
-}
-
-function OperationTab({ gameState, setCurrentStrategy }) {
-  const [subTab, setSubTab] = useState('bank')
+function OperationTab({ gameState, setCurrentStrategy, setFactoryAction }) {
+  const [subTab, setSubTab] = useState('factory')
 
   return (
     <div className="cr2-panel-content">
       <div className="cr2-panel-title">운영</div>
-      <div className="cr2-panel-desc">이번 달의 은행 거래와 마케팅을 정합니다.</div>
+      <div className="cr2-panel-desc">이번 달의 설비 투자, 은행 거래, 마케팅을 정합니다.</div>
 
       <div className="cr2-operation-info">
+        <div>예상 품질 {gameState.quality} &nbsp; 예상 원가 {gameState.cost?.toLocaleString()}원</div>
         <div>예상 부채 {(gameState.debt || 0).toLocaleString()}원</div>
       </div>
 
       <div className="cr2-subtab-bar">
-        {['bank', 'marketing'].map(tab => (
+        {['factory', 'bank', 'marketing'].map(tab => (
           <button
             key={tab}
             className={`cr2-subtab ${subTab === tab ? 'cr2-subtab-active' : ''}`}
@@ -463,11 +404,17 @@ function OperationTab({ gameState, setCurrentStrategy }) {
               playSFX('click')
             }}
           >
-            {tab === 'bank' ? '은행 업무' : '마케팅'}
+            {tab === 'factory' ? '공장 관리' : tab === 'bank' ? '은행 업무' : '마케팅'}
           </button>
         ))}
       </div>
 
+      {subTab === 'factory' && (
+        <FactorySection
+          gameState={gameState}
+          setFactoryAction={setFactoryAction}
+        />
+      )}
       {subTab === 'bank' && (
         <BankSection gameState={gameState} />
       )}
