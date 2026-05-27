@@ -23,12 +23,26 @@ export default function AdvisorSelectScreen() {
 
   return (
     <div className="cr2-advisor-screen">
-      <button
-        className="cr2-btn cr2-back-btn cr2-advisor-back-btn"
-        onClick={() => setCurrentScreen('title')}
-      >
-        이전으로
-      </button>
+      <div style={{
+        position: 'absolute',
+        top: '12px',
+        left: '12px',
+        zIndex: 10,
+      }}>
+        <button
+          className="cr2-btn"
+          onClick={() => setCurrentScreen('characterCreate')}
+          style={{
+            fontSize: '9px',
+            padding: '6px 12px',
+            border: '1px solid var(--cr2-green)',
+            color: 'var(--cr2-green)',
+            background: 'transparent',
+          }}
+        >
+          ← 이전으로
+        </button>
+      </div>
 
       <div className="cr2-advisor-header">
         <div className="cr2-advisor-kicker">ADVISOR SELECT</div>
@@ -76,8 +90,11 @@ export default function AdvisorSelectScreen() {
           </div>
 
           <div className="cr2-advisor-detail-main">
-            <div className="cr2-advisor-detail-name">
-              {selectedAdvisor.name}
+            <div
+              className="cr2-advisor-detail-name"
+              style={{ color: getAdvisorColor(selectedAdvisor.id) }}
+            >
+              {selectedAdvisor.name} {selectedAdvisor.style}
             </div>
             <div className="cr2-advisor-detail-style">{selectedAdvisor.style}</div>
             <div className="cr2-advisor-detail-desc">{selectedAdvisor.description}</div>
@@ -120,7 +137,7 @@ function getAdvisorColor(id) {
   const colors = {
     raider: '#DC143C',
     guardian: '#00AA00',
-    analyst: '#00FF41',
+    analyst: '#4488FF',
     gambler: '#FFD700',
   }
   return colors[id] || '#00FF41'
