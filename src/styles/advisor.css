@@ -45,7 +45,7 @@
 .cr2-advisor-title {
   font-size: 20px;
   color: var(--cr2-lime);
-  text-shadow: 0 0 18px rgba(0, 255, 65, 0.45);
+  text-shadow: none;
 }
 
 .cr2-advisor-layout {

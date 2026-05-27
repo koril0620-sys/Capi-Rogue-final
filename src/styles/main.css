@@ -87,7 +87,7 @@
 .cr2-overlay-phase-value {
   font-size: 14px;
   font-weight: bold;
-  text-shadow: 0 0 8px currentColor;
+  text-shadow: none;
 }
 
 .cr2-overlay-phase-multiplier {
@@ -191,7 +191,7 @@
 .cr2-demand-value {
   font-size: 15px;
   color: var(--cr2-lime);
-  text-shadow: 0 0 8px var(--cr2-lime);
+  text-shadow: none;
 }
 
 .cr2-tooltip-btn {

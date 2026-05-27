@@ -48,7 +48,7 @@ body {
   will-change: transform;
 }
 
-/* CRT 극미세 스캔라인 오버레이 (opacity 0.02) */
+/* CRT 극미세 스캔라인 오버레이 (opacity 0.01) */
 #root::after {
   content: " ";
   display: block;
@@ -61,7 +61,7 @@ body {
   background-size: 100% 3px;
   z-index: 99999;
   pointer-events: none;
-  opacity: 0.02;
+  opacity: 0.01;
 }
 
 :root {
@@ -72,7 +72,7 @@ body {
   --cr2-red: #dc143c;
   --cr2-gold: #ffd700;
   --cr2-white: #f0f0f0;
-  --cr2-gray: #555566;
+  --cr2-gray: #a0a0b0;
   
   /* HSL/RGB 기반 단일 글로우 섀도우용 변수 */
   --cr2-lime-glow: rgba(0, 255, 65, 0.25);
