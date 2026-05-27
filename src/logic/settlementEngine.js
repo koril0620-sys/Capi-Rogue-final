@@ -198,6 +198,19 @@ export function settle(gameState) {
     ]
   }
 
+  state.revenueHistory = [
+    ...(state.revenueHistory || []).slice(-9),
+    result.revenue,
+  ]
+  state.profitHistory = [
+    ...(state.profitHistory || []).slice(-9),
+    result.netProfit,
+  ]
+  state.capitalHistory = [
+    ...(state.capitalHistory || []).slice(-9),
+    state.capital,
+  ]
+
   return { updatedState: state, settlementResult: result }
 }
 

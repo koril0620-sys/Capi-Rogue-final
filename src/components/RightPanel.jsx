@@ -545,7 +545,260 @@ function MarketingSection({ gameState, setCurrentStrategy }) {
   )
 }
 
+function ShareDonutChart({ share, rivalName }) {
+  const size = 80
+  const cx = size / 2
+  const cy = size / 2
+  const r = 28
+  const strokeWidth = 12
+  const circumference = 2 * Math.PI * r
+
+  const playerShare = Math.min(Math.max(share || 0, 0), 1)
+  const rivalShare = 1 - playerShare
+  const playerDash = playerShare * circumference
+  const rivalDash = rivalShare * circumference
+
+  return (
+    <div className="cr2-donut-wrap">
+      <svg width={size} height={size}>
+        <circle
+          cx={cx}
+          cy={cy}
+          r={r}
+          fill="none"
+          stroke="rgba(255,255,255,0.1)"
+          strokeWidth={strokeWidth}
+        />
+        <circle
+          cx={cx}
+          cy={cy}
+          r={r}
+          fill="none"
+          stroke="var(--cr2-lime)"
+          strokeWidth={strokeWidth}
+          strokeDasharray={`${playerDash} ${circumference - playerDash}`}
+          strokeDashoffset={circumference * 0.25}
+          strokeLinecap="round"
+          style={{ transform: 'rotate(-90deg)', transformOrigin: `${cx}px ${cy}px` }}
+        />
+        {rivalShare > 0 && (
+          <circle
+            cx={cx}
+            cy={cy}
+            r={r}
+            fill="none"
+            stroke="var(--cr2-red)"
+            strokeWidth={strokeWidth}
+            strokeDasharray={`${rivalDash} ${circumference - rivalDash}`}
+            strokeDashoffset={circumference * 0.25 - playerDash}
+            strokeLinecap="round"
+            style={{ transform: 'rotate(-90deg)', transformOrigin: `${cx}px ${cy}px` }}
+          />
+        )}
+        <text
+          x={cx}
+          y={cy - 4}
+          textAnchor="middle"
+          fill="var(--cr2-lime)"
+          fontSize="12"
+          fontFamily="'Press Start 2P', monospace"
+        >
+          {Math.round(playerShare * 100)}%
+        </text>
+        <text
+          x={cx}
+          y={cy + 10}
+          textAnchor="middle"
+          fill="var(--cr2-gray)"
+          fontSize="6"
+          fontFamily="'Press Start 2P', monospace"
+        >
+          점유율
+        </text>
+      </svg>
+
+      <div className="cr2-donut-legend">
+        <div className="cr2-donut-legend-item">
+          <span className="cr2-donut-dot cr2-lime-bg" />
+          <span>내 회사 {Math.round(playerShare * 100)}%</span>
+        </div>
+        <div className="cr2-donut-legend-item">
+          <span className="cr2-donut-dot cr2-red-bg" />
+          <span>{rivalName || '라이벌'} {Math.round(rivalShare * 100)}%</span>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function RevenueBarChart({ revenueHistory, profitHistory }) {
+  const data = revenueHistory?.slice(-8) || []
+  const profits = profitHistory?.slice(-8) || []
+
+  if (data.length === 0) {
+    return (
+      <div className="cr2-bar-chart-empty cr2-gray">
+        데이터 쌓이는 중...
+      </div>
+    )
+  }
+
+  const maxVal = Math.max(...data.map(Math.abs), ...profits.map(Math.abs), 1)
+  const chartH = 60
+
+  return (
+    <div className="cr2-bar-chart-wrap">
+      <div className="cr2-bar-chart-label">매출 / 순이익 추이</div>
+      <svg
+        width="100%"
+        height={chartH + 20}
+        viewBox={`0 0 280 ${chartH + 20}`}
+        preserveAspectRatio="none"
+      >
+        <line
+          x1="0"
+          y1={chartH / 2}
+          x2="280"
+          y2={chartH / 2}
+          stroke="rgba(255,255,255,0.15)"
+          strokeWidth="1"
+        />
+
+        {data.map((rev, index) => {
+          const profit = profits[index] || 0
+          const slotW = 280 / data.length
+          const cx = index * slotW + slotW / 2
+          const revH = Math.abs(rev / maxVal) * (chartH / 2)
+          const revY = chartH / 2 - revH
+          const profH = Math.abs(profit / maxVal) * (chartH / 2)
+          const profY = profit >= 0
+            ? chartH / 2 - profH
+            : chartH / 2
+          const bw = slotW * 0.35
+
+          return (
+            <g key={index}>
+              <rect
+                x={cx - bw}
+                y={revY}
+                width={bw * 0.9}
+                height={revH}
+                fill="rgba(0,255,65,0.4)"
+              />
+              <rect
+                x={cx + 1}
+                y={profY}
+                width={bw * 0.9}
+                height={profH}
+                fill={profit >= 0 ? 'var(--cr2-lime)' : 'var(--cr2-red)'}
+              />
+              <text
+                x={cx}
+                y={chartH + 14}
+                textAnchor="middle"
+                fill="rgba(255,255,255,0.4)"
+                fontSize="5"
+                fontFamily="monospace"
+              >
+                {index + 1}
+              </text>
+            </g>
+          )
+        })}
+      </svg>
+
+      <div className="cr2-bar-chart-legend">
+        <span className="cr2-bar-legend-item cr2-gray-fill">매출</span>
+        <span className="cr2-bar-legend-item cr2-lime">순이익</span>
+        <span className="cr2-bar-legend-item cr2-red">적자</span>
+      </div>
+    </div>
+  )
+}
+
+function CapitalLineChart({ capitalHistory }) {
+  const data = capitalHistory?.slice(-10) || []
+
+  if (data.length < 2) {
+    return (
+      <div className="cr2-line-chart-empty cr2-gray">
+        데이터 쌓이는 중...
+      </div>
+    )
+  }
+
+  const width = 280
+  const height = 50
+  const minVal = Math.min(...data)
+  const maxVal = Math.max(...data)
+  const range = maxVal - minVal || 1
+
+  const points = data.map((value, index) => {
+    const x = (index / (data.length - 1)) * width
+    const y = height - ((value - minVal) / range) * height
+    return `${x},${y}`
+  }).join(' ')
+
+  const isUp = data[data.length - 1] >= data[0]
+  const lineColor = isUp ? 'var(--cr2-lime)' : 'var(--cr2-red)'
+  const areaPath = [
+    `M 0,${height}`,
+    ...data.map((value, index) => {
+      const x = (index / (data.length - 1)) * width
+      const y = height - ((value - minVal) / range) * height
+      return `L ${x},${y}`
+    }),
+    `L ${width},${height}`,
+    'Z',
+  ].join(' ')
+
+  const formatK = (value) => {
+    if (Math.abs(value) >= 100000000) return `${(value / 100000000).toFixed(1)}억`
+    if (Math.abs(value) >= 10000) return `${Math.floor(value / 10000)}만`
+    return value.toLocaleString()
+  }
+
+  const lastY = height - ((data[data.length - 1] - minVal) / range) * height
+
+  return (
+    <div className="cr2-line-chart-wrap">
+      <div className="cr2-line-chart-label">자본 변화</div>
+      <svg
+        width="100%"
+        height={height + 16}
+        viewBox={`0 0 ${width} ${height + 16}`}
+        preserveAspectRatio="none"
+      >
+        <path
+          d={areaPath}
+          fill={isUp ? 'rgba(0,255,65,0.08)' : 'rgba(220,20,60,0.08)'}
+        />
+        <polyline
+          points={points}
+          fill="none"
+          stroke={lineColor}
+          strokeWidth="1.5"
+          strokeLinejoin="round"
+        />
+        <circle
+          cx={width}
+          cy={lastY}
+          r="3"
+          fill={lineColor}
+        />
+        <text x="2" y="8" fill="var(--cr2-gray)" fontSize="5" fontFamily="monospace">
+          {formatK(maxVal)}
+        </text>
+        <text x="2" y={height - 2} fill="var(--cr2-gray)" fontSize="5" fontFamily="monospace">
+          {formatK(minVal)}
+        </text>
+      </svg>
+    </div>
+  )
+}
+
 function NextTab({ gameState, onSettle }) {
+  const stage = getCurrentStage(gameState.floor)
   const strategy = gameState.currentStrategy || {}
   const cost = gameState.cost || 3000
   const price = strategy.price || cost * 2
@@ -562,40 +815,59 @@ function NextTab({ gameState, onSettle }) {
   const breakeven = margin > 0 ? Math.ceil((operatingCost + interest) / margin) : null
   const expectedRevenue = orderAmount * price * 0.7
   const expectedProfit = expectedRevenue - totalExpense
+  const currentShare = (gameState.playerShareHistory || []).slice(-1)[0] || 0
 
   return (
-    <div className="cr2-panel-content">
-      <div className="cr2-panel-title">정산 확인</div>
-      <div className="cr2-panel-desc">이번 턴의 가격, 생산, 지출을 확인한 뒤 정산을 진행합니다.</div>
+    <div className="cr2-panel-content cr2-next-tab">
+      <div className="cr2-next-charts">
+        <ShareDonutChart
+          share={currentShare}
+          rivalName={stage?.rivalName}
+        />
+
+        <RevenueBarChart
+          revenueHistory={gameState.revenueHistory}
+          profitHistory={gameState.profitHistory}
+        />
+
+        <CapitalLineChart
+          capitalHistory={gameState.capitalHistory}
+        />
+      </div>
+
+      <div className="cr2-next-divider" />
 
       <div className="cr2-next-summary">
-        <div>예상 가격: {price.toLocaleString()}원</div>
-        <div>예상 품질: {gameState.quality}</div>
-        <div className="cr2-next-divider" />
-        <div>생산: {orderAmount.toLocaleString()}개</div>
-        <div>생산비: {(productionCost / 10000).toFixed(0)}만원</div>
-        <div>운영비: {(operatingCost / 10000).toFixed(0)}만원</div>
-        {interest > 0 && <div>이자: {(interest / 10000).toFixed(0)}만원</div>}
-        <div className="cr2-negative cr2-next-total">
-          예정 지출: {(totalExpense / 10000).toFixed(0)}만원
+        <div className="cr2-next-summary-title">이번 달 예상</div>
+        <div className="cr2-next-row">
+          <span>가격</span>
+          <span>{price.toLocaleString()}원</span>
         </div>
-        <div className="cr2-next-divider" />
+        <div className="cr2-next-row">
+          <span>발주</span>
+          <span>{orderAmount.toLocaleString()}개</span>
+        </div>
+        <div className="cr2-next-row cr2-negative">
+          <span>예정 지출</span>
+          <span>{(totalExpense / 10000).toFixed(0)}만원</span>
+        </div>
         {breakeven && (
-          <div>손익분기점: <span className="cr2-gold">{breakeven.toLocaleString()}개</span> 팔면 본전</div>
+          <div className="cr2-next-row cr2-gold">
+            <span>손익분기점</span>
+            <span>{breakeven.toLocaleString()}개</span>
+          </div>
         )}
-        <div className={expectedProfit >= 0 ? 'cr2-positive' : 'cr2-negative'}>
-          예상 순이익: {expectedProfit >= 0 ? '+' : ''}{(expectedProfit / 10000).toFixed(0)}만원
+        <div className={`cr2-next-row cr2-next-profit ${expectedProfit >= 0 ? 'cr2-positive' : 'cr2-negative'}`}>
+          <span>예상 순이익</span>
+          <span>{expectedProfit >= 0 ? '+' : ''}{(expectedProfit / 10000).toFixed(0)}만원</span>
         </div>
       </div>
 
       <div className="cr2-next-desc cr2-gray">
-        점유율과 손익은 정산에서 공개됩니다.
+        점유율과 손익은 정산에서 확정됩니다.
       </div>
 
-      <button
-        className="cr2-btn cr2-settle-btn"
-        onClick={onSettle}
-      >
+      <button className="cr2-btn cr2-settle-btn" onClick={onSettle}>
         정산하기
       </button>
     </div>
