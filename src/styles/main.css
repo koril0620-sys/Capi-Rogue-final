@@ -22,6 +22,10 @@
   height: calc(100% - 48px);
   display: flex;
   flex-direction: column;
+  border: 1px solid var(--cr2-green);
+  box-shadow:
+    0 0 12px rgba(0, 255, 65, 0.15),
+    inset 0 0 12px rgba(0, 255, 65, 0.05);
 }
 
 .cr2-pause-trigger-btn {
@@ -265,34 +269,45 @@
 
 .cr2-finance-panel {
   flex: 1.5;
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 3px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
 }
 
-.cr2-finance-item {
+.cr2-finance-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cr2-finance-capital {
+  gap: 6px;
+}
+
+.cr2-finance-big {
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.cr2-finance-delta {
+  font-size: 8px;
+}
+
+.cr2-finance-cell {
+  flex: 1;
   display: flex;
   flex-direction: column;
   gap: 1px;
 }
 
-.cr2-finance-highlight .cr2-finance-value {
-  font-size: 12px;
-}
-
 .cr2-finance-label {
-  font-size: 8px;
+  font-size: 7px;
   color: var(--cr2-gray);
 }
 
 .cr2-finance-value {
   font-size: 10px;
   color: var(--cr2-white);
-}
-
-.cr2-finance-delta {
-  font-size: 7px;
-  margin-left: 2px;
 }
 
 /* 탭바 */
@@ -312,10 +327,13 @@
   border: 1px solid var(--cr2-green);
   border-bottom: none;
   color: var(--cr2-green);
-  font-family: 'Press Start 2P', monospace;
-  font-size: 9px;
+  font-family: 'Press Start 2P', 'Noto Sans KR', monospace;
+  font-size: 10px;
   cursor: pointer;
   transition: all 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .cr2-tab:hover {

@@ -10,36 +10,13 @@ import { RIVALS } from '../constants/rivals'
 import { LOAN_TYPES } from '../constants/creditScore'
 import { playSFX } from '../logic/audioEngine'
 
-export default function RightPanel({ activeTab, setActiveTab, onSettle }) {
+export default function RightPanel({ activeTab, onSettle }) {
   const gameState = useGameStore(state => state)
   const setCurrentStrategy = useGameStore(state => state.setCurrentStrategy)
   const setFactoryAction = useGameStore(state => state.setFactoryAction)
 
-  const handleTabChange = (tab) => {
-    playSFX('click')
-    setActiveTab(tab)
-  }
-
   return (
     <div className="cr2-right-panel">
-      <div className="cr2-right-panel-tabs">
-        {['rival', 'sale', 'operation', 'next'].map(tab => (
-          <button
-            key={tab}
-            className={`cr2-subtab ${activeTab === tab ? 'cr2-subtab-active' : ''}`}
-            onClick={() => handleTabChange(tab)}
-          >
-            {tab === 'rival'
-              ? '라이벌'
-              : tab === 'sale'
-                ? '판매'
-                : tab === 'operation'
-                  ? '운영'
-                  : '정산확인'}
-          </button>
-        ))}
-      </div>
-
       {activeTab === 'rival' && (
         <RivalTab gameState={gameState} />
       )}
@@ -106,10 +83,29 @@ function SaleTab({ gameState, setCurrentStrategy }) {
     { key: 'max', label: '최대',   amount: maxOrder                   },
   ]
 
+  const currentQuality = gameState.quality || 8
   const qualOpts = [
-    { key: 'reduce',   label: '절감', cost: Math.floor(cost * 0.8),  color: 'var(--cr2-lime)'  },
-    { key: 'maintain', label: '유지', cost,                           color: 'var(--cr2-white)' },
-    { key: 'upgrade',  label: '고급', cost: Math.floor(cost * 1.25), color: 'var(--cr2-red)'   },
+    {
+      key: 'reduce',
+      label: '절감',
+      cost: Math.floor(cost * 0.8),
+      color: 'var(--cr2-lime)',
+      qualityDisplay: `품질: ${Math.floor(currentQuality * 0.8)}`,
+    },
+    {
+      key: 'maintain',
+      label: '유지',
+      cost,
+      color: 'var(--cr2-white)',
+      qualityDisplay: `품질: ${currentQuality}`,
+    },
+    {
+      key: 'upgrade',
+      label: '고급',
+      cost: Math.floor(cost * 1.25),
+      color: 'var(--cr2-red)',
+      qualityDisplay: `품질: ${Math.floor(currentQuality * 1.2)}`,
+    },
   ]
 
   const handlePrice = (price, key) => {
@@ -371,6 +367,15 @@ function SaleTab({ gameState, setCurrentStrategy }) {
               </span>
               <span style={{ fontSize: '7px', color: 'var(--cr2-gray)' }}>
                 {opt.cost.toLocaleString()}원
+              </span>
+              <span style={{
+                fontSize: '7px',
+                color: opt.key === 'reduce' ? 'var(--cr2-lime)'
+                  : opt.key === 'upgrade' ? 'var(--cr2-red)'
+                    : 'var(--cr2-gray)',
+                marginTop: '1px',
+              }}>
+                ({opt.qualityDisplay})
               </span>
             </button>
           ))}

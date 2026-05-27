@@ -6,6 +6,8 @@
   padding: 0;
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
+  -webkit-font-smoothing: antialiased;
+  image-rendering: pixelated;
 }
 
 html,
@@ -23,6 +25,15 @@ body {
   position: absolute;
   overflow: hidden;
   background: #000000;
+  transform-origin: top left;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  will-change: transform;
+}
+
+#root * {
+  border-width: 1px !important;
+  box-sizing: border-box;
 }
 
 :root {

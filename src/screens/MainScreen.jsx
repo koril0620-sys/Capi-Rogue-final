@@ -252,18 +252,60 @@ export default function MainScreen() {
           </div>
 
           <div className="cr2-finance-panel">
-            <FinanceItem
-              label="자본"
-              value={formatCapital(gameState.capital)}
-              delta={gameState.capital - gameState.lastCapital}
-              highlight
-              negative={gameState.capital < 0}
-            />
-            <FinanceItem label="부채" value={formatCapital(gameState.debt)} />
-            <FinanceItem label="월이자" value={formatCapital(calcMonthlyInterest(gameState.loans))} />
-            <FinanceItem label="품질" value={gameState.quality} />
-            <FinanceItem label="브랜드" value={gameState.brand?.toFixed(1)} />
-            <FinanceItem label="인지도" value={`${gameState.awareness?.toFixed(0)}%`} />
+            <div className="cr2-finance-row cr2-finance-capital">
+              <span className="cr2-finance-label">자본</span>
+              <span className={`cr2-finance-big ${gameState.capital < 0 ? 'cr2-negative' : 'cr2-positive'}`}>
+                {formatCapital(gameState.capital)}
+              </span>
+              {gameState.lastCapital !== undefined && gameState.capital !== gameState.lastCapital && (
+                <span className={`cr2-finance-delta ${gameState.capital > gameState.lastCapital ? 'cr2-positive' : 'cr2-negative'}`}>
+                  {gameState.capital > gameState.lastCapital ? '▲' : '▼'}
+                  {formatCapital(Math.abs(gameState.capital - gameState.lastCapital))}
+                </span>
+              )}
+            </div>
+
+            <div className="cr2-finance-row">
+              <div className="cr2-finance-cell">
+                <span className="cr2-finance-label">부채</span>
+                <span className={`cr2-finance-value ${gameState.debt > 0 ? 'cr2-negative' : ''}`}>
+                  {formatCapital(gameState.debt)}
+                </span>
+              </div>
+              <div className="cr2-finance-cell">
+                <span className="cr2-finance-label">월이자</span>
+                <span className="cr2-finance-value cr2-negative">
+                  {formatCapital(calcMonthlyInterest(gameState.loans))}
+                </span>
+              </div>
+              <div className="cr2-finance-cell">
+                <span className="cr2-finance-label">신용</span>
+                <span className={`cr2-finance-value ${getCreditColor(gameState.creditScore)}`}>
+                  {getCreditGrade(gameState.creditScore)}
+                </span>
+              </div>
+            </div>
+
+            <div className="cr2-finance-row">
+              <div className="cr2-finance-cell">
+                <span className="cr2-finance-label">품질</span>
+                <span className="cr2-finance-value cr2-lime">
+                  {gameState.quality}
+                </span>
+              </div>
+              <div className="cr2-finance-cell">
+                <span className="cr2-finance-label">브랜드</span>
+                <span className="cr2-finance-value">
+                  {gameState.brand?.toFixed(1)}
+                </span>
+              </div>
+              <div className="cr2-finance-cell">
+                <span className="cr2-finance-label">인지도</span>
+                <span className="cr2-finance-value">
+                  {gameState.awareness?.toFixed(0)}%
+                </span>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -279,16 +321,25 @@ export default function MainScreen() {
 
       <RightPanel
         activeTab={activeTab}
-        setActiveTab={setActiveTab}
         onSettle={handleSettle}
       />
 
       <div className="cr2-tab-bar">
         <button
-          className={`cr2-tab cr2-tab-rival ${activeTab === 'rival' ? 'cr2-tab-active' : ''}`}
+          className={`cr2-tab ${activeTab === 'rival' ? 'cr2-tab-active' : ''}`}
           onClick={() => {
             setActiveTab('rival')
             playSFX('click')
+          }}
+          style={{
+            flex: 1,
+            borderColor: activeTab === 'rival'
+              ? 'var(--cr2-red)' : 'rgba(220,20,60,0.5)',
+            color: activeTab === 'rival'
+              ? '#FF6B6B' : 'rgba(220,20,60,0.7)',
+            background: activeTab === 'rival'
+              ? 'rgba(220,20,60,0.12)' : 'rgba(0,0,0,0.9)',
+            fontSize: '10px',
           }}
         >
           라이벌
@@ -299,17 +350,9 @@ export default function MainScreen() {
             setActiveTab('sale')
             playSFX('click')
           }}
+          style={{ flex: 1, fontSize: '10px' }}
         >
           판매
-        </button>
-        <button
-          className={`cr2-tab ${activeTab === 'quality' ? 'cr2-tab-active' : ''}`}
-          onClick={() => {
-            setActiveTab('quality')
-            playSFX('click')
-          }}
-        >
-          공장
         </button>
         <button
           className={`cr2-tab ${activeTab === 'operation' ? 'cr2-tab-active' : ''}`}
@@ -317,15 +360,17 @@ export default function MainScreen() {
             setActiveTab('operation')
             playSFX('click')
           }}
+          style={{ flex: 1, fontSize: '10px' }}
         >
           운영
         </button>
         <button
-          className={`cr2-tab cr2-tab-next ${activeTab === 'next' ? 'cr2-tab-active' : ''}`}
+          className="cr2-tab cr2-tab-next"
           onClick={() => {
             setActiveTab('next')
             playSFX('click')
           }}
+          style={{ flex: 1, fontSize: '10px' }}
         >
           정산확인
         </button>
@@ -381,22 +426,6 @@ export default function MainScreen() {
       )}
 
       <CheatPanel />
-    </div>
-  )
-}
-
-function FinanceItem({ label, value, delta, highlight, negative }) {
-  return (
-    <div className={`cr2-finance-item ${highlight ? 'cr2-finance-highlight' : ''}`}>
-      <span className="cr2-finance-label">{label}</span>
-      <span className={`cr2-finance-value ${negative ? 'cr2-negative' : ''}`}>
-        {value}
-        {delta !== undefined && delta !== 0 && (
-          <span className={`cr2-finance-delta ${delta > 0 ? 'cr2-positive' : 'cr2-negative'}`}>
-            {delta > 0 ? ' ▲' : ' ▼'}{formatCapital(Math.abs(delta))}
-          </span>
-        )}
-      </span>
     </div>
   )
 }
@@ -472,6 +501,20 @@ function calcMonthlyInterest(loans = []) {
   return loans.reduce((sum, loan) => (
     sum + Math.floor(loan.principal * (loan.interestRate / 12))
   ), 0)
+}
+
+function getCreditGrade(score) {
+  if (score >= 80) return 'A'
+  if (score >= 60) return 'B'
+  if (score >= 40) return 'C'
+  return 'D'
+}
+
+function getCreditColor(score) {
+  if (score >= 80) return 'cr2-positive'
+  if (score >= 60) return 'cr2-gold'
+  if (score >= 40) return ''
+  return 'cr2-negative'
 }
 
 function getRivalProfileImage(rivalId) {
