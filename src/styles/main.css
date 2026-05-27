@@ -416,6 +416,9 @@
   height: calc(100% - 48px);
   background: rgba(0, 0, 0, 0.88);
   border-left: 1px solid var(--cr2-green);
+  box-shadow:
+    -4px 0 12px rgba(0, 255, 65, 0.1),
+    inset 4px 0 12px rgba(0, 255, 65, 0.03);
   overflow-y: auto;
   backdrop-filter: blur(4px);
 }
