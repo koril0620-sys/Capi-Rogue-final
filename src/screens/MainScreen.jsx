@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useGameStore } from '../store/useGameStore'
 import { settle } from '../logic/settlementEngine'
-import { rollExternalEvent, rollInternalEvent } from '../logic/eventEngine'
 import { getRivalInitialCapital } from '../logic/monopolEngine'
 import { getCurrentStage, isNewStage } from '../constants/monopol'
 import { getLearningGoal } from '../constants/learningGoals'
@@ -82,21 +81,6 @@ export default function MainScreen() {
   const handleSettle = async () => {
     playSFX('nextfloor')
 
-    const externalEvent = rollExternalEvent(
-      gameState.floor,
-      gameState.activeEffects,
-    )
-    const internalEvent = rollInternalEvent(gameState)
-
-    if (externalEvent || internalEvent) {
-      useGameStore.setState({
-        currentExternalEvent: externalEvent || null,
-        currentInternalEvent: internalEvent || null,
-      })
-      setCurrentScreen('event')
-      return
-    }
-
     const { updatedState, settlementResult } = settle(gameState)
 
     useGameStore.setState({
@@ -104,7 +88,7 @@ export default function MainScreen() {
       lastSettlementResult: settlementResult,
       playerShareHistory: [
         ...(gameState.playerShareHistory || []),
-        settlementResult.shareAfter,
+        settlementResult.shareAfter || 0,
       ],
       revenueHistory: [
         ...(gameState.revenueHistory || []).slice(-9),
@@ -193,6 +177,21 @@ export default function MainScreen() {
             </span>
           </div>
 
+          {gameState.activeEffects?.filter(effect => effect.source !== 'MONOPOL').length > 0 && (
+            <div className="cr2-overlay-row">
+              <span style={{
+                fontSize: '8px',
+                color: 'var(--cr2-red)',
+                fontFamily: "'Noto Sans KR', sans-serif",
+              }}>
+                ⚠️ {gameState.activeEffects
+                  .filter(effect => effect.source !== 'MONOPOL')
+                  .map(effect => effect.title || effect.type)
+                  .join(' · ')}
+              </span>
+            </div>
+          )}
+
           {monopolEffect && (
             <span className="cr2-negative">MONOPOL 개입 중</span>
           )}
@@ -211,6 +210,8 @@ export default function MainScreen() {
             alignItems: 'center',
             gap: '3px',
             width: '100px',
+            maxHeight: '220px',
+            overflow: 'hidden',
             backdropFilter: 'blur(4px)',
             boxShadow: '0 0 10px rgba(220,20,60,0.3)',
             zIndex: 4,
@@ -222,9 +223,9 @@ export default function MainScreen() {
                   alt={stage.rivalName}
                   style={{
                     width: '72px',
-                    height: '90px',
+                    height: '100px',
                     objectFit: 'contain',
-                    objectPosition: 'top',
+                    objectPosition: 'top center',
                   }}
                 />
                 <div style={{ fontSize: '10px', color: 'var(--cr2-red)', textAlign: 'center' }}>
@@ -274,7 +275,7 @@ export default function MainScreen() {
 
           <div style={{
             position: 'absolute',
-            bottom: '60px',
+            bottom: '120px',
             left: '12px',
             background: 'rgba(0,0,0,0.85)',
             border: '2px solid var(--cr2-lime)',

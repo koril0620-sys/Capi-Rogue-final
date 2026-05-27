@@ -39,7 +39,7 @@ export default function EventScreen() {
   }
 
   const proceedToInternal = () => {
-    if (!internalEvent) proceedToSettle()
+    if (!internalEvent) completeEventFlow()
   }
 
   const handleChoiceSelect = (choice) => {
@@ -181,9 +181,23 @@ export default function EventScreen() {
     }
   }
 
+  const completeEventFlow = () => {
+    const currentState = useGameStore.getState()
+    if (currentState.lastSettlementResult?.nextFloorEventHandled) {
+      useGameStore.setState({
+        currentExternalEvent: null,
+        currentInternalEvent: null,
+      })
+      setCurrentScreen('result')
+      return
+    }
+
+    void proceedToSettle()
+  }
+
   useEffect(() => {
     if (!externalEvent && !internalEvent && !result) {
-      void proceedToSettle()
+      completeEventFlow()
     }
   })
 
@@ -255,7 +269,7 @@ export default function EventScreen() {
           <div className={`cr2-event-result-text ${getResultType(result.outcome)}`}>
             {formatOutcome(result.outcome, gameState.capital)}
           </div>
-          <button className="cr2-btn cr2-event-confirm-btn" onClick={proceedToSettle}>
+          <button className="cr2-btn cr2-event-confirm-btn" onClick={completeEventFlow}>
             계속
           </button>
         </div>

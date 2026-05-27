@@ -5,6 +5,7 @@ import { saveOnFloorEnter } from '../logic/saveEngine'
 import { getClearGrade } from '../logic/rewardEngine'
 import { getCurrentStage, isBossStage } from '../constants/monopol'
 import { playBGM, playSFX } from '../logic/audioEngine'
+import { rollExternalEvent, rollInternalEvent } from '../logic/eventEngine'
 import { getMaturedLoans } from '../logic/loanEngine'
 import AchievementToast from '../components/AchievementToast'
 import LoanMaturityAlert from '../components/LoanMaturityAlert'
@@ -67,10 +68,35 @@ export default function ResultScreen() {
     setSaving(true)
     playSFX('nextfloor')
 
-    const nextFloor = gameState.floor + 1
+    const currentState = useGameStore.getState()
+    const currentResult = currentState.lastSettlementResult || settlementResult
+
+    if (!currentResult?.nextFloorEventHandled) {
+      const externalEvent = rollExternalEvent(
+        currentState.floor,
+        currentState.activeEffects,
+      )
+      const internalEvent = rollInternalEvent(currentState)
+
+      if (externalEvent || internalEvent) {
+        useGameStore.setState({
+          currentExternalEvent: externalEvent || null,
+          currentInternalEvent: internalEvent || null,
+          lastSettlementResult: {
+            ...currentResult,
+            nextFloorEventHandled: true,
+          },
+        })
+        setSaving(false)
+        setCurrentScreen('event')
+        return
+      }
+    }
+
+    const nextFloor = currentState.floor + 1
 
     if (nextFloor > 120) {
-      const grade = getClearGrade(gameState)
+      const grade = getClearGrade(currentState)
       useGameStore.setState({ clearGrade: grade, isClear: true })
       setCurrentScreen('ending')
       return
@@ -78,7 +104,7 @@ export default function ResultScreen() {
 
     if (isBossStage(nextFloor)) {
       setFloor(nextFloor)
-      await saveOnFloorEnter({ ...gameState, floor: nextFloor })
+      await saveOnFloorEnter({ ...currentState, floor: nextFloor })
       setSaving(false)
       setCurrentScreen('boss')
       return
@@ -86,14 +112,14 @@ export default function ResultScreen() {
 
     if (nextFloor % 20 === 0 || nextFloor % 10 === 0 || nextFloor % 5 === 0) {
       setFloor(nextFloor)
-      await saveOnFloorEnter({ ...gameState, floor: nextFloor })
+      await saveOnFloorEnter({ ...currentState, floor: nextFloor })
       setSaving(false)
       setCurrentScreen('reward')
       return
     }
 
     setFloor(nextFloor)
-    await saveOnFloorEnter({ ...gameState, floor: nextFloor })
+    await saveOnFloorEnter({ ...currentState, floor: nextFloor })
     setSaving(false)
     setCurrentScreen('main')
   }
