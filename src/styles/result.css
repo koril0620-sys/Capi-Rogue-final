@@ -89,6 +89,33 @@
 .cr2-income-capital { color: var(--cr2-gold); }
 .cr2-income-revenue { color: var(--cr2-lime); }
 
+.cr2-income-row span:first-child {
+  color: #C8C8C8;
+}
+
+.cr2-income-revenue span:first-child {
+  color: #00FF41;
+}
+
+.cr2-income-gross span:first-child {
+  color: #FFFFFF;
+  font-weight: bold;
+}
+
+.cr2-income-net span:first-child {
+  color: #FFFFFF;
+  font-weight: bold;
+  font-size: 13px;
+}
+
+.cr2-income-capital span:first-child {
+  color: #FFD700;
+}
+
+.cr2-income-sub div {
+  color: #666666;
+}
+
 .cr2-factory-result {
   background: var(--cr2-bg2);
   border: 1px solid var(--cr2-green);
