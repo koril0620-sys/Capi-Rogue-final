@@ -246,7 +246,7 @@ export default function MainScreen() {
 
           <div style={{
             position: 'absolute',
-            top: '280px',
+            top: '270px',
             left: '16px',
             background: 'rgba(0,0,0,0.85)',
             border: '2px solid var(--cr2-lime)',
