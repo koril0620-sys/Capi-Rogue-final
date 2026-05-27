@@ -161,9 +161,34 @@ export default function MainScreen() {
 
       <div className="cr2-main-left">
         <div className="cr2-main-overlay-top">
-          <span>{gameState.floor}/120</span>
-          <span>{phaseLabel(gameState.econPhase)}</span>
-          <span>보상: {getRewardLabel(gameState.floor)}</span>
+          <div className="cr2-overlay-row">
+            <span className="cr2-overlay-floor">
+              {gameState.floor} / 120
+            </span>
+            <span className="cr2-overlay-reward cr2-gray">
+              보상 {getRewardLabel(gameState.floor)}
+            </span>
+          </div>
+
+          <div className="cr2-overlay-row">
+            <span className="cr2-overlay-phase-label cr2-gray">경기</span>
+            <span
+              className="cr2-overlay-phase-value"
+              style={{ color: getPhaseColor(gameState.econPhase) }}
+            >
+              {phaseLabel(gameState.econPhase)}
+            </span>
+            <span className="cr2-overlay-phase-multiplier cr2-gray">
+              수요 ×{getDemandMultiplier(gameState.econPhase).toFixed(1)}
+            </span>
+          </div>
+
+          <div className="cr2-overlay-row">
+            <span className="cr2-overlay-phase-desc">
+              {getPhaseDesc(gameState.econPhase)}
+            </span>
+          </div>
+
           {monopolEffect && (
             <span className="cr2-negative">MONOPOL 개입 중</span>
           )}
@@ -450,6 +475,28 @@ function phaseLabel(phase) {
     recession: '불황',
   }
   return map[phase] || phase
+}
+
+function getPhaseColor(phase) {
+  const map = {
+    boom: '#FFD700',
+    growth: '#00FF41',
+    stable: '#AAAAAA',
+    contraction: '#FF8800',
+    recession: '#DC143C',
+  }
+  return map[phase] || '#AAAAAA'
+}
+
+function getPhaseDesc(phase) {
+  const map = {
+    boom: '소비 활발 · 품질 중시 소비자 ↑',
+    growth: '경기 회복 · 균형 소비',
+    stable: '일반적인 시장 상황',
+    contraction: '소비 위축 · 가격 중시 소비자 ↑',
+    recession: '극심한 침체 · 최저가 경쟁',
+  }
+  return map[phase] || ''
 }
 
 function getDemandMultiplier(phase) {
