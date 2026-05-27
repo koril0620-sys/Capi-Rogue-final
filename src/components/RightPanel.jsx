@@ -25,17 +25,28 @@ export default function RightPanel({ activeTab, setActiveTab, onSettle }) {
   return (
     <div className="cr2-right-panel">
       <div className="cr2-right-panel-tabs">
-        {['sale', 'quality', 'operation', 'next'].map(tab => (
+        {['rival', 'sale', 'quality', 'operation', 'next'].map(tab => (
           <button
             key={tab}
             className={`cr2-subtab ${activeTab === tab ? 'cr2-subtab-active' : ''}`}
             onClick={() => handleTabChange(tab)}
           >
-            {tab === 'sale' ? '판매' : tab === 'quality' ? '품질' : tab === 'operation' ? '운영' : '정산'}
+            {tab === 'rival'
+              ? '라이벌'
+              : tab === 'sale'
+                ? '판매'
+                : tab === 'quality'
+                  ? '품질'
+                  : tab === 'operation'
+                    ? '운영'
+                    : '정산'}
           </button>
         ))}
       </div>
 
+      {activeTab === 'rival' && (
+        <RivalTab gameState={gameState} />
+      )}
       {activeTab === 'sale' && (
         <SaleTab
           gameState={gameState}
@@ -510,6 +521,117 @@ function BankSection({ gameState }) {
   )
 }
 
+function RivalTab({ gameState }) {
+  const stage = getCurrentStage(gameState.floor)
+
+  if (!stage) {
+    return (
+      <div className="cr2-panel-content">
+        <div className="cr2-panel-title">라이벌</div>
+        <div className="cr2-rival-tab-empty cr2-gray">
+          현재 구간에 라이벌이 없습니다.
+        </div>
+      </div>
+    )
+  }
+
+  const capitalRatio = gameState.rivalInitialCapital > 0
+    ? Math.max(gameState.rivalCapital / gameState.rivalInitialCapital, 0)
+    : 0
+
+  const getCapitalBarColor = () => {
+    if (capitalRatio <= 0.3) return 'var(--cr2-red)'
+    if (capitalRatio <= 0.7) return 'var(--cr2-gold)'
+    return 'var(--cr2-green)'
+  }
+
+  return (
+    <div className="cr2-panel-content">
+      <div className="cr2-panel-title">라이벌 정보</div>
+
+      <div className="cr2-rival-tab-profile">
+        <img
+          src={`/assets/${getRivalAssetFilename(stage.rival)}`}
+          alt={stage.rivalName}
+          className="cr2-rival-tab-img"
+        />
+        <div className="cr2-rival-tab-info">
+          <div className="cr2-rival-tab-name cr2-negative">{stage.rivalName}</div>
+          <div className="cr2-rival-tab-company cr2-gray">{stage.company}</div>
+          <div className="cr2-rival-tab-tier" style={{ color: getTierColor(stage.tier) }}>
+            [{stage.tier}] MONOPOL
+          </div>
+        </div>
+      </div>
+
+      <div className="cr2-rival-tab-section">
+        <div className="cr2-rival-tab-section-title">자본 현황</div>
+        <div className="cr2-rival-cap-bar-track">
+          <div
+            className={`cr2-rival-cap-bar ${capitalRatio <= 0.1 ? 'cr2-blink' : ''}`}
+            style={{
+              width: `${Math.min(capitalRatio * 100, 100)}%`,
+              background: getCapitalBarColor(),
+            }}
+          />
+        </div>
+        <div className="cr2-rival-tab-cap-info">
+          <span style={{ color: gameState.rivalCapital < 0 ? 'var(--cr2-red)' : 'var(--cr2-white)' }}>
+            {(gameState.rivalCapital / 10000).toFixed(0)}만원
+          </span>
+          {gameState.rivalNetProfit !== 0 && (
+            <span className={gameState.rivalNetProfit < 0 ? 'cr2-positive' : 'cr2-negative'}>
+              이번달 {gameState.rivalNetProfit < 0 ? '▼' : '▲'}
+              {Math.abs(gameState.rivalNetProfit / 10000).toFixed(0)}만원
+            </span>
+          )}
+        </div>
+        {capitalRatio <= 0.1 && (
+          <div className="cr2-positive cr2-blink" style={{ fontSize: 9 }}>
+            파산 임박! 압박을 유지하라.
+          </div>
+        )}
+      </div>
+
+      <div className="cr2-rival-tab-section">
+        <div className="cr2-rival-tab-section-title">특수 능력</div>
+        {stage.specialAbility ? (
+          <div className="cr2-rival-tab-ability cr2-negative">
+            {stage.specialAbility.description || getAbilityDesc(stage.specialAbility.type)}
+          </div>
+        ) : (
+          <div className="cr2-gray" style={{ fontSize: 9 }}>없음</div>
+        )}
+      </div>
+
+      <div className="cr2-rival-tab-section">
+        <div className="cr2-rival-tab-section-title">시장 개입</div>
+        {stage.marketIntervention ? (
+          <div className="cr2-rival-tab-intervention cr2-negative">
+            {stage.marketIntervention.description || getInterventionDesc(stage.marketIntervention.type)}
+          </div>
+        ) : (
+          <div className="cr2-gray" style={{ fontSize: 9 }}>없음</div>
+        )}
+      </div>
+
+      <div className="cr2-rival-tab-section">
+        <div className="cr2-rival-tab-section-title cr2-gold">이번 구간 힌트</div>
+        <div className="cr2-rival-tab-hint">{stage.hint}</div>
+      </div>
+
+      {gameState.rivalNetProfit < 0 && gameState.rivalCapital > 0 && (
+        <div className="cr2-rival-tab-section">
+          <div className="cr2-rival-tab-section-title">예상 파산</div>
+          <div className="cr2-positive" style={{ fontSize: 10 }}>
+            약 {Math.ceil(gameState.rivalCapital / Math.abs(gameState.rivalNetProfit))}턴 후
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
 function MarketingSection({ gameState, setCurrentStrategy }) {
   const [budget, setBudget] = useState(0)
   const limit = getMarketingLimit(gameState.capital, gameState.settings?.marketingLimitMode || 'ratio')
@@ -872,6 +994,61 @@ function NextTab({ gameState, onSettle }) {
       </button>
     </div>
   )
+}
+
+function getRivalAssetFilename(rivalId) {
+  const map = {
+    junhyuk: 'rival_entry_junhyuk-CHIAhbxg.png',
+    sua: 'rival_entry_sua-Ng4BiHqL.png',
+    sungjin: 'rival_mid_sungjin-D6YbcSZf.png',
+    jieun: 'rival_mid_sunseo-D7JBcSZf.png',
+    junseo: 'rival_senior_junseo-D7JBRjRD.png',
+    seoyeon: 'rival_senior_seoyeon-DQw87pvW.png',
+    taejun: 'rival_senior_taejun-NZJ6s3M.png',
+    cheolmin: 'rival_champion_cheolmin-DQI-_sih.png',
+    dogan: 'rival_champion_dogon-BRN0GlPx.png',
+    hyekyung: 'rival_champion_hyegyeong-Cuy8B_O2.png',
+  }
+  return map[rivalId] || 'logo_image-f7z3e97D.png'
+}
+
+function getTierColor(tier) {
+  const map = {
+    ENTRY: 'var(--cr2-gray)',
+    MID: '#88FF88',
+    SENIOR: 'var(--cr2-gold)',
+    CHAMPION: 'var(--cr2-red)',
+    BOSS: '#FF00FF',
+  }
+  return map[tier] || 'var(--cr2-gray)'
+}
+
+function getAbilityDesc(type) {
+  const map = {
+    MARKETING_BLITZ: '매 3턴 마케팅 집중 (인지도 +20%)',
+    PRICE_DUMP: '매 5턴 가격 덤핑 (판매가 -30%)',
+    COST_REDUCTION_STACK: '매 턴 원가 -0.5% 누적',
+    QUALITY_RUSH: '매 3턴 품질 +5',
+    BRAND_INVEST: '매 턴 브랜드 +0.2',
+    PHASE_OPTIMIZER: '경기 국면 최적 전략 자동 적용',
+    EVENT_AMPLIFY: '매 턴 외부 이벤트 강도 x1.5',
+    AI_COUNTER: '플레이어 전략 패턴 분석 후 카운터',
+  }
+  return map[type] || type
+}
+
+function getInterventionDesc(type) {
+  const map = {
+    DEMAND_SUPPRESS: '매 5턴 전체 수요 -10%',
+    SUPPLY_GLUT: '매 5턴 공급 과잉 압박',
+    RAW_MATERIAL_MONOPOLY: '매 5턴 원자재 매점, 원가 +10%',
+    ECONOMY_SUPPRESS: '매 3턴 경기 국면 강제 하향',
+    CONSUMER_MANIPULATION: '매 3턴 브랜드 중시 소비자 +20%',
+    PHASE_CHAOS: '매 3턴 경기 국면 무작위 변동',
+    FORCE_EXTERNAL_EVENT: '매 턴 외부 이벤트 강제 발동',
+    FULL_CONTROL: '매 턴 최악 경기 조건 강제',
+  }
+  return map[type] || type
 }
 
 function getGradeColor(grade) {

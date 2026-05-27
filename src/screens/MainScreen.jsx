@@ -5,8 +5,6 @@ import { rollExternalEvent, rollInternalEvent } from '../logic/eventEngine'
 import { getRivalInitialCapital } from '../logic/monopolEngine'
 import { getCurrentStage, isNewStage } from '../constants/monopol'
 import { getLearningGoal } from '../constants/learningGoals'
-import { RIVALS } from '../constants/rivals'
-import { ADVISORS } from '../constants/advisors'
 import { saveAchievements } from '../logic/achievementEngine'
 import { playSFX, playBGM } from '../logic/audioEngine'
 import { getUpcomingMaturityLoans } from '../logic/loanEngine'
@@ -49,6 +47,7 @@ export default function MainScreen() {
           })
 
           setStagePopup({
+            rival: nextStage.rival,
             rivalName: nextStage.rivalName,
             company: nextStage.company,
             message: nextStage.entryMessage,
@@ -125,9 +124,8 @@ export default function MainScreen() {
 
   const background = getBackground(gameState.econPhase)
   const stage = getCurrentStage(gameState.floor)
-  const currentRival = stage ? RIVALS.find(rival => rival.id === stage.rival) : null
-  const currentAdvisor = ADVISORS.find(advisor => advisor.id === gameState.selectedAdvisor)
   const upcomingLoans = getUpcomingMaturityLoans(gameState.loans || [])
+  const monopolEffect = gameState.activeEffects?.find(effect => effect.source === 'MONOPOL')
 
   return (
     <div className="cr2-main-screen">
@@ -137,11 +135,14 @@ export default function MainScreen() {
       />
 
       <button
-        className="cr2-pause-btn"
+        className="cr2-pause-trigger-btn"
         onClick={() => setIsPaused(true)}
-        style={{ position: 'absolute', top: 8, right: 8, zIndex: 10 }}
+        aria-label="일시정지"
       >
-        II
+        <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true">
+          <rect x="2" y="2" width="3.5" height="10" rx="1" fill="white" />
+          <rect x="8.5" y="2" width="3.5" height="10" rx="1" fill="white" />
+        </svg>
       </button>
 
       <div className="cr2-main-left">
@@ -149,72 +150,76 @@ export default function MainScreen() {
           <span>{gameState.floor}/120</span>
           <span>{phaseLabel(gameState.econPhase)}</span>
           <span>보상: {getRewardLabel(gameState.floor)}</span>
-          {gameState.currentExternalEvent && (
-            <span className="cr2-event-label">
-              {gameState.currentExternalEvent.title}
-            </span>
+          {monopolEffect && (
+            <span className="cr2-negative">MONOPOL 개입 중</span>
           )}
         </div>
 
-        {upcomingLoans.length > 0 && (
-          <div className={`cr2-loan-warning ${upcomingLoans[0].remainingTurns <= 1 ? 'cr2-blink' : ''}`}>
-            ⚠️ 대출 만기 {upcomingLoans[0].remainingTurns}턴 후 ·
-            원금 {(upcomingLoans[0].principal / 10000).toFixed(0)}만원
+        <div className="cr2-game-area">
+          <div className="cr2-rival-card">
+            {stage ? (
+              <>
+                <img
+                  src={`/assets/${getRivalAssetFilename(stage.rival)}`}
+                  alt={stage.rivalName}
+                  className="cr2-rival-card-img"
+                />
+                <div className="cr2-rival-card-name">{stage.rivalName}</div>
+                <div className="cr2-rival-card-company">{stage.company}</div>
+                <div className="cr2-rival-card-tier">[{stage.tier}]</div>
+                <div className="cr2-rival-card-status cr2-gray">정산 후 공개</div>
+              </>
+            ) : (
+              <div className="cr2-rival-card-empty cr2-gray">라이벌 없음</div>
+            )}
           </div>
-        )}
 
-        <div className="cr2-demand-area">
           <div className="cr2-demand-bubble">
             <div className="cr2-demand-label">수요</div>
             <div className="cr2-demand-value">
-              {(10000 * getDemandMultiplier(gameState.econPhase)).toLocaleString()}
+              {Math.floor(10000 * getDemandMultiplier(gameState.econPhase)).toLocaleString()}
             </div>
-            <button className="cr2-tooltip-btn">?</button>
+            <button className="cr2-tooltip-btn cr2-gray">?</button>
           </div>
 
-          {stage && (
-            <div className="cr2-rival-bubble">
-              <img
-                src={currentRival?.profileImage || '/assets/logo_image-f7z3e97D.png'}
-                alt={stage.rivalName}
-                className="cr2-rival-img"
-              />
-              <div className="cr2-rival-name">{stage.rivalName}</div>
-              <div className="cr2-rival-company">{stage.company}</div>
-              <div className="cr2-rival-status">정산 후 공개</div>
-            </div>
-          )}
-
-          <div className="cr2-player-bubble">
+          <div className="cr2-player-card">
             <img
-              src={gameState.playerProfile?.avatar || '/assets/player_male_a_profile-_nb4zKZU.png'}
+              src={gameState.playerProfile?.avatar || '/assets/player_male_a_profile-nb4zKZU.png'}
               alt="내 회사"
-              className="cr2-player-img"
+              className="cr2-player-card-img"
             />
-            <div className="cr2-player-company">{gameState.playerProfile?.company || '내 회사'}</div>
-            <div className="cr2-player-ceo">{gameState.playerProfile?.name || ''}</div>
+            <div className="cr2-player-card-company cr2-lime">
+              {gameState.playerProfile?.company || '내 회사'}
+            </div>
+            <div className="cr2-player-card-ceo cr2-gray">
+              {gameState.playerProfile?.name || ''}
+            </div>
             <div className="cr2-health-bar">
-              {Array.from({ length: gameState.maxHealth }).map((_, index) => (
+              {Array.from({ length: gameState.maxHealth || 10 }).map((_, index) => (
                 <div
                   key={`health-${index}`}
-                  className={`cr2-health-cell ${index < gameState.health ? 'cr2-health-full' : 'cr2-health-empty'}`}
+                  className="cr2-health-cell"
                   style={{
                     background: index < gameState.health
                       ? gameState.health <= 3 ? 'var(--cr2-red)' : 'var(--cr2-lime)'
-                      : 'transparent',
+                      : 'rgba(255,255,255,0.1)',
+                    border: `1px solid ${index < gameState.health ? 'var(--cr2-green)' : 'rgba(255,255,255,0.2)'}`,
                   }}
                 />
               ))}
             </div>
-            <div className="cr2-momentum-label">
+            <div className={`cr2-momentum-label ${getMomentumColor(gameState.momentum)}`}>
               {getMomentumLabel(gameState.momentum)}
             </div>
             <div className="cr2-advisor-mini">
               <img
-                src={currentAdvisor?.profileImage || '/assets/logo_image-f7z3e97D.png'}
+                src={getAdvisorProfileImage(gameState.selectedAdvisor)}
                 alt="어드바이저"
                 className="cr2-advisor-mini-img"
               />
+              <span className="cr2-advisor-mini-name cr2-gray">
+                {getAdvisorShortName(gameState.selectedAdvisor)}
+              </span>
             </div>
           </div>
         </div>
@@ -227,48 +232,35 @@ export default function MainScreen() {
             </div>
             {getLearningGoal(gameState.floor) && (
               <div className="cr2-learning-hint">
-                📚 {getLearningGoal(gameState.floor).hint}
+                {getLearningGoal(gameState.floor).hint}
               </div>
             )}
           </div>
 
           <div className="cr2-finance-panel">
-            <div className="cr2-finance-item">
-              <span className="cr2-finance-label">자본</span>
-              <span className={`cr2-finance-value cr2-capital ${gameState.capital < 0 ? 'cr2-negative' : 'cr2-positive'}`}>
-                {formatCapital(gameState.capital)}
-                {gameState.lastCapital !== gameState.capital && (
-                  <span className={`cr2-capital-delta ${gameState.capital > gameState.lastCapital ? 'cr2-positive' : 'cr2-negative'}`}>
-                    {gameState.capital > gameState.lastCapital ? '▲' : '▼'}
-                    {formatCapital(Math.abs(gameState.capital - gameState.lastCapital))}
-                  </span>
-                )}
-              </span>
-            </div>
-            <div className="cr2-finance-item">
-              <span className="cr2-finance-label">부채</span>
-              <span className="cr2-finance-value">{formatCapital(gameState.debt)}</span>
-            </div>
-            <div className="cr2-finance-item">
-              <span className="cr2-finance-label">월 이자</span>
-              <span className="cr2-finance-value">{formatCapital(calcMonthlyInterest(gameState.loans))}</span>
-            </div>
-            <div className="cr2-finance-item">
-              <span className="cr2-finance-label">품질</span>
-              <span className="cr2-finance-value">{gameState.quality}</span>
-            </div>
-            <div className="cr2-finance-item">
-              <span className="cr2-finance-label">브랜드</span>
-              <span className="cr2-finance-value">{gameState.brand.toFixed(1)}</span>
-            </div>
-            <div className="cr2-finance-item">
-              <span className="cr2-finance-label">인지도</span>
-              <span className="cr2-finance-value">{gameState.awareness.toFixed(0)}%</span>
-            </div>
+            <FinanceItem
+              label="자본"
+              value={formatCapital(gameState.capital)}
+              delta={gameState.capital - gameState.lastCapital}
+              highlight
+              negative={gameState.capital < 0}
+            />
+            <FinanceItem label="부채" value={formatCapital(gameState.debt)} />
+            <FinanceItem label="월이자" value={formatCapital(calcMonthlyInterest(gameState.loans))} />
+            <FinanceItem label="품질" value={gameState.quality} />
+            <FinanceItem label="브랜드" value={gameState.brand?.toFixed(1)} />
+            <FinanceItem label="인지도" value={`${gameState.awareness?.toFixed(0)}%`} />
           </div>
         </div>
 
         <RivalCapitalBar />
+
+        {upcomingLoans.length > 0 && (
+          <div className={`cr2-loan-warning ${upcomingLoans[0].remainingTurns <= 1 ? 'cr2-blink' : ''}`}>
+            대출 만기 {upcomingLoans[0].remainingTurns}턴 후 ·
+            원금 {(upcomingLoans[0].principal / 10000).toFixed(0)}만원
+          </div>
+        )}
       </div>
 
       <RightPanel
@@ -279,31 +271,40 @@ export default function MainScreen() {
 
       <div className="cr2-tab-bar">
         <button
-          className={`cr2-tab cr2-tab-sale ${activeTab === 'sale' ? 'cr2-tab-active' : ''}`}
+          className={`cr2-tab cr2-tab-rival ${activeTab === 'rival' ? 'cr2-tab-active' : ''}`}
+          onClick={() => {
+            setActiveTab('rival')
+            playSFX('click')
+          }}
+        >
+          라이벌
+        </button>
+        <button
+          className={`cr2-tab ${activeTab === 'sale' ? 'cr2-tab-active' : ''}`}
           onClick={() => {
             setActiveTab('sale')
             playSFX('click')
           }}
         >
-          판매 ❓
+          판매
         </button>
         <button
-          className={`cr2-tab cr2-tab-quality ${activeTab === 'quality' ? 'cr2-tab-active' : ''}`}
+          className={`cr2-tab ${activeTab === 'quality' ? 'cr2-tab-active' : ''}`}
           onClick={() => {
             setActiveTab('quality')
             playSFX('click')
           }}
         >
-          품질 ❓
+          품질
         </button>
         <button
-          className={`cr2-tab cr2-tab-operation ${activeTab === 'operation' ? 'cr2-tab-active' : ''}`}
+          className={`cr2-tab ${activeTab === 'operation' ? 'cr2-tab-active' : ''}`}
           onClick={() => {
             setActiveTab('operation')
             playSFX('click')
           }}
         >
-          운영 ❓
+          운영
         </button>
         <button
           className={`cr2-tab cr2-tab-next ${activeTab === 'next' ? 'cr2-tab-active' : ''}`}
@@ -312,17 +313,17 @@ export default function MainScreen() {
             playSFX('click')
           }}
         >
-          정산 확인
+          정산확인
         </button>
       </div>
 
       {stagePopup && (
         <div className="cr2-popup-overlay">
           <div className="cr2-stage-popup">
-            <div className="cr2-stage-popup-title">⚠️ MONOPOL 새 조직원 등장</div>
+            <div className="cr2-stage-popup-title">MONOPOL 조직원 등장</div>
             <div className="cr2-stage-popup-info">
               <img
-                src={currentRival?.profileImage || '/assets/logo_image-f7z3e97D.png'}
+                src={`/assets/${getRivalAssetFilename(stagePopup.rival)}`}
                 alt={stagePopup.rivalName}
                 className="cr2-stage-popup-img"
               />
@@ -330,7 +331,7 @@ export default function MainScreen() {
               <div className="cr2-stage-popup-company">{stagePopup.company}</div>
             </div>
             <div className="cr2-stage-popup-message">{stagePopup.message}</div>
-            <div className="cr2-stage-popup-hint">💡 {stagePopup.hint}</div>
+            <div className="cr2-stage-popup-hint">{stagePopup.hint}</div>
             <button
               className="cr2-btn"
               onClick={() => setStagePopup(null)}
@@ -344,7 +345,7 @@ export default function MainScreen() {
       {learningPopup && (
         <div className="cr2-popup-overlay">
           <div className="cr2-learning-popup">
-            <div className="cr2-learning-popup-title">💡 이번 구간</div>
+            <div className="cr2-learning-popup-title">이번 구간</div>
             <div className="cr2-learning-popup-hint">{learningPopup.hint}</div>
             <div className="cr2-learning-popup-monopol">{learningPopup.monopolContext}</div>
             <div className="cr2-learning-popup-btns">
@@ -370,6 +371,22 @@ export default function MainScreen() {
   )
 }
 
+function FinanceItem({ label, value, delta, highlight, negative }) {
+  return (
+    <div className={`cr2-finance-item ${highlight ? 'cr2-finance-highlight' : ''}`}>
+      <span className="cr2-finance-label">{label}</span>
+      <span className={`cr2-finance-value ${negative ? 'cr2-negative' : ''}`}>
+        {value}
+        {delta !== undefined && delta !== 0 && (
+          <span className={`cr2-finance-delta ${delta > 0 ? 'cr2-positive' : 'cr2-negative'}`}>
+            {delta > 0 ? ' ▲' : ' ▼'}{formatCapital(Math.abs(delta))}
+          </span>
+        )}
+      </span>
+    </div>
+  )
+}
+
 function getBackground(econPhase) {
   const bgMap = {
     boom: '/assets/bg_phase_boom-BqFLGgpW.jpg',
@@ -382,7 +399,13 @@ function getBackground(econPhase) {
 }
 
 function phaseLabel(phase) {
-  const map = { boom: '호황', growth: '성장', stable: '안정', contraction: '위축', recession: '불황' }
+  const map = {
+    boom: '호황',
+    growth: '성장',
+    stable: '안정',
+    contraction: '위축',
+    recession: '불황',
+  }
   return map[phase] || phase
 }
 
@@ -392,15 +415,23 @@ function getDemandMultiplier(phase) {
 }
 
 function getMomentumLabel(momentum) {
-  if (momentum >= 3) return '호황세'
-  if (momentum >= 1) return '상승세'
+  if (momentum >= 3) return '강한 상승'
+  if (momentum >= 1) return '상승'
   if (momentum === 0) return '중립'
-  if (momentum >= -2) return '둔화'
+  if (momentum >= -2) return '약세'
   return '침체'
 }
 
+function getMomentumColor(momentum) {
+  if (momentum >= 3) return 'cr2-positive'
+  if (momentum >= 1) return 'cr2-lime'
+  if (momentum === 0) return 'cr2-gray'
+  if (momentum >= -2) return 'cr2-gold'
+  return 'cr2-negative'
+}
+
 function getRewardLabel(floor) {
-  if (floor % 20 === 0) return '이번 달'
+  if (floor % 20 === 0) return '이번 층'
   const next = Math.ceil(floor / 20) * 20
   return `${next - floor}개월 후`
 }
@@ -410,8 +441,8 @@ function getStrategyWarning(gameState) {
   const cost = gameState.cost || 3000
   const quality = gameState.quality || 0
   if (!price) return null
-  if (price < cost * 1.2 && quality > 20) return '⚠️ 수익성 위험'
-  if (price > cost * 4 && quality < 10) return '⚠️ 브랜드 리스크'
+  if (price < cost * 1.2 && quality > 20) return '수익성 위험'
+  if (price > cost * 4 && quality < 10) return '브랜드 리스크'
   return null
 }
 
@@ -427,4 +458,40 @@ function calcMonthlyInterest(loans = []) {
   return loans.reduce((sum, loan) => (
     sum + Math.floor(loan.principal * (loan.interestRate / 12))
   ), 0)
+}
+
+function getRivalAssetFilename(rivalId) {
+  const map = {
+    junhyuk: 'rival_entry_junhyuk-CHIAhbxg.png',
+    sua: 'rival_entry_sua-Ng4BiHqL.png',
+    sungjin: 'rival_mid_sungjin-D6YbcSZf.png',
+    jieun: 'rival_mid_sunseo-D7JBcSZf.png',
+    junseo: 'rival_senior_junseo-D7JBRjRD.png',
+    seoyeon: 'rival_senior_seoyeon-DQw87pvW.png',
+    taejun: 'rival_senior_taejun-NZJ6s3M.png',
+    cheolmin: 'rival_champion_cheolmin-DQI-_sih.png',
+    dogan: 'rival_champion_dogon-BRN0GlPx.png',
+    hyekyung: 'rival_champion_hyegyeong-Cuy8B_O2.png',
+  }
+  return map[rivalId] || 'logo_image-f7z3e97D.png'
+}
+
+function getAdvisorProfileImage(id) {
+  const map = {
+    raider: '/assets/advisor_raider_profile-BG4Qmc-_.png',
+    guardian: '/assets/advisor_guardian_profile-DheSXB--.png',
+    analyst: '/assets/advisor_analyst_profile-aFBaficW.png',
+    gambler: '/assets/advisor_gambler_profile-Mw_W8stF.png',
+  }
+  return map[id] || '/assets/logo_image-f7z3e97D.png'
+}
+
+function getAdvisorShortName(id) {
+  const map = {
+    raider: 'Raider',
+    guardian: 'Guardian',
+    analyst: 'Analyst',
+    gambler: 'Gambler',
+  }
+  return map[id] || ''
 }
