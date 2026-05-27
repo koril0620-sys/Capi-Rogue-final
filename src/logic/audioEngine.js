@@ -39,40 +39,45 @@ export function applyAudioSettings(settings) {
 
 export function playBGM(key, volume = null) {
   if (!bgmEnabled) return
+
   if (currentBGMKey === key && currentBGM && !currentBGM.paused) return
 
   const src = BGM_FILES[key]
   if (!src) return
 
   if (currentBGM) {
-    fadeOut(currentBGM, () => {
-      startBGM(src, key, volume)
-    })
-  } else {
-    startBGM(src, key, volume)
+    currentBGM.pause()
+    currentBGM.currentTime = 0
+    currentBGM = null
+    currentBGMKey = null
   }
+
+  startBGM(src, key, volume)
 }
 
-function startBGM(src, key, volume) {
+function startBGM(src, key, volume, fade = false) {
   const audio = new Audio(src)
   audio.loop = true
-  audio.volume = 0
-  audio.play().catch(() => {})
-  fadeIn(audio, volume !== null ? volume : bgmVolume)
+  const targetVolume = volume !== null ? volume : bgmVolume
+  audio.volume = fade ? 0 : targetVolume
+  audio.play().catch(error => console.warn('BGM 재생 실패:', error))
+  if (fade) fadeIn(audio, targetVolume)
   currentBGM = audio
   currentBGMKey = key
 }
 
-export function stopBGM(fade = true) {
+export function stopBGM(fade = false) {
   if (!currentBGM) return
 
   if (fade) {
-    fadeOut(currentBGM, () => {
+    const audio = currentBGM
+    fadeOut(audio, () => {
       currentBGM = null
       currentBGMKey = null
     })
   } else {
     currentBGM.pause()
+    currentBGM.currentTime = 0
     currentBGM = null
     currentBGMKey = null
   }

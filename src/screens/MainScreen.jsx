@@ -213,7 +213,7 @@ export default function MainScreen() {
             width: '100px',
             backdropFilter: 'blur(4px)',
             boxShadow: '0 0 10px rgba(220,20,60,0.3)',
-            zIndex: 3,
+            zIndex: 4,
           }}>
             {stage ? (
               <>
@@ -264,7 +264,7 @@ export default function MainScreen() {
             gap: '3px',
             backdropFilter: 'blur(4px)',
             boxShadow: '0 0 12px rgba(0,255,65,0.2)',
-            zIndex: 3,
+            zIndex: 10,
           }}>
             <div style={{ fontSize: '8px', color: 'var(--cr2-green)' }}>수요</div>
             <div style={{ fontSize: '13px', color: 'var(--cr2-lime)' }}>
@@ -285,7 +285,7 @@ export default function MainScreen() {
             gap: '3px',
             width: '100px',
             backdropFilter: 'blur(4px)',
-            zIndex: 3,
+            zIndex: 4,
           }}>
             <img
               src={gameState.playerProfile?.avatar || '/assets/player_male_a_profile-_nb4zKZU.png'}

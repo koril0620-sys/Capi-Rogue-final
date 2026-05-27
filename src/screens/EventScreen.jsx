@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useGameStore } from '../store/useGameStore'
 import { resolveChoice, resolveCashAmount } from '../logic/eventEngine'
 import { settle } from '../logic/settlementEngine'
@@ -11,7 +11,7 @@ export default function EventScreen() {
   const setCurrentScreen = useGameStore(state => state.setCurrentScreen)
   const [selectedChoice, setSelectedChoice] = useState(null)
   const [result, setResult] = useState(null)
-  const [settling, setSettling] = useState(false)
+  const settlingRef = useRef(false)
 
   const externalEvent = gameState.currentExternalEvent
   const internalEvent = gameState.currentInternalEvent
@@ -126,50 +126,66 @@ export default function EventScreen() {
   }
 
   const proceedToSettle = async () => {
-    setSettling(true)
-    const currentState = useGameStore.getState()
-    const { updatedState, settlementResult } = settle(currentState)
+    if (settlingRef.current) return
+    settlingRef.current = true
 
-    useGameStore.setState({
-      ...updatedState,
-      lastSettlementResult: settlementResult,
-      playerShareHistory: [
-        ...(currentState.playerShareHistory || []),
-        settlementResult.shareAfter,
-      ],
-      revenueHistory: [
-        ...(currentState.revenueHistory || []).slice(-9),
-        settlementResult.revenue || 0,
-      ],
-      profitHistory: [
-        ...(currentState.profitHistory || []).slice(-9),
-        settlementResult.netProfit || 0,
-      ],
-      capitalHistory: [
-        ...(currentState.capitalHistory || []).slice(-9),
-        updatedState.capital,
-      ],
-    })
+    try {
+      const currentState = useGameStore.getState()
+      const { updatedState, settlementResult } = settle(currentState)
 
-    if (settlementResult.newlyUnlocked?.length > 0) {
-      useGameStore.setState({ newAchievements: settlementResult.newlyUnlocked })
-      if (currentState.playerId) {
-        void saveAchievements(currentState.playerId, settlementResult.newlyUnlocked)
+      useGameStore.setState({
+        ...updatedState,
+        lastSettlementResult: settlementResult,
+        currentExternalEvent: null,
+        currentInternalEvent: null,
+        playerShareHistory: [
+          ...(currentState.playerShareHistory || []),
+          settlementResult.shareAfter || 0,
+        ],
+        revenueHistory: [
+          ...(currentState.revenueHistory || []).slice(-9),
+          settlementResult.revenue || 0,
+        ],
+        profitHistory: [
+          ...(currentState.profitHistory || []).slice(-9),
+          settlementResult.netProfit || 0,
+        ],
+        capitalHistory: [
+          ...(currentState.capitalHistory || []).slice(-9),
+          updatedState.capital,
+        ],
+      })
+
+      try {
+        if (settlementResult.newlyUnlocked?.length > 0 && currentState.playerId) {
+          await saveAchievements(currentState.playerId, settlementResult.newlyUnlocked)
+          useGameStore.setState({ newAchievements: settlementResult.newlyUnlocked })
+        }
+      } catch (error) {
+        console.error('업적 저장 실패 (무시):', error)
       }
-    }
 
-    if (updatedState.isGameOver || settlementResult.isGameOver) {
-      setCurrentScreen('gameOver')
-      return
+      if (settlementResult.isGameOver) {
+        setCurrentScreen('gameOver')
+        return
+      }
+      if (settlementResult.bossClear) {
+        setCurrentScreen('ending')
+        return
+      }
+
+      setTimeout(() => setCurrentScreen('result'), 0)
+    } catch (error) {
+      console.error('정산 오류:', error)
+      setTimeout(() => setCurrentScreen('result'), 0)
     }
-    if (settlementResult.bossClear) {
-      setCurrentScreen('ending')
-      return
-    }
-    setTimeout(() => {
-      setCurrentScreen('result')
-    }, 0)
   }
+
+  useEffect(() => {
+    if (!externalEvent && !internalEvent && !result) {
+      void proceedToSettle()
+    }
+  })
 
   if (externalEvent && !result) {
     return (
@@ -247,18 +263,7 @@ export default function EventScreen() {
     )
   }
 
-  return (
-    <div className="cr2-event-screen">
-      <div className="cr2-event-card cr2-event-result">
-        <div className="cr2-event-title">
-          {settling ? '정산 중...' : '정산 준비 중...'}
-        </div>
-        <div className="cr2-event-result-text cr2-gray">
-          잠시만 기다려 주세요.
-        </div>
-      </div>
-    </div>
-  )
+  return null
 }
 
 function formatEffect(effect) {
