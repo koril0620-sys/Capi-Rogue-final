@@ -195,7 +195,23 @@ export default function MainScreen() {
         </div>
 
         <div className="cr2-game-area">
-          <div className="cr2-rival-card">
+          <div
+            className="cr2-rival-card"
+            style={{
+              position: 'absolute',
+              top: '110px',
+              left: '12px',
+              background: 'rgba(0,0,0,0.8)',
+              border: '2px solid var(--cr2-red)',
+              padding: '10px 12px',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '4px',
+              minWidth: '110px',
+              backdropFilter: 'blur(4px)',
+            }}
+          >
             {stage ? (
               <>
                 <img
@@ -206,14 +222,33 @@ export default function MainScreen() {
                 <div className="cr2-rival-card-name">{stage.rivalName}</div>
                 <div className="cr2-rival-card-company">{stage.company}</div>
                 <div className="cr2-rival-card-tier">[{stage.tier}]</div>
-                <div className="cr2-rival-card-status cr2-gray">정산 후 공개</div>
               </>
             ) : (
               <div className="cr2-rival-card-empty cr2-gray">라이벌 없음</div>
             )}
           </div>
 
-          <div className="cr2-demand-bubble">
+          <div
+            className="cr2-demand-bubble"
+            style={{
+              position: 'absolute',
+              top: '50%',
+              left: '12px',
+              transform: 'translateY(-50%)',
+              background: 'rgba(0,0,0,0.8)',
+              border: '2px solid var(--cr2-lime)',
+              borderRadius: '50%',
+              width: '110px',
+              height: '110px',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '4px',
+              backdropFilter: 'blur(4px)',
+              boxShadow: '0 0 16px rgba(0,255,65,0.2)',
+            }}
+          >
             <div className="cr2-demand-label">수요</div>
             <div className="cr2-demand-value">
               {Math.floor(10000 * getDemandMultiplier(gameState.econPhase)).toLocaleString()}
@@ -221,7 +256,23 @@ export default function MainScreen() {
             <button className="cr2-tooltip-btn cr2-gray">?</button>
           </div>
 
-          <div className="cr2-player-card">
+          <div
+            className="cr2-player-card"
+            style={{
+              position: 'absolute',
+              bottom: '60px',
+              left: '12px',
+              background: 'rgba(0,0,0,0.8)',
+              border: '2px solid var(--cr2-lime)',
+              padding: '10px 12px',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '4px',
+              minWidth: '110px',
+              backdropFilter: 'blur(4px)',
+            }}
+          >
             <img
               src={getPlayerAvatarImage(gameState.playerProfile)}
               alt="내 회사"
