@@ -1,9 +1,37 @@
 import { supabase } from '../lib/supabaseClient'
 import { useGameStore } from '../store/useGameStore'
 
+const EXCLUDE_FIELDS = [
+  'currentScreen',
+  'isPaused',
+  'stagePopup',
+  'learningPopup',
+  'newAchievements',
+  'lastSettlementResult',
+]
+
+export function serializeGameState(gameState) {
+  const serialized = {}
+
+  for (const [key, value] of Object.entries(gameState)) {
+    if (typeof value === 'function') continue
+    if (EXCLUDE_FIELDS.includes(key)) continue
+    serialized[key] = value
+  }
+
+  return serialized
+}
+
+export function hydrateGameState(savedJson) {
+  return { ...(savedJson || {}) }
+}
+
 export async function saveOnFloorEnter(gameState = useGameStore.getState()) {
   const { playerId, currentSlot } = gameState
   if (!playerId || !currentSlot) return false
+  if (!supabase) return false
+
+  const serialized = serializeGameState(gameState)
 
   try {
     const { error } = await supabase
@@ -11,25 +39,21 @@ export async function saveOnFloorEnter(gameState = useGameStore.getState()) {
       .upsert({
         user_id: playerId,
         slot_number: currentSlot,
-        game_state_json: gameState,
+        game_state_json: serialized,
         updated_at: new Date().toISOString(),
       }, {
         onConflict: 'user_id,slot_number',
       })
 
-    if (error) {
-      console.error('저장 실패:', error)
-      return false
-    }
-
-    return true
-  } catch (err) {
-    console.error('저장 오류:', err)
+    return !error
+  } catch {
     return false
   }
 }
 
 export async function loadSaveSlots(userId) {
+  if (!supabase) return []
+
   try {
     const { data, error } = await supabase
       .from('game_saves')
@@ -45,6 +69,8 @@ export async function loadSaveSlots(userId) {
 }
 
 export async function loadSaveSlot(userId, slotNumber) {
+  if (!supabase) return null
+
   try {
     const { data, error } = await supabase
       .from('game_saves')
@@ -54,13 +80,15 @@ export async function loadSaveSlot(userId, slotNumber) {
       .single()
 
     if (error || !data) return null
-    return data.game_state_json
+    return hydrateGameState(data.game_state_json)
   } catch {
     return null
   }
 }
 
 export async function deleteSaveSlot(userId, slotNumber) {
+  if (!supabase) return false
+
   try {
     const { error } = await supabase
       .from('game_saves')
@@ -75,6 +103,8 @@ export async function deleteSaveSlot(userId, slotNumber) {
 }
 
 export async function saveRecord(userId, recordData) {
+  if (!supabase) return false
+
   try {
     const { error } = await supabase
       .from('records')
@@ -104,6 +134,8 @@ export async function saveRecord(userId, recordData) {
 }
 
 export async function loadAllRecords(userId) {
+  if (!supabase) return []
+
   try {
     const { data, error } = await supabase
       .from('records')

@@ -1,15 +1,26 @@
 import { useState, useEffect } from 'react'
 import { useGameStore } from '../store/useGameStore'
-import { loadSaveSlots } from '../logic/saveEngine'
+import { loadSaveSlot, loadSaveSlots } from '../logic/saveEngine'
 import { playSFX } from '../logic/audioEngine'
 
 export default function SlotSelectScreen() {
   const setCurrentScreen = useGameStore(state => state.setCurrentScreen)
   const setCurrentSlot = useGameStore(state => state.setCurrentSlot)
+  const resetGame = useGameStore(state => state.resetGame)
   const playerId = useGameStore(state => state.playerId)
+  const playerProfile = useGameStore(state => state.playerProfile)
+  const selectedAdvisor = useGameStore(state => state.selectedAdvisor)
   const [slots, setSlots] = useState([])
   const [confirmSlot, setConfirmSlot] = useState(null)
   const [loading, setLoading] = useState(Boolean(playerId))
+
+  useEffect(() => {
+    if (!selectedAdvisor && !playerId) {
+      setCurrentScreen('advisorSelect')
+      return
+    }
+    if (!playerProfile && !playerId) setCurrentScreen('characterCreate')
+  }, [playerId, playerProfile, selectedAdvisor, setCurrentScreen])
 
   useEffect(() => {
     if (!playerId) return undefined
@@ -31,23 +42,50 @@ export default function SlotSelectScreen() {
   const getSlotData = slotNumber =>
     slots.find(slot => slot.slot_number === slotNumber)
 
+  const startNewGame = (slotNumber) => {
+    const state = useGameStore.getState()
+    if (!state.selectedAdvisor || !state.playerProfile) {
+      setCurrentScreen('advisorSelect')
+      return
+    }
+    setCurrentSlot(slotNumber)
+    resetGame(state.selectedAdvisor, state.playerProfile, slotNumber)
+    setCurrentScreen('main')
+  }
+
   const handleSlotClick = (slotNumber) => {
     playSFX('click')
     const slotData = getSlotData(slotNumber)
     if (slotData) {
       setConfirmSlot(slotNumber)
     } else {
-      selectSlot(slotNumber)
+      startNewGame(slotNumber)
     }
   }
 
-  const selectSlot = (slotNumber) => {
-    setCurrentSlot(slotNumber)
+  const handleContinue = async (slotNumber) => {
+    if (!playerId) return
+
+    const savedState = await loadSaveSlot(playerId, slotNumber)
+    if (!savedState) return
+
+    const pureState = { ...savedState }
+    delete pureState.setCurrentScreen
+    delete pureState.setIsPaused
+    delete pureState.resetGame
+
+    useGameStore.setState({
+      ...pureState,
+      currentSlot: slotNumber,
+      isPaused: false,
+    })
+    setConfirmSlot(null)
     setCurrentScreen('main')
   }
 
   const handleConfirmOverwrite = () => {
-    selectSlot(confirmSlot)
+    if (!confirmSlot) return
+    startNewGame(confirmSlot)
     setConfirmSlot(null)
   }
 
@@ -97,14 +135,17 @@ export default function SlotSelectScreen() {
       {confirmSlot && (
         <div className="cr2-slot-confirm-overlay">
           <div className="cr2-slot-confirm-box">
-            <div className="cr2-slot-confirm-title">⚠️ 덮어쓰기</div>
+            <div className="cr2-slot-confirm-title">저장된 슬롯</div>
             <div className="cr2-slot-confirm-text">
               슬롯 {confirmSlot}에 저장된 데이터가 있습니다.<br />
-              덮어쓸까요?
+              이어서 하거나 새 게임으로 덮어쓸 수 있습니다.
             </div>
             <div className="cr2-slot-confirm-btns">
+              <button className="cr2-btn" onClick={() => handleContinue(confirmSlot)}>
+                이어하기
+              </button>
               <button className="cr2-btn cr2-btn-danger" onClick={handleConfirmOverwrite}>
-                덮어쓰기
+                새 게임
               </button>
               <button className="cr2-btn" onClick={() => setConfirmSlot(null)}>
                 취소
@@ -116,7 +157,7 @@ export default function SlotSelectScreen() {
 
       <button
         className="cr2-btn cr2-back-btn"
-        onClick={() => setCurrentScreen('advisorSelect')}
+        onClick={() => setCurrentScreen('characterCreate')}
       >
         뒤로가기
       </button>

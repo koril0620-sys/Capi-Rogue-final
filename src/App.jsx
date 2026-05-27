@@ -81,7 +81,7 @@ export default function App() {
 
   return (
     <>
-      {screens[currentScreen] || <LoginScreen />}
+      {screens[currentScreen] || <TitleScreen />}
       {isPaused && <PauseMenu />}
     </>
   )

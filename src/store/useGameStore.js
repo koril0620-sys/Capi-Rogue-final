@@ -57,6 +57,7 @@ export const useGameStore = create((set) => ({
   currentExternalEvent: null,
   currentInternalEvent: null,
   factoryActionThisTurn: null,
+  lastSettlementResult: null,
 
   rivalCapital: 0,
   rivalInitialCapital: 0,
@@ -100,7 +101,6 @@ export const useGameStore = create((set) => ({
   },
 
   completedTutorials: [],
-  isTutorialEnabled: true,
 
   settings: {
     language: 'ko',
@@ -173,6 +173,7 @@ export const useGameStore = create((set) => ({
       currentExternalEvent: null,
       currentInternalEvent: null,
       factoryActionThisTurn: null,
+      lastSettlementResult: null,
       rivalCapital: 0,
       rivalInitialCapital: 0,
       rivalConsecutiveLoss: 0,

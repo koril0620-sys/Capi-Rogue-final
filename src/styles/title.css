@@ -11,9 +11,7 @@
 .cr2-title-bg {
   position: absolute;
   inset: 0;
-  background-image: url('/assets/images/backgrounds/bg_title.png');
-  background-size: cover;
-  background-position: center;
+  background: #000;
   filter: brightness(0.5);
 }
 
@@ -26,6 +24,13 @@
     4px 4px 0 #005500,
     0 0 40px var(--cr2-lime);
   margin-bottom: 8px;
+}
+
+.cr2-title-logo-img {
+  position: relative;
+  z-index: 1;
+  width: 480px;
+  object-fit: contain;
 }
 
 .cr2-title-version {

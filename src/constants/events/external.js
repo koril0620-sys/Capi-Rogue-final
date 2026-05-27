@@ -9,7 +9,7 @@ export const EXTERNAL_EVENTS = [
       creditScoreChange: -2,
       duration: 3,
     },
-    backgroundImage: '/assets/images/backgrounds/event_finance.png',
+    backgroundImage: '/assets/bg_phase_stable-BS4q62fz.jpg',
   },
   {
     id: 'E02',
@@ -20,7 +20,7 @@ export const EXTERNAL_EVENTS = [
       interestRateChange: -0.01,
       duration: 3,
     },
-    backgroundImage: '/assets/images/backgrounds/event_finance.png',
+    backgroundImage: '/assets/bg_phase_stable-BS4q62fz.jpg',
   },
   {
     id: 'E03',
@@ -31,7 +31,7 @@ export const EXTERNAL_EVENTS = [
       costMultiplier: 1.15,
       duration: 2,
     },
-    backgroundImage: '/assets/images/backgrounds/event_finance.png',
+    backgroundImage: '/assets/bg_phase_stable-BS4q62fz.jpg',
   },
   {
     id: 'E04',
@@ -42,7 +42,7 @@ export const EXTERNAL_EVENTS = [
       forcePhase: 'contraction',
       duration: 1,
     },
-    backgroundImage: '/assets/images/backgrounds/event_crisis.png',
+    backgroundImage: '/assets/bg_phase_recession-CCyrxX4k.jpg',
   },
   {
     id: 'E05',
@@ -54,7 +54,7 @@ export const EXTERNAL_EVENTS = [
       demandMultiplier: 1.15,
       duration: 2,
     },
-    backgroundImage: '/assets/images/backgrounds/event_policy.png',
+    backgroundImage: '/assets/bg_phase_growth-BN5UHyVn.jpg',
   },
   {
     id: 'E06',
@@ -66,7 +66,7 @@ export const EXTERNAL_EVENTS = [
       orderCapMultiplier: 0.8,
       duration: 3,
     },
-    backgroundImage: '/assets/images/backgrounds/event_supply.png',
+    backgroundImage: '/assets/bg_phase_contraction-CbRrs-qy.jpg',
   },
   {
     id: 'E07',
@@ -77,7 +77,7 @@ export const EXTERNAL_EVENTS = [
       costMultiplier: 1.20,
       duration: 2,
     },
-    backgroundImage: '/assets/images/backgrounds/event_supply.png',
+    backgroundImage: '/assets/bg_phase_contraction-CbRrs-qy.jpg',
   },
   {
     id: 'E08',
@@ -88,7 +88,7 @@ export const EXTERNAL_EVENTS = [
       costMultiplier: 0.85,
       duration: 2,
     },
-    backgroundImage: '/assets/images/backgrounds/event_supply.png',
+    backgroundImage: '/assets/bg_phase_contraction-CbRrs-qy.jpg',
   },
   {
     id: 'E09',
@@ -100,7 +100,7 @@ export const EXTERNAL_EVENTS = [
       costMultiplier: 1.10,
       duration: 2,
     },
-    backgroundImage: '/assets/images/backgrounds/event_supply.png',
+    backgroundImage: '/assets/bg_phase_contraction-CbRrs-qy.jpg',
   },
   {
     id: 'E10',
@@ -111,7 +111,7 @@ export const EXTERNAL_EVENTS = [
       costMultiplier: 0.90,
       duration: 2,
     },
-    backgroundImage: '/assets/images/backgrounds/event_supply.png',
+    backgroundImage: '/assets/bg_phase_contraction-CbRrs-qy.jpg',
   },
   {
     id: 'E11',
@@ -124,7 +124,7 @@ export const EXTERNAL_EVENTS = [
       demandMultiplier: 0.85,
       duration: 4,
     },
-    backgroundImage: '/assets/images/backgrounds/event_war.png',
+    backgroundImage: '/assets/bg_phase_recession-CCyrxX4k.jpg',
   },
   {
     id: 'E12',
@@ -135,7 +135,7 @@ export const EXTERNAL_EVENTS = [
       forcePhase: 'stable',
       duration: 1,
     },
-    backgroundImage: '/assets/images/backgrounds/event_peace.png',
+    backgroundImage: '/assets/bg_phase_stable-BS4q62fz.jpg',
   },
   {
     id: 'E13',
@@ -147,7 +147,7 @@ export const EXTERNAL_EVENTS = [
       demandMultiplier: 0.80,
       duration: 2,
     },
-    backgroundImage: '/assets/images/backgrounds/event_disaster.png',
+    backgroundImage: '/assets/bg_phase_recession-CCyrxX4k.jpg',
   },
   {
     id: 'E14',
@@ -159,7 +159,7 @@ export const EXTERNAL_EVENTS = [
       demandMultiplier: 0.75,
       duration: 3,
     },
-    backgroundImage: '/assets/images/backgrounds/event_pandemic.png',
+    backgroundImage: '/assets/bg_phase_recession-CCyrxX4k.jpg',
   },
   {
     id: 'E15',
@@ -170,7 +170,7 @@ export const EXTERNAL_EVENTS = [
       orderCapMultiplier: 0.75,
       duration: 2,
     },
-    backgroundImage: '/assets/images/backgrounds/event_strike.png',
+    backgroundImage: '/assets/bg_phase_contraction-CbRrs-qy.jpg',
   },
   {
     id: 'E16',
@@ -181,7 +181,7 @@ export const EXTERNAL_EVENTS = [
       consumerRatioShift: { quality: 0.10, price: -0.10 },
       duration: 3,
     },
-    backgroundImage: '/assets/images/backgrounds/event_trend.png',
+    backgroundImage: '/assets/bg_phase_growth-BN5UHyVn.jpg',
   },
   {
     id: 'E17',
@@ -192,7 +192,7 @@ export const EXTERNAL_EVENTS = [
       costMultiplier: 1.15,
       duration: 4,
     },
-    backgroundImage: '/assets/images/backgrounds/event_policy.png',
+    backgroundImage: '/assets/bg_phase_growth-BN5UHyVn.jpg',
   },
   {
     id: 'E18',
@@ -203,7 +203,7 @@ export const EXTERNAL_EVENTS = [
       netProfitMultiplier: 1.10,
       duration: 3,
     },
-    backgroundImage: '/assets/images/backgrounds/event_policy.png',
+    backgroundImage: '/assets/bg_phase_growth-BN5UHyVn.jpg',
   },
   {
     id: 'E19',
@@ -214,7 +214,7 @@ export const EXTERNAL_EVENTS = [
       demandMultiplier: 1.15,
       duration: 2,
     },
-    backgroundImage: '/assets/images/backgrounds/event_trend.png',
+    backgroundImage: '/assets/bg_phase_growth-BN5UHyVn.jpg',
   },
   {
     id: 'E20',
@@ -225,6 +225,6 @@ export const EXTERNAL_EVENTS = [
       forcePhase: 'growth',
       duration: 1,
     },
-    backgroundImage: '/assets/images/backgrounds/event_trend.png',
+    backgroundImage: '/assets/bg_phase_growth-BN5UHyVn.jpg',
   },
 ]

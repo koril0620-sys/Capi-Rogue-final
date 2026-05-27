@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useGameStore } from '../store/useGameStore'
 import { saveRecord } from '../logic/saveEngine'
 import { getCurrentStage } from '../constants/monopol'
+import { RIVALS } from '../constants/rivals'
 import { getGrade } from '../logic/creditEngine'
 import { playSFX } from '../logic/audioEngine'
 import '../styles/gameOver.css'
@@ -14,6 +15,7 @@ export default function GameOverScreen() {
   const [saved, setSaved] = useState(false)
 
   const stage = getCurrentStage(gameState.floor)
+  const currentRival = stage ? RIVALS.find(rival => rival.id === stage.rival) : null
 
   const getGameOverReason = () => {
     if (gameState.health <= 0) return '경영 체력이 소진됐다.'
@@ -70,7 +72,7 @@ export default function GameOverScreen() {
           {stage && (
             <div className="cr2-gameover-rival">
               <img
-                src={`/assets/images/rivals/${stage.rival}.png`}
+                src={currentRival?.profileImage || '/assets/logo_image-f7z3e97D.png'}
                 alt={stage.rivalName}
                 className="cr2-gameover-rival-img"
               />

@@ -26,19 +26,24 @@ export default function TitleScreen() {
       setIntroStep(prev => prev + 1)
     } else {
       setShowIntro(false)
-      setCurrentScreen('characterCreate')
+      setCurrentScreen('advisorSelect')
     }
   }
 
   const handleIntroSkip = () => {
     setShowIntro(false)
-    setCurrentScreen('characterCreate')
+    setCurrentScreen('advisorSelect')
   }
 
   return (
     <div className="cr2-title-screen">
       <div className="cr2-title-bg" />
 
+      <img
+        src="/assets/logo_image-f7z3e97D.png"
+        alt="CapiRogue"
+        className="cr2-title-logo-img"
+      />
       <div className="cr2-title-logo">CapiRogue</div>
       <div className="cr2-title-version">v1.0.0</div>
       <div className="cr2-title-tagline">시장을 지배하라</div>

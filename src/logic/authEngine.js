@@ -46,6 +46,7 @@ export function clearAuthToken() {
 export async function tryAutoLogin() {
   const token = loadAuthToken()
   if (!token) return false
+  if (!supabase) return false
 
   try {
     const { data, error } = await supabase
@@ -69,6 +70,8 @@ export async function tryAutoLogin() {
 }
 
 export async function signIn(username, password, rememberMe = true) {
+  if (!supabase) return { success: false, error: '서버 연결 없음 (게스트 모드)' }
+
   try {
     const { data, error } = await supabase
       .from('player_accounts')
@@ -92,6 +95,8 @@ export async function signIn(username, password, rememberMe = true) {
 }
 
 export async function signUp(username, password, userType = 'general') {
+  if (!supabase) return { success: false, error: '서버 연결 없음 (게스트 모드)' }
+
   try {
     const { data: existing } = await supabase
       .from('player_accounts')

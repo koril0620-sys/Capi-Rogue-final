@@ -5,7 +5,9 @@ import { saveOnFloorEnter } from '../logic/saveEngine'
 import { getClearGrade } from '../logic/rewardEngine'
 import { getCurrentStage, isBossStage } from '../constants/monopol'
 import { playSFX } from '../logic/audioEngine'
+import { getMaturedLoans } from '../logic/loanEngine'
 import AchievementToast from '../components/AchievementToast'
+import LoanMaturityAlert from '../components/LoanMaturityAlert'
 import '../styles/result.css'
 
 export default function ResultScreen() {
@@ -16,6 +18,9 @@ export default function ResultScreen() {
 
   const settlementResult = gameState.lastSettlementResult || {}
   const report = generateReport(gameState, settlementResult, gameState.selectedAdvisor)
+  const maturedLoans = getMaturedLoans(gameState.loans || [])
+  const [showAlert, setShowAlert] = useState(maturedLoans.length > 0)
+  const [alertLoan, setAlertLoan] = useState(maturedLoans[0] || null)
 
   const handleNextFloor = async () => {
     setSaving(true)
@@ -210,6 +215,16 @@ export default function ResultScreen() {
           </button>
         </div>
       </div>
+
+      {showAlert && alertLoan && (
+        <LoanMaturityAlert
+          loan={alertLoan}
+          onClose={() => {
+            setShowAlert(false)
+            setAlertLoan(null)
+          }}
+        />
+      )}
 
       <AchievementToast />
     </div>

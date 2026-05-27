@@ -1,25 +1,47 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useGameStore } from '../store/useGameStore'
 import { playSFX } from '../logic/audioEngine'
 
 const AVATARS = [
-  { id: 'male_a', label: '남 A', src: '/assets/images/avatars/male_a.png' },
-  { id: 'male_b', label: '남 B', src: '/assets/images/avatars/male_b.png' },
-  { id: 'female_a', label: '여 A', src: '/assets/images/avatars/female_a.png' },
-  { id: 'female_b', label: '여 B', src: '/assets/images/avatars/female_b.png' },
+  {
+    id: 'male_a',
+    label: '남 A',
+    src: '/assets/player_male_a_profile-_nb4zKZU.png',
+    fullSrc: '/assets/player_male_a_full-DF6j0EBQ.png',
+  },
+  {
+    id: 'male_b',
+    label: '남 B',
+    src: '/assets/player_male_b_profile-DqCZ6-iC.png',
+    fullSrc: '/assets/player_male_b_full-BNlwZp8L.png',
+  },
+  {
+    id: 'female_a',
+    label: '여 A',
+    src: '/assets/player_female_a_profile-VQBwtxfm.png',
+    fullSrc: '/assets/player_female_a_full-CBD6AZpe.png',
+  },
+  {
+    id: 'female_b',
+    label: '여 B',
+    src: '/assets/player_female_b_profile-Ca7EZ6ok.png',
+    fullSrc: '/assets/player_female_b_full-D8QzBvRn.png',
+  },
 ]
 
 export default function CharacterCreateScreen() {
   const setCurrentScreen = useGameStore(s => s.setCurrentScreen)
   const setPlayerProfile = useGameStore(s => s.setPlayerProfile)
-  const resetGame = useGameStore(s => s.resetGame)
   const selectedAdvisor = useGameStore(s => s.selectedAdvisor)
-  const currentSlot = useGameStore(s => s.currentSlot)
 
   const [avatar, setAvatar] = useState('male_a')
   const [ceoName, setCeoName] = useState('')
   const [companyName, setCompanyName] = useState('')
   const [error, setError] = useState('')
+
+  useEffect(() => {
+    if (!selectedAdvisor) setCurrentScreen('advisorSelect')
+  }, [selectedAdvisor, setCurrentScreen])
 
   const handleStart = () => {
     if (!ceoName.trim()) {
@@ -40,8 +62,7 @@ export default function CharacterCreateScreen() {
     }
 
     setPlayerProfile(profile)
-    resetGame(selectedAdvisor, profile, currentSlot)
-    setCurrentScreen('main')
+    setCurrentScreen('slotSelect')
   }
 
   return (

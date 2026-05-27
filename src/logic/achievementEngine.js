@@ -77,6 +77,7 @@ function checkCondition(condition, gameState, result) {
 
 export async function saveAchievements(userId, achievementIds) {
   if (!userId || !achievementIds.length) return
+  if (!supabase) return { success: false, error: '서버 연결 없음 (게스트 모드)' }
 
   try {
     const { data } = await supabase
@@ -92,8 +93,11 @@ export async function saveAchievements(userId, achievementIds) {
       .from('player_accounts')
       .update({ achievements: merged })
       .eq('id', userId)
+
+    return { success: true }
   } catch (err) {
     console.error('업적 저장 실패:', err)
+    return { success: false, error: err?.message || '업적 저장 실패' }
   }
 }
 

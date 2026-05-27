@@ -4,6 +4,8 @@ import { saveRecord } from '../logic/saveEngine'
 import { getClearGrade } from '../logic/rewardEngine'
 import { getGrade } from '../logic/creditEngine'
 import { playSFX } from '../logic/audioEngine'
+import { ADVISORS } from '../constants/advisors'
+import { RIVALS } from '../constants/rivals'
 import '../styles/ending.css'
 
 export default function EndingScreen() {
@@ -16,6 +18,7 @@ export default function EndingScreen() {
   const grade = gameState.clearGrade || getClearGrade(gameState)
   const gradeColors = { S: '#FFD700', A: '#00FF41', B: '#00AA00', C: '#DC143C' }
   const gradeColor = gradeColors[grade] || '#00FF41'
+  const advisor = ADVISORS.find(item => item.id === gameState.selectedAdvisor)
 
   const endingMessages = {
     S: 'MONOPOL을 완전히 무너뜨렸다. 시장은 이제 자유롭다.',
@@ -61,7 +64,7 @@ export default function EndingScreen() {
           <div className="cr2-ending-main-title cr2-negative">MONOPOL 붕괴</div>
 
           <img
-            src={`/assets/images/endings/ending_${grade.toLowerCase()}.png`}
+            src="/assets/logo_image-f7z3e97D.png"
             alt="엔딩"
             className="cr2-ending-main-img"
           />
@@ -74,7 +77,7 @@ export default function EndingScreen() {
 
           <div className="cr2-ending-advisor">
             <img
-              src={`/assets/images/advisors/${gameState.selectedAdvisor}.png`}
+              src={advisor?.profileImage || '/assets/logo_image-f7z3e97D.png'}
               alt="어드바이저"
               className="cr2-ending-advisor-img"
             />
@@ -111,7 +114,7 @@ export default function EndingScreen() {
               {(gameState.metRivals || []).map(rivalId => (
                 <img
                   key={rivalId}
-                  src={`/assets/images/rivals/${rivalId}.png`}
+                  src={RIVALS.find(rival => rival.id === rivalId)?.profileImage || '/assets/logo_image-f7z3e97D.png'}
                   alt={rivalId}
                   className="cr2-ending-rival-sprite"
                 />

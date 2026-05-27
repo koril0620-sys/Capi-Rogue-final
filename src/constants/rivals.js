@@ -7,7 +7,7 @@ export const RIVALS = [
     monopolMember: true,
     monopolRank: 'ENTRY',
     monopolStageId: 'stage_1',
-    profileImage: '/assets/images/rivals/junhyuk.png',
+    profileImage: '/assets/rival_entry_junhyuk-CHlAhbxg.png',
     floorUnlock: 1,
     stats: { quality: 5.0, brand: 1, awareness: 8 },
     baseStrategy: {
@@ -28,7 +28,7 @@ export const RIVALS = [
     monopolMember: true,
     monopolRank: 'ENTRY',
     monopolStageId: 'stage_2',
-    profileImage: '/assets/images/rivals/sua.png',
+    profileImage: '/assets/rival_entry_sua-Ng4BiHAI.png',
     floorUnlock: 11,
     stats: { quality: 5.5, brand: 2, awareness: 15 },
     baseStrategy: {
@@ -49,7 +49,7 @@ export const RIVALS = [
     monopolMember: true,
     monopolRank: 'MID',
     monopolStageId: 'stage_3',
-    profileImage: '/assets/images/rivals/sungjin.png',
+    profileImage: '/assets/rival_mid_sungjin-D6YbcSZf.png',
     floorUnlock: 21,
     stats: { quality: 6.0, brand: 3, awareness: 20 },
     baseStrategy: {
@@ -70,7 +70,7 @@ export const RIVALS = [
     monopolMember: true,
     monopolRank: 'MID',
     monopolStageId: 'stage_4',
-    profileImage: '/assets/images/rivals/jieun.png',
+    profileImage: '/assets/rival_mid_jieun-BOpsHoqL.png',
     floorUnlock: 41,
     stats: { quality: 6.5, brand: 3, awareness: 25 },
     baseStrategy: {
@@ -91,7 +91,7 @@ export const RIVALS = [
     monopolMember: true,
     monopolRank: 'SENIOR',
     monopolStageId: 'stage_5',
-    profileImage: '/assets/images/rivals/junseo.png',
+    profileImage: '/assets/rival_senior_junseo-D7JBRjRD.png',
     floorUnlock: 61,
     stats: { quality: 8.0, brand: 5, awareness: 45 },
     baseStrategy: {
@@ -112,7 +112,7 @@ export const RIVALS = [
     monopolMember: true,
     monopolRank: 'SENIOR',
     monopolStageId: 'stage_6',
-    profileImage: '/assets/images/rivals/seoyeon.png',
+    profileImage: '/assets/rival_senior_seoyeon-DQw87pvW.png',
     floorUnlock: 81,
     stats: { quality: 8.5, brand: 7, awareness: 55 },
     baseStrategy: {
@@ -133,7 +133,7 @@ export const RIVALS = [
     monopolMember: true,
     monopolRank: 'SENIOR',
     monopolStageId: 'stage_7',
-    profileImage: '/assets/images/rivals/taejun.png',
+    profileImage: '/assets/rival_senior_taejun-NZJ6-s3M.png',
     floorUnlock: 96,
     stats: { quality: 9.0, brand: 6, awareness: 60 },
     baseStrategy: {
@@ -154,7 +154,7 @@ export const RIVALS = [
     monopolMember: true,
     monopolRank: 'CHAMPION',
     monopolStageId: 'stage_8',
-    profileImage: '/assets/images/rivals/cheolmin.png',
+    profileImage: '/assets/rival_champion_cheolmin-DQI-_sih.png',
     floorUnlock: 111,
     stats: { quality: 10.0, brand: 8, awareness: 75 },
     baseStrategy: {
@@ -175,7 +175,7 @@ export const RIVALS = [
     monopolMember: true,
     monopolRank: 'VICE_BOSS',
     monopolStageId: 'stage_9',
-    profileImage: '/assets/images/rivals/dogan.png',
+    profileImage: '/assets/rival_champion_dogeon-BRN0GlPx.png',
     floorUnlock: 119,
     stats: { quality: 11.0, brand: 9, awareness: 80 },
     baseStrategy: {
@@ -196,7 +196,7 @@ export const RIVALS = [
     monopolMember: true,
     monopolRank: 'BOSS',
     monopolStageId: 'stage_boss',
-    profileImage: '/assets/images/rivals/hyekyung.png',
+    profileImage: '/assets/rival_champion_hyegyeong-Cuy8B_O2.png',
     floorUnlock: 120,
     stats: { quality: 15.0, brand: 10, awareness: 90 },
     baseStrategy: {

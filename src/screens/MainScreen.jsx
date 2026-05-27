@@ -5,8 +5,11 @@ import { rollExternalEvent, rollInternalEvent } from '../logic/eventEngine'
 import { getRivalInitialCapital } from '../logic/monopolEngine'
 import { getCurrentStage, isNewStage } from '../constants/monopol'
 import { getLearningGoal } from '../constants/learningGoals'
+import { RIVALS } from '../constants/rivals'
+import { ADVISORS } from '../constants/advisors'
 import { saveAchievements } from '../logic/achievementEngine'
 import { playSFX, playBGM } from '../logic/audioEngine'
+import { getUpcomingMaturityLoans } from '../logic/loanEngine'
 import RightPanel from '../components/RightPanel'
 import RivalCapitalBar from '../components/RivalCapitalBar'
 import CheatPanel from '../components/CheatPanel'
@@ -16,6 +19,7 @@ export default function MainScreen() {
   const gameState = useGameStore(state => state)
   const setCurrentScreen = useGameStore(state => state.setCurrentScreen)
   const setRivalState = useGameStore(state => state.setRivalState)
+  const setIsPaused = useGameStore(state => state.setIsPaused)
 
   const [stagePopup, setStagePopup] = useState(null)
   const [learningPopup, setLearningPopup] = useState(null)
@@ -57,7 +61,7 @@ export default function MainScreen() {
 
       const goal = getLearningGoal(currentFloor)
       const hideGoal = localStorage.getItem('cr2_hide_goal')
-      if (goal && !hideGoal && gameState.isTutorialEnabled) {
+      if (goal && !hideGoal && gameState.settings?.tutorial !== false) {
         setLearningPopup(goal)
       }
 
@@ -67,7 +71,7 @@ export default function MainScreen() {
     gameState.capital,
     gameState.econPhase,
     gameState.floor,
-    gameState.isTutorialEnabled,
+    gameState.settings?.tutorial,
     setRivalState,
   ])
 
@@ -121,6 +125,9 @@ export default function MainScreen() {
 
   const background = getBackground(gameState.econPhase)
   const stage = getCurrentStage(gameState.floor)
+  const currentRival = stage ? RIVALS.find(rival => rival.id === stage.rival) : null
+  const currentAdvisor = ADVISORS.find(advisor => advisor.id === gameState.selectedAdvisor)
+  const upcomingLoans = getUpcomingMaturityLoans(gameState.loans || [])
 
   return (
     <div className="cr2-main-screen">
@@ -128,6 +135,14 @@ export default function MainScreen() {
         className="cr2-main-bg"
         style={{ backgroundImage: `url(${background})` }}
       />
+
+      <button
+        className="cr2-pause-btn"
+        onClick={() => setIsPaused(true)}
+        style={{ position: 'absolute', top: 8, right: 8, zIndex: 10 }}
+      >
+        II
+      </button>
 
       <div className="cr2-main-left">
         <div className="cr2-main-overlay-top">
@@ -141,6 +156,13 @@ export default function MainScreen() {
           )}
         </div>
 
+        {upcomingLoans.length > 0 && (
+          <div className={`cr2-loan-warning ${upcomingLoans[0].remainingTurns <= 1 ? 'cr2-blink' : ''}`}>
+            ⚠️ 대출 만기 {upcomingLoans[0].remainingTurns}턴 후 ·
+            원금 {(upcomingLoans[0].principal / 10000).toFixed(0)}만원
+          </div>
+        )}
+
         <div className="cr2-demand-area">
           <div className="cr2-demand-bubble">
             <div className="cr2-demand-label">수요</div>
@@ -153,7 +175,7 @@ export default function MainScreen() {
           {stage && (
             <div className="cr2-rival-bubble">
               <img
-                src={`/assets/images/rivals/${stage.rival}.png`}
+                src={currentRival?.profileImage || '/assets/logo_image-f7z3e97D.png'}
                 alt={stage.rivalName}
                 className="cr2-rival-img"
               />
@@ -165,7 +187,7 @@ export default function MainScreen() {
 
           <div className="cr2-player-bubble">
             <img
-              src={gameState.playerProfile?.avatar || '/assets/images/avatars/male_a.png'}
+              src={gameState.playerProfile?.avatar || '/assets/player_male_a_profile-_nb4zKZU.png'}
               alt="내 회사"
               className="cr2-player-img"
             />
@@ -189,7 +211,7 @@ export default function MainScreen() {
             </div>
             <div className="cr2-advisor-mini">
               <img
-                src={`/assets/images/advisors/${gameState.selectedAdvisor}.png`}
+                src={currentAdvisor?.profileImage || '/assets/logo_image-f7z3e97D.png'}
                 alt="어드바이저"
                 className="cr2-advisor-mini-img"
               />
@@ -283,7 +305,7 @@ export default function MainScreen() {
             <div className="cr2-stage-popup-title">⚠️ MONOPOL 새 조직원 등장</div>
             <div className="cr2-stage-popup-info">
               <img
-                src={`/assets/images/rivals/${stage?.rival}.png`}
+                src={currentRival?.profileImage || '/assets/logo_image-f7z3e97D.png'}
                 alt={stagePopup.rivalName}
                 className="cr2-stage-popup-img"
               />
@@ -333,11 +355,11 @@ export default function MainScreen() {
 
 function getBackground(econPhase) {
   const bgMap = {
-    boom: '/assets/images/backgrounds/bg_boom.png',
-    growth: '/assets/images/backgrounds/bg_growth.png',
-    stable: '/assets/images/backgrounds/bg_stable.png',
-    contraction: '/assets/images/backgrounds/bg_contraction.png',
-    recession: '/assets/images/backgrounds/bg_recession.png',
+    boom: '/assets/bg_phase_boom-BqFLGgpW.jpg',
+    growth: '/assets/bg_phase_growth-BN5UHyVn.jpg',
+    stable: '/assets/bg_phase_stable-BS4q62fz.jpg',
+    contraction: '/assets/bg_phase_contraction-CbRrs-qy.jpg',
+    recession: '/assets/bg_phase_recession-CCyrxX4k.jpg',
   }
   return bgMap[econPhase] || bgMap.stable
 }

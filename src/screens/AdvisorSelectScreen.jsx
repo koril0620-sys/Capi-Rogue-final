@@ -16,7 +16,7 @@ export default function AdvisorSelectScreen() {
   const handleConfirm = () => {
     if (!selected) return
     setSelectedAdvisor(selected)
-    setCurrentScreen('slotSelect')
+    setCurrentScreen('characterCreate')
   }
 
   const selectedAdvisor = ADVISORS.find(advisor => advisor.id === selected)
@@ -86,7 +86,7 @@ export default function AdvisorSelectScreen() {
 
       <button
         className="cr2-btn cr2-back-btn"
-        onClick={() => setCurrentScreen('characterCreate')}
+        onClick={() => setCurrentScreen('title')}
       >
         이전으로
       </button>

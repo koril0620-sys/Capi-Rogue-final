@@ -1,25 +1,25 @@
 const BGM_FILES = {
-  boom: '/assets/audio/bgm/bg_music_boom.mp3',
-  growth: '/assets/audio/bgm/bg_music_growth.mp3',
-  stable: '/assets/audio/bgm/bg_music_stable.mp3',
-  contraction: '/assets/audio/bgm/bg_music_contraction.mp3',
-  recession: '/assets/audio/bgm/bg_music_recession.mp3',
-  main: '/assets/audio/bgm/bg_music_main.mp3',
-  strategy: '/assets/audio/bgm/bg_music_strategy.mp3',
-  tension: '/assets/audio/bgm/bg_music_tension.mp3',
-  boss: '/assets/audio/bgm/bg_music_boss.mp3',
+  main: '/assets/bg_music_main-OJkt3Ww0.wav',
+  boom: '/assets/boom_bgm-DTk4t7vb.wav',
+  growth: '/assets/growth_bgm-C0KEhCfV.wav',
+  stable: '/assets/stable_bgm-DcFM65x4.wav',
+  contraction: '/assets/contraction_bgm-D-3xaovd.wav',
+  recession: '/assets/recession_bgm-CIfbH_6Y.wav',
+  strategy: '/assets/business_decision_bgm-DwDZoRM1.wav',
+  tension: '/assets/bg_music_tension-ckK7n9RU.wav',
+  boss: '/assets/bg_music_tension-ckK7n9RU.wav',
 }
 
 const SFX_FILES = {
-  click: '/assets/audio/sfx/sfx_click.mp3',
-  event: '/assets/audio/sfx/sfx_event.mp3',
-  warning: '/assets/audio/sfx/sfx_warning.mp3',
-  profit: '/assets/audio/sfx/sfx_profit.mp3',
-  loss: '/assets/audio/sfx/sfx_loss.mp3',
-  nextfloor: '/assets/audio/sfx/sfx_nextfloor.mp3',
-  rival: '/assets/audio/sfx/sfx_rival.mp3',
-  boss: '/assets/audio/sfx/sfx_boss.mp3',
-  clear: '/assets/audio/sfx/sfx_clear.mp3',
+  click: '/assets/sfx_click-qu1BfHPW.wav',
+  nextfloor: '/assets/sfx_nextfloor-DkbsiXpx.wav',
+  event: '/assets/sfx_click-qu1BfHPW.wav',
+  warning: '/assets/sfx_click-qu1BfHPW.wav',
+  profit: '/assets/sfx_nextfloor-DkbsiXpx.wav',
+  loss: '/assets/sfx_click-qu1BfHPW.wav',
+  rival: '/assets/sfx_click-qu1BfHPW.wav',
+  boss: '/assets/sfx_nextfloor-DkbsiXpx.wav',
+  clear: '/assets/sfx_nextfloor-DkbsiXpx.wav',
 }
 
 let currentBGM = null

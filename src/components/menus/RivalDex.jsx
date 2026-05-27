@@ -53,7 +53,7 @@ export default function RivalDex() {
               className={`cr2-rivaldex-item ${isMet ? 'cr2-rivaldex-met' : 'cr2-rivaldex-unknown'}`}
             >
               <img
-                src={`/assets/images/rivals/${rival.id}.png`}
+                src={rival.profileImage}
                 alt={isMet ? rival.name : '???'}
                 className="cr2-rivaldex-img"
                 style={{ filter: isMet ? 'none' : 'grayscale(100%) brightness(0.2)' }}

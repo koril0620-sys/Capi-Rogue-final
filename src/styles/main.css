@@ -36,6 +36,18 @@
   z-index: 2;
 }
 
+.cr2-loan-warning {
+  position: absolute;
+  top: 36px;
+  left: 8px;
+  background: rgba(220,20,60,0.15);
+  border: 1px solid var(--cr2-red);
+  color: var(--cr2-red);
+  font-size: 9px;
+  padding: 3px 8px;
+  z-index: 2;
+}
+
 .cr2-demand-area {
   flex: 1;
   position: relative;

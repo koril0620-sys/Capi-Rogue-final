@@ -172,6 +172,8 @@ export function settle(gameState) {
   if (isBossStage(state.floor)) {
     const bossShare = 1 - share
     state.bossShareHistory = [...(state.bossShareHistory || []).slice(-2), bossShare]
+    state.bossCounterActive = isRepeatingStrategy(state.currentStrategy, state.bossLastPlayerStrategy)
+    state.bossLastPlayerStrategy = { ...state.currentStrategy }
     result.bossClear = checkBossClearCondition(state.bossShareHistory)
   }
 
@@ -181,8 +183,21 @@ export function settle(gameState) {
 
   const newlyUnlocked = checkAchievements(state, result)
   result.newlyUnlocked = newlyUnlocked
+  if (newlyUnlocked.length > 0) {
+    state.unlockedAchievements = [
+      ...new Set([...(state.unlockedAchievements || []), ...newlyUnlocked]),
+    ]
+  }
 
   return { updatedState: state, settlementResult: result }
+}
+
+function isRepeatingStrategy(currentStrategy = {}, lastStrategy = null) {
+  if (!lastStrategy) return false
+  return (
+    Math.abs((lastStrategy.price || 0) - (currentStrategy.price || 0)) < 100 &&
+    Math.abs((lastStrategy.orderAmount || 0) - (currentStrategy.orderAmount || 0)) < 50
+  )
 }
 
 function updateStats(stats, result, state) {
