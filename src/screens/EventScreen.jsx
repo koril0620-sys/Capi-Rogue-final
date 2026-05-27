@@ -12,6 +12,7 @@ export default function EventScreen() {
   const [selectedChoice, setSelectedChoice] = useState(null)
   const [result, setResult] = useState(null)
   const settlingRef = useRef(false)
+  const choiceResolvingRef = useRef(false)
 
   const externalEvent = gameState.currentExternalEvent
   const internalEvent = gameState.currentInternalEvent
@@ -43,16 +44,17 @@ export default function EventScreen() {
   }
 
   const handleChoiceSelect = (choice) => {
+    if (choiceResolvingRef.current) return
+    choiceResolvingRef.current = true
     playSFX('click')
     setSelectedChoice(choice.id)
+    setTimeout(() => {
+      handleChoiceConfirmWithChoice(choice)
+    }, 200)
   }
 
-  const handleChoiceConfirm = () => {
-    if (!selectedChoice || !internalEvent) return
-
-    const choice = internalEvent.choices.find(item => item.id === selectedChoice)
-    if (!choice) return
-
+  const handleChoiceConfirmWithChoice = (choice) => {
+    if (!choice || !internalEvent) return
     const outcome = resolveChoice(choice, gameState, gameState.selectedAdvisor)
     applyOutcome(outcome)
     const isSuccess = outcome.capitalChange?.startsWith('+') ||
@@ -75,10 +77,11 @@ export default function EventScreen() {
     }))
     setResult({ choice, outcome })
 
-    const cashDelta = outcome.capitalChange
-      ? resolveCashAmount(outcome.capitalChange, gameState.capital)
-      : 0
-    playSFX(cashDelta > 0 ? 'profit' : 'loss')
+    playSFX(
+      typeof outcome.capitalChange === 'string' && outcome.capitalChange.startsWith('+')
+        ? 'profit'
+        : 'loss',
+    )
   }
 
   const applyOutcome = (outcome) => {
@@ -251,11 +254,6 @@ export default function EventScreen() {
             ))}
           </div>
 
-          {selectedChoice && (
-            <button className="cr2-btn cr2-event-confirm-btn" onClick={handleChoiceConfirm}>
-              선택 확정
-            </button>
-          )}
         </div>
       </div>
     )
