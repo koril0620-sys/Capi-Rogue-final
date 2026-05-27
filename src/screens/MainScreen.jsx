@@ -251,8 +251,8 @@ export default function MainScreen() {
 
           <div style={{
             position: 'absolute',
-            top: '270px',
-            left: '16px',
+            top: '380px',
+            left: '12px',
             background: 'rgba(0,0,0,0.85)',
             border: '2px solid var(--cr2-lime)',
             borderRadius: '50%',
