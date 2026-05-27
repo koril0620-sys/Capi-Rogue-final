@@ -305,7 +305,15 @@ export default function MainScreen() {
         >
           운영 ❓
         </button>
-        <button className="cr2-tab cr2-tab-next" onClick={handleSettle}>정산하기</button>
+        <button
+          className={`cr2-tab cr2-tab-next ${activeTab === 'next' ? 'cr2-tab-active' : ''}`}
+          onClick={() => {
+            setActiveTab('next')
+            playSFX('click')
+          }}
+        >
+          정산 확인
+        </button>
       </div>
 
       {stagePopup && (

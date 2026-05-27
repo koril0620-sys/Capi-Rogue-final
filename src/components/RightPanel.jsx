@@ -31,7 +31,7 @@ export default function RightPanel({ activeTab, setActiveTab, onSettle }) {
             className={`cr2-subtab ${activeTab === tab ? 'cr2-subtab-active' : ''}`}
             onClick={() => handleTabChange(tab)}
           >
-            {tab === 'sale' ? '판매' : tab === 'quality' ? '품질' : tab === 'operation' ? '운영' : '다음'}
+            {tab === 'sale' ? '판매' : tab === 'quality' ? '품질' : tab === 'operation' ? '운영' : '정산'}
           </button>
         ))}
       </div>
@@ -565,8 +565,8 @@ function NextTab({ gameState, onSettle }) {
 
   return (
     <div className="cr2-panel-content">
-      <div className="cr2-panel-title">다음 달로</div>
-      <div className="cr2-panel-desc">전략을 확정하고 이벤트 또는 정산으로 진행합니다.</div>
+      <div className="cr2-panel-title">정산 확인</div>
+      <div className="cr2-panel-desc">이번 턴의 가격, 생산, 지출을 확인한 뒤 정산을 진행합니다.</div>
 
       <div className="cr2-next-summary">
         <div>예상 가격: {price.toLocaleString()}원</div>
