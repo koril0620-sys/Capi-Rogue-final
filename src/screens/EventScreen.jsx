@@ -42,7 +42,10 @@ export default function EventScreen() {
   }
 
   const proceedToInternal = () => {
-    if (!internalEvent && !rivalEvent) completeEventFlow()
+    const currentState = useGameStore.getState()
+    if (currentState.currentRivalEvent) return
+    if (currentState.currentInternalEvent) return
+    completeEventFlow()
   }
 
   const handleRivalConfirm = () => {
@@ -70,7 +73,10 @@ export default function EventScreen() {
     }))
     playSFX('event')
 
-    if (!internalEvent) completeEventFlow()
+    const currentState = useGameStore.getState()
+    if (!currentState.currentInternalEvent) {
+      completeEventFlow()
+    }
   }
 
   const handleChoiceSelect = (choice) => {
