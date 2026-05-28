@@ -637,17 +637,31 @@ function getStrategyWarning(gameState) {
   const debt = gameState.debt || 0
   const capital = gameState.capital || 0
   const loans = gameState.loans || []
+  const orderAmount = gameState.currentStrategy?.orderAmount || 0
+  const operatingCost = 1500000
   const monthlyInterest = loans.reduce(
     (sum, loan) => sum + Math.floor(loan.principal * (loan.interestRate || 0.065) / 12),
     0,
   )
+  const totalFixedCost = operatingCost + monthlyInterest
+  const margin = price - cost
+  const breakeven = margin > 0 ? Math.ceil(totalFixedCost / margin) : null
 
   if (!price) return '가격을 설정하세요.'
   if (price < cost) return '⚠️ 판매가가 원가보다 낮습니다. 팔수록 손해입니다.'
-  if (price < cost * 1.1) return '⚠️ 마진이 너무 낮습니다. 운영비를 감당하기 어렵습니다.'
-  if (price > cost * 5 && quality < 10) return '⚠️ 고가 전략인데 품질이 낮아 소비자가 외면할 수 있습니다.'
+  if (price < cost * 1.1) return '⚠️ 마진이 너무 낮습니다. 운영비(150만원)를 감당하기 어렵습니다.'
+
+  if (price > cost * 4 && quality < 10) return '⚠️ 고가 전략인데 품질이 너무 낮습니다. 소비자가 외면합니다.'
+  if (price > cost * 3 && quality < 7) return '⚠️ 가격 대비 품질이 낮습니다. 점유율이 떨어질 수 있습니다.'
+  if (price > cost * 2 && quality < 5) return '⚠️ 품질이 매우 낮습니다. 저가 전략을 고려하세요.'
+
+  if (breakeven && orderAmount > 0 && orderAmount < breakeven) {
+    return `⚠️ 발주량(${orderAmount.toLocaleString()})이 손익분기점(${breakeven.toLocaleString()})보다 낮습니다.`
+  }
+  if (monthlyInterest > operatingCost) return `⚠️ 월 이자(${(monthlyInterest / 10000).toFixed(0)}만원)가 운영비(150만원)를 넘었습니다.`
+  if (totalFixedCost > capital * 0.3) return `⚠️ 고정비용(${(totalFixedCost / 10000).toFixed(0)}만원)이 자본의 30%를 넘습니다.`
+
   if (debt > capital * 0.7) return '⚠️ 부채가 자본의 70%를 넘었습니다. 이자 부담이 큽니다.'
-  if (monthlyInterest > capital * 0.1) return '⚠️ 월 이자가 자본의 10%를 넘습니다. 대출 상환을 고려하세요.'
   if ((gameState.health || 0) <= 3) return '⚠️ 경영 체력이 위험 수준입니다. 흑자를 내야 합니다.'
   if ((gameState.momentum || 0) <= -3) return '⚠️ 연속 적자로 모멘텀이 매우 낮습니다.'
   if ((gameState.awareness || 0) < 5) return '⚠️ 인지도가 너무 낮습니다. 마케팅 투자가 필요합니다.'
