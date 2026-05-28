@@ -23,12 +23,7 @@ export default function MainScreen() {
   const [stagePopup, setStagePopup] = useState(null)
   const [learningPopup, setLearningPopup] = useState(null)
   const [activeTab, setActiveTab] = useState('sale')
-  const [demandBubbleTop, setDemandBubbleTop] = useState(270)
   const prevFloorRef = useRef(gameState.floor)
-  const gameAreaRef = useRef(null)
-  const rivalCardRef = useRef(null)
-  const demandBubbleRef = useRef(null)
-  const playerCardRef = useRef(null)
 
   useEffect(() => {
     playBGM(gameState.econPhase)
@@ -152,38 +147,6 @@ export default function MainScreen() {
   const upcomingLoans = getUpcomingMaturityLoans(gameState.loans || [])
   const monopolEffect = gameState.activeEffects?.find(effect => effect.source === 'MONOPOL')
 
-  useEffect(() => {
-    const updateDemandBubbleTop = () => {
-      const gameArea = gameAreaRef.current
-      const rivalCard = rivalCardRef.current
-      const demandBubble = demandBubbleRef.current
-      const playerCard = playerCardRef.current
-
-      if (!gameArea || !rivalCard || !demandBubble || !playerCard) return
-
-      const areaRect = gameArea.getBoundingClientRect()
-      const rivalRect = rivalCard.getBoundingClientRect()
-      const playerRect = playerCard.getBoundingClientRect()
-      const bubbleHeight = demandBubble.offsetHeight || 90
-      const rivalCenter = rivalRect.top - areaRect.top + (rivalRect.height / 2)
-      const playerCenter = playerRect.top - areaRect.top + (playerRect.height / 2)
-      const nextTop = Math.max(0, Math.round(((rivalCenter + playerCenter) / 2) - (bubbleHeight / 2)))
-
-      setDemandBubbleTop(prev => (prev === nextTop ? prev : nextTop))
-    }
-
-    updateDemandBubbleTop()
-    window.addEventListener('resize', updateDemandBubbleTop)
-    return () => window.removeEventListener('resize', updateDemandBubbleTop)
-  }, [
-    gameState.floor,
-    gameState.health,
-    gameState.maxHealth,
-    gameState.momentum,
-    gameState.playerProfile,
-    gameState.selectedAdvisor,
-  ])
-
   return (
     <div className="cr2-main-screen">
       <div
@@ -252,8 +215,8 @@ export default function MainScreen() {
           )}
         </div>
 
-        <div className="cr2-game-area" ref={gameAreaRef}>
-          <div ref={rivalCardRef} style={{
+        <div className="cr2-game-area">
+          <div style={{
             position: 'absolute',
             top: '110px',
             left: '12px',
@@ -304,9 +267,9 @@ export default function MainScreen() {
             )}
           </div>
 
-          <div ref={demandBubbleRef} style={{
+          <div style={{
             position: 'absolute',
-            top: `${demandBubbleTop}px`,
+            top: '300px',
             left: '16px',
             background: 'rgba(0,0,0,0.85)',
             border: '2px solid var(--cr2-lime)',
@@ -328,7 +291,7 @@ export default function MainScreen() {
             </div>
           </div>
 
-          <div ref={playerCardRef} style={{
+          <div style={{
             position: 'absolute',
             bottom: '0px',
             left: '12px',
