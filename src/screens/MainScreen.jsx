@@ -8,6 +8,7 @@ import { RIVALS } from '../constants/rivals'
 import { saveAchievements } from '../logic/achievementEngine'
 import { playSFX, playBGM } from '../logic/audioEngine'
 import { getUpcomingMaturityLoans } from '../logic/loanEngine'
+import { rollInternalEvent } from '../logic/eventEngine'
 import RightPanel from '../components/RightPanel'
 import RivalCapitalBar from '../components/RivalCapitalBar'
 import CheatPanel from '../components/CheatPanel'
@@ -81,11 +82,28 @@ export default function MainScreen() {
   const handleSettle = async () => {
     playSFX('nextfloor')
 
+    const internalEvent = rollInternalEvent(gameState)
+
+    if (internalEvent) {
+      useGameStore.setState({
+        currentExternalEvent: null,
+        currentInternalEvent: internalEvent,
+        currentRivalEvent: null,
+        pendingNextFloor: null,
+      })
+      setCurrentScreen('event')
+      return
+    }
+
     const { updatedState, settlementResult } = settle(gameState)
 
     useGameStore.setState({
       ...updatedState,
       lastSettlementResult: settlementResult,
+      currentExternalEvent: null,
+      currentInternalEvent: null,
+      currentRivalEvent: null,
+      pendingNextFloor: null,
       playerShareHistory: [
         ...(gameState.playerShareHistory || []),
         settlementResult.shareAfter || 0,

@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
 import { useGameStore } from '../store/useGameStore'
 import { resolveChoice, resolveCashAmount } from '../logic/eventEngine'
+import { settle } from '../logic/settlementEngine'
 import { saveOnFloorEnter } from '../logic/saveEngine'
 import { getClearGrade } from '../logic/rewardEngine'
+import { saveAchievements } from '../logic/achievementEngine'
 import { playBGM, playSFX } from '../logic/audioEngine'
 import { getCurrentStage, isBossStage } from '../constants/monopol'
 import '../styles/event.css'
@@ -13,6 +15,7 @@ export default function EventScreen() {
   const [selectedChoice, setSelectedChoice] = useState(null)
   const [result, setResult] = useState(null)
   const choiceResolvingRef = useRef(false)
+  const flowResolvingRef = useRef(false)
 
   const externalEvent = gameState.currentExternalEvent
   const internalEvent = gameState.currentInternalEvent
@@ -24,7 +27,7 @@ export default function EventScreen() {
 
   const handleExternalConfirm = () => {
     if (!externalEvent) {
-      proceedToInternal()
+      void proceedAfterEvent()
       return
     }
 
@@ -33,23 +36,21 @@ export default function EventScreen() {
       {
         ...externalEvent.effect,
         remainingTurns: externalEvent.effect.duration || 1,
+        source: 'EXTERNAL',
       },
     ]
     useGameStore.setState({ activeEffects: newEffects, currentExternalEvent: null })
     playSFX('event')
-    proceedToInternal()
-  }
 
-  const proceedToInternal = () => {
     const currentState = useGameStore.getState()
-    if (currentState.currentRivalEvent) return
-    if (currentState.currentInternalEvent) return
-    completeEventFlow()
+    if (!currentState.currentRivalEvent) {
+      void proceedAfterEvent()
+    }
   }
 
   const handleRivalConfirm = () => {
     if (!rivalEvent) {
-      proceedToInternal()
+      void proceedAfterEvent()
       return
     }
 
@@ -72,10 +73,7 @@ export default function EventScreen() {
     }))
     playSFX('event')
 
-    const currentState = useGameStore.getState()
-    if (!currentState.currentInternalEvent) {
-      completeEventFlow()
-    }
+    void proceedAfterEvent()
   }
 
   const handleChoiceSelect = (choice) => {
@@ -164,6 +162,9 @@ export default function EventScreen() {
   }
 
   const proceedAfterEvent = async () => {
+    if (flowResolvingRef.current) return
+    flowResolvingRef.current = true
+
     const currentState = useGameStore.getState()
     const pendingNextFloor = currentState.pendingNextFloor
 
@@ -221,13 +222,74 @@ export default function EventScreen() {
     setCurrentScreen('main')
   }
 
-  const completeEventFlow = () => {
-    void proceedAfterEvent()
+  const completeEventFlow = async () => {
+    if (flowResolvingRef.current) return
+
+    const currentState = useGameStore.getState()
+    if (currentState.pendingNextFloor) {
+      void proceedAfterEvent()
+      return
+    }
+
+    flowResolvingRef.current = true
+
+    try {
+      const { updatedState, settlementResult } = settle(currentState)
+
+      useGameStore.setState({
+        ...updatedState,
+        lastSettlementResult: settlementResult,
+        currentExternalEvent: null,
+        currentInternalEvent: null,
+        currentRivalEvent: null,
+        pendingNextFloor: null,
+        playerShareHistory: [
+          ...(currentState.playerShareHistory || []),
+          settlementResult.shareAfter || 0,
+        ],
+        revenueHistory: [
+          ...(currentState.revenueHistory || []).slice(-9),
+          settlementResult.revenue || 0,
+        ],
+        profitHistory: [
+          ...(currentState.profitHistory || []).slice(-9),
+          settlementResult.netProfit || 0,
+        ],
+        capitalHistory: [
+          ...(currentState.capitalHistory || []).slice(-9),
+          updatedState.capital,
+        ],
+      })
+
+      try {
+        if (settlementResult.newlyUnlocked?.length > 0 && currentState.playerId) {
+          await saveAchievements(currentState.playerId, settlementResult.newlyUnlocked)
+          useGameStore.setState({ newAchievements: settlementResult.newlyUnlocked })
+        }
+      } catch (error) {
+        console.error('achievement save failed:', error)
+      }
+
+      if (settlementResult.isGameOver) {
+        setCurrentScreen('gameOver')
+        return
+      }
+
+      if (settlementResult.bossClear) {
+        setCurrentScreen('ending')
+        return
+      }
+
+      setTimeout(() => setCurrentScreen('result'), 0)
+    } catch (error) {
+      console.error('settlement failed:', error)
+      setTimeout(() => setCurrentScreen('result'), 0)
+    }
   }
 
   useEffect(() => {
     if (!externalEvent && !rivalEvent && !internalEvent && !result) {
-      completeEventFlow()
+      void completeEventFlow()
     }
   })
 

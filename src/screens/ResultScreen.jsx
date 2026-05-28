@@ -5,7 +5,7 @@ import { saveOnFloorEnter } from '../logic/saveEngine'
 import { getClearGrade } from '../logic/rewardEngine'
 import { getCurrentStage, isBossStage } from '../constants/monopol'
 import { playBGM, playSFX } from '../logic/audioEngine'
-import { rollExternalEvent, rollInternalEvent, rollRivalEvent } from '../logic/eventEngine'
+import { rollExternalEvent, rollRivalEvent } from '../logic/eventEngine'
 import { getMaturedLoans } from '../logic/loanEngine'
 import AchievementToast from '../components/AchievementToast'
 import LoanMaturityAlert from '../components/LoanMaturityAlert'
@@ -69,26 +69,26 @@ export default function ResultScreen() {
     playSFX('nextfloor')
 
     const currentState = useGameStore.getState()
-    const nextFloor = currentState.floor + 1
+    const stage = getCurrentStage(currentState.floor)
     const externalEvent = rollExternalEvent(
       currentState.floor,
       currentState.activeEffects,
     )
-    const internalEvent = rollInternalEvent(currentState)
-    const stage = getCurrentStage(currentState.floor)
     const rivalEvent = stage ? rollRivalEvent(stage.tier) : null
 
-    if (externalEvent || internalEvent || rivalEvent) {
+    if (externalEvent || rivalEvent) {
       useGameStore.setState({
         currentExternalEvent: externalEvent || null,
-        currentInternalEvent: internalEvent || null,
+        currentInternalEvent: null,
         currentRivalEvent: rivalEvent || null,
-        pendingNextFloor: nextFloor,
+        pendingNextFloor: currentState.floor + 1,
       })
       setSaving(false)
       setCurrentScreen('event')
       return
     }
+
+    const nextFloor = currentState.floor + 1
 
     if (nextFloor > 120) {
       const grade = getClearGrade(currentState)
