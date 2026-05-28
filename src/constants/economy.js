@@ -10,7 +10,7 @@ export const ECO_PHASES = {
   boom: {
     label: '호황',
     demandMultiplier: 1.4,
-    consumerRatio: { quality: 0.30, brand: 0.30, price: 0.20, general: 0.20 },
+    consumerRatio: { quality: 0.35, brand: 0.30, price: 0.15, general: 0.20 },
   },
   growth: {
     label: '성장',
@@ -46,7 +46,7 @@ export const FORCE_PHASE_EVENTS = {
 
 export const FIXED_EVENT_FLOORS = [20, 40, 70, 100, 115]
 
-export const BASE_DEMAND = 10000
+export const BASE_DEMAND = 1000
 
 export const OPERATING_COSTS = {
   rent: 500000,
