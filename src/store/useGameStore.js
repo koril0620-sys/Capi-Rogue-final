@@ -59,6 +59,7 @@ export const useGameStore = create((set) => ({
   activeEffects: [],
   currentExternalEvent: null,
   currentInternalEvent: null,
+  currentRivalEvent: null,
   factoryActionThisTurn: null,
   lastSettlementResult: null,
 
@@ -178,6 +179,7 @@ export const useGameStore = create((set) => ({
       activeEffects: [],
       currentExternalEvent: null,
       currentInternalEvent: null,
+      currentRivalEvent: null,
       factoryActionThisTurn: null,
       lastSettlementResult: null,
       rivalCapital: 0,

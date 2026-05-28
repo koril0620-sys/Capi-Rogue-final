@@ -18,12 +18,15 @@ export function rollInternalEvent() {
   return INTERNAL_EVENTS[Math.floor(Math.random() * INTERNAL_EVENTS.length)]
 }
 
-export function rollRivalEvent() {
+export function rollRivalEvent(currentRivalTier) {
   if (Math.random() > 0.30) return null
 
-  const eligible = RIVAL_EVENTS.filter(() => {
-    // TODO: 현재 구간 라이벌 티어 기반 필터
-    return true
+  const tierOrder = ['ENTRY', 'MID', 'SENIOR', 'CHAMPION', 'BOSS']
+  const tierIndex = tierOrder.indexOf(currentRivalTier)
+
+  const eligible = RIVAL_EVENTS.filter(event => {
+    const minIndex = tierOrder.indexOf(event.minRivalTier)
+    return minIndex <= tierIndex
   })
 
   if (eligible.length === 0) return null

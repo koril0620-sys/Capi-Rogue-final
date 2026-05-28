@@ -4,6 +4,7 @@ import { resolveChoice, resolveCashAmount } from '../logic/eventEngine'
 import { settle } from '../logic/settlementEngine'
 import { saveAchievements } from '../logic/achievementEngine'
 import { playBGM, playSFX } from '../logic/audioEngine'
+import { getCurrentStage } from '../constants/monopol'
 import '../styles/event.css'
 
 export default function EventScreen() {
@@ -16,6 +17,7 @@ export default function EventScreen() {
 
   const externalEvent = gameState.currentExternalEvent
   const internalEvent = gameState.currentInternalEvent
+  const rivalEvent = gameState.currentRivalEvent
 
   useEffect(() => {
     playBGM('tension')
@@ -40,6 +42,34 @@ export default function EventScreen() {
   }
 
   const proceedToInternal = () => {
+    if (!internalEvent && !rivalEvent) completeEventFlow()
+  }
+
+  const handleRivalConfirm = () => {
+    if (!rivalEvent) {
+      proceedToInternal()
+      return
+    }
+
+    const newEffects = [
+      ...(gameState.activeEffects || []),
+      {
+        ...rivalEvent.effect,
+        remainingTurns: rivalEvent.effect.duration || 1,
+        source: 'RIVAL',
+      },
+    ]
+
+    useGameStore.setState(state => ({
+      activeEffects: newEffects,
+      currentRivalEvent: null,
+      stats: {
+        ...(state.stats || {}),
+        rivalEventCount: (state.stats?.rivalEventCount || 0) + 1,
+      },
+    }))
+    playSFX('event')
+
     if (!internalEvent) completeEventFlow()
   }
 
@@ -141,6 +171,7 @@ export default function EventScreen() {
         lastSettlementResult: settlementResult,
         currentExternalEvent: null,
         currentInternalEvent: null,
+        currentRivalEvent: null,
         playerShareHistory: [
           ...(currentState.playerShareHistory || []),
           settlementResult.shareAfter || 0,
@@ -190,6 +221,7 @@ export default function EventScreen() {
       useGameStore.setState({
         currentExternalEvent: null,
         currentInternalEvent: null,
+        currentRivalEvent: null,
       })
       setCurrentScreen('result')
       return
@@ -199,7 +231,7 @@ export default function EventScreen() {
   }
 
   useEffect(() => {
-    if (!externalEvent && !internalEvent && !result) {
+    if (!externalEvent && !rivalEvent && !internalEvent && !result) {
       completeEventFlow()
     }
   })
@@ -219,6 +251,40 @@ export default function EventScreen() {
             {formatEffect(externalEvent.effect)}
           </div>
           <button className="cr2-btn cr2-event-confirm-btn" onClick={handleExternalConfirm}>
+            확인
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  if (rivalEvent && !result) {
+    return (
+      <div className="cr2-event-screen">
+        <div
+          className="cr2-event-card cr2-event-external"
+          style={{ borderColor: 'var(--cr2-red)' }}
+        >
+          <div className="cr2-event-badge" style={{ color: 'var(--cr2-red)' }}>
+            MONOPOL 이벤트
+          </div>
+          <div className="cr2-event-title" style={{ color: 'var(--cr2-red)' }}>
+            {rivalEvent.title}
+          </div>
+          <div className="cr2-event-desc">
+            {rivalEvent.description.replace(
+              '{rivalName}',
+              getCurrentStage(gameState.floor)?.rivalName || '라이벌',
+            )}
+          </div>
+          <div className="cr2-event-effect">
+            {formatRivalEffect(rivalEvent.effect)}
+          </div>
+          <button
+            className="cr2-btn cr2-event-confirm-btn"
+            style={{ borderColor: 'var(--cr2-red)', color: 'var(--cr2-red)' }}
+            onClick={handleRivalConfirm}
+          >
             확인
           </button>
         </div>
@@ -285,6 +351,17 @@ function formatEffect(effect) {
   if (effect.costMultiplier) lines.push(`원가 ${effect.costMultiplier > 1 ? '+' : ''}${((effect.costMultiplier - 1) * 100).toFixed(0)}%`)
   if (effect.interestRateChange) lines.push(`이자율 ${effect.interestRateChange > 0 ? '+' : ''}${(effect.interestRateChange * 100).toFixed(1)}%p`)
   if (effect.duration) lines.push(`지속: ${effect.duration}턴`)
+  return lines.join(' / ')
+}
+
+function formatRivalEffect(effect) {
+  const lines = []
+  if (effect.rivalPriceMultiplier) lines.push(`라이벌 가격 ${((effect.rivalPriceMultiplier - 1) * 100).toFixed(0)}%`)
+  if (effect.rivalAwarenessBoost) lines.push(`라이벌 인지도 +${effect.rivalAwarenessBoost}%`)
+  if (effect.rivalQualityBoost) lines.push(`라이벌 품질 +${effect.rivalQualityBoost}`)
+  if (effect.demandMultiplier) lines.push(`수요 ${((effect.demandMultiplier - 1) * 100).toFixed(0)}%`)
+  if (effect.costMultiplier) lines.push(`원가 +${((effect.costMultiplier - 1) * 100).toFixed(0)}%`)
+  if (effect.duration) lines.push(`${effect.duration}턴 지속`)
   return lines.join(' / ')
 }
 

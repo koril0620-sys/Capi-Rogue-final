@@ -5,7 +5,7 @@ import { saveOnFloorEnter } from '../logic/saveEngine'
 import { getClearGrade } from '../logic/rewardEngine'
 import { getCurrentStage, isBossStage } from '../constants/monopol'
 import { playBGM, playSFX } from '../logic/audioEngine'
-import { rollExternalEvent, rollInternalEvent } from '../logic/eventEngine'
+import { rollExternalEvent, rollInternalEvent, rollRivalEvent } from '../logic/eventEngine'
 import { getMaturedLoans } from '../logic/loanEngine'
 import AchievementToast from '../components/AchievementToast'
 import LoanMaturityAlert from '../components/LoanMaturityAlert'
@@ -77,11 +77,14 @@ export default function ResultScreen() {
         currentState.activeEffects,
       )
       const internalEvent = rollInternalEvent(currentState)
+      const stage = getCurrentStage(currentState.floor)
+      const rivalEvent = stage ? rollRivalEvent(stage.tier) : null
 
-      if (externalEvent || internalEvent) {
+      if (externalEvent || internalEvent || rivalEvent) {
         useGameStore.setState({
           currentExternalEvent: externalEvent || null,
           currentInternalEvent: internalEvent || null,
+          currentRivalEvent: rivalEvent || null,
           lastSettlementResult: {
             ...currentResult,
             nextFloorEventHandled: true,
