@@ -63,7 +63,11 @@ export function settle(gameState) {
   result.marketingCost = validMarketing
 
   const allAttractions = calcAllAttractions(state)
-  const { totalDemand, share } = calcTotalDemand(state, allAttractions)
+  const { totalDemand: rawDemand, share } = calcTotalDemand(state, allAttractions)
+  const activeEffectDemandMultiplier = state.activeEffects
+    .filter(effect => effect.demandMultiplier)
+    .reduce((multiplier, effect) => multiplier * effect.demandMultiplier, 1)
+  const totalDemand = Math.floor(rawDemand * activeEffectDemandMultiplier)
   result.totalDemand = totalDemand
 
   const realCost = state.cost * (1 - (state.costReductionTotal || 0))
@@ -81,7 +85,15 @@ export function settle(gameState) {
 
   const totalOperatingCost = Object.values(OPERATING_COSTS).reduce((sum, value) => sum + value, 0)
 
-  const { interestAmount, isLate, interestPaid } = processInterest(state)
+  const interestRateBonus = state.activeEffects
+    .filter(effect => effect.interestRateChange)
+    .reduce((sum, effect) => sum + effect.interestRateChange, 0)
+  const adjustedLoans = (state.loans || []).map(loan => ({
+    ...loan,
+    interestRate: Math.max((loan.interestRate || 0.065) + interestRateBonus, 0.01),
+  }))
+  const stateWithAdjustedLoans = { ...state, loans: adjustedLoans }
+  const { interestAmount, isLate, interestPaid } = processInterest(stateWithAdjustedLoans)
   result.interestAmount = interestAmount
   result.interestLate = isLate
   result.interestPaid = interestPaid
@@ -128,7 +140,17 @@ export function settle(gameState) {
   state.bankruptcyTurns = checkBankruptcy(state.capital, state.bankruptcyTurns)
   result.isGameOver = checkGameOver(state.health, state.bankruptcyTurns)
 
-  state.econPhase = transitionPhase(state.econPhase, state.activeEffects, state.floor, state.selectedAdvisor)
+  const forcePhaseEffect = state.activeEffects.find(effect => effect.forcePhase)
+  if (forcePhaseEffect) {
+    state.econPhase = forcePhaseEffect.forcePhase
+  } else {
+    state.econPhase = transitionPhase(
+      state.econPhase,
+      state.activeEffects,
+      state.floor,
+      state.selectedAdvisor,
+    )
+  }
   state.activeEffects = tickActiveEffects(state.activeEffects)
 
   const updatedRival = settleRival(
