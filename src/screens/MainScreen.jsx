@@ -634,10 +634,25 @@ function getStrategyWarning(gameState) {
   const price = gameState.currentStrategy?.price || 0
   const cost = gameState.cost || 3000
   const quality = gameState.quality || 0
-  if (!price) return null
-  if (price < cost * 1.2 && quality > 20) return '수익성 위험'
-  if (price > cost * 4 && quality < 10) return '브랜드 리스크'
-  return null
+  const debt = gameState.debt || 0
+  const capital = gameState.capital || 0
+  const loans = gameState.loans || []
+  const monthlyInterest = loans.reduce(
+    (sum, loan) => sum + Math.floor(loan.principal * (loan.interestRate || 0.065) / 12),
+    0,
+  )
+
+  if (!price) return '가격을 설정하세요.'
+  if (price < cost) return '⚠️ 판매가가 원가보다 낮습니다. 팔수록 손해입니다.'
+  if (price < cost * 1.1) return '⚠️ 마진이 너무 낮습니다. 운영비를 감당하기 어렵습니다.'
+  if (price > cost * 5 && quality < 10) return '⚠️ 고가 전략인데 품질이 낮아 소비자가 외면할 수 있습니다.'
+  if (debt > capital * 0.7) return '⚠️ 부채가 자본의 70%를 넘었습니다. 이자 부담이 큽니다.'
+  if (monthlyInterest > capital * 0.1) return '⚠️ 월 이자가 자본의 10%를 넘습니다. 대출 상환을 고려하세요.'
+  if ((gameState.health || 0) <= 3) return '⚠️ 경영 체력이 위험 수준입니다. 흑자를 내야 합니다.'
+  if ((gameState.momentum || 0) <= -3) return '⚠️ 연속 적자로 모멘텀이 매우 낮습니다.'
+  if ((gameState.awareness || 0) < 5) return '⚠️ 인지도가 너무 낮습니다. 마케팅 투자가 필요합니다.'
+
+  return '전략 안정권'
 }
 
 function formatCapital(amount) {
