@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
 import { useGameStore } from '../store/useGameStore'
 import { resolveChoice, resolveCashAmount } from '../logic/eventEngine'
-import { settle } from '../logic/settlementEngine'
-import { saveAchievements } from '../logic/achievementEngine'
+import { saveOnFloorEnter } from '../logic/saveEngine'
+import { getClearGrade } from '../logic/rewardEngine'
 import { playBGM, playSFX } from '../logic/audioEngine'
-import { getCurrentStage } from '../constants/monopol'
+import { getCurrentStage, isBossStage } from '../constants/monopol'
 import '../styles/event.css'
 
 export default function EventScreen() {
@@ -12,7 +12,6 @@ export default function EventScreen() {
   const setCurrentScreen = useGameStore(state => state.setCurrentScreen)
   const [selectedChoice, setSelectedChoice] = useState(null)
   const [result, setResult] = useState(null)
-  const settlingRef = useRef(false)
   const choiceResolvingRef = useRef(false)
 
   const externalEvent = gameState.currentExternalEvent
@@ -164,76 +163,66 @@ export default function EventScreen() {
     useGameStore.setState({ ...updates, currentInternalEvent: null })
   }
 
-  const proceedToSettle = async () => {
-    if (settlingRef.current) return
-    settlingRef.current = true
-
-    try {
-      const currentState = useGameStore.getState()
-      const { updatedState, settlementResult } = settle(currentState)
-
-      useGameStore.setState({
-        ...updatedState,
-        lastSettlementResult: settlementResult,
-        currentExternalEvent: null,
-        currentInternalEvent: null,
-        currentRivalEvent: null,
-        playerShareHistory: [
-          ...(currentState.playerShareHistory || []),
-          settlementResult.shareAfter || 0,
-        ],
-        revenueHistory: [
-          ...(currentState.revenueHistory || []).slice(-9),
-          settlementResult.revenue || 0,
-        ],
-        profitHistory: [
-          ...(currentState.profitHistory || []).slice(-9),
-          settlementResult.netProfit || 0,
-        ],
-        capitalHistory: [
-          ...(currentState.capitalHistory || []).slice(-9),
-          updatedState.capital,
-        ],
-      })
-
-      try {
-        if (settlementResult.newlyUnlocked?.length > 0 && currentState.playerId) {
-          await saveAchievements(currentState.playerId, settlementResult.newlyUnlocked)
-          useGameStore.setState({ newAchievements: settlementResult.newlyUnlocked })
-        }
-      } catch (error) {
-        console.error('업적 저장 실패 (무시):', error)
-      }
-
-      if (settlementResult.isGameOver) {
-        setCurrentScreen('gameOver')
-        return
-      }
-      if (settlementResult.bossClear) {
-        setCurrentScreen('ending')
-        return
-      }
-
-      setTimeout(() => setCurrentScreen('result'), 0)
-    } catch (error) {
-      console.error('정산 오류:', error)
-      setTimeout(() => setCurrentScreen('result'), 0)
-    }
-  }
-
-  const completeEventFlow = () => {
+  const proceedAfterEvent = async () => {
     const currentState = useGameStore.getState()
-    if (currentState.lastSettlementResult?.nextFloorEventHandled) {
+    const pendingNextFloor = currentState.pendingNextFloor
+
+    if (!pendingNextFloor) {
       useGameStore.setState({
         currentExternalEvent: null,
         currentInternalEvent: null,
         currentRivalEvent: null,
+        pendingNextFloor: null,
       })
-      setCurrentScreen('result')
+      setCurrentScreen('main')
       return
     }
 
-    void proceedToSettle()
+    const nextFloor = pendingNextFloor
+    const saveState = {
+      ...currentState,
+      floor: nextFloor,
+      pendingNextFloor: null,
+      currentExternalEvent: null,
+      currentInternalEvent: null,
+      currentRivalEvent: null,
+    }
+
+    useGameStore.setState({
+      pendingNextFloor: null,
+      currentExternalEvent: null,
+      currentInternalEvent: null,
+      currentRivalEvent: null,
+    })
+
+    if (nextFloor > 120) {
+      const grade = getClearGrade(currentState)
+      useGameStore.setState({ clearGrade: grade, isClear: true })
+      setCurrentScreen('ending')
+      return
+    }
+
+    if (isBossStage(nextFloor)) {
+      useGameStore.getState().setFloor(nextFloor)
+      await saveOnFloorEnter(saveState)
+      setCurrentScreen('boss')
+      return
+    }
+
+    if (nextFloor % 20 === 0 || nextFloor % 10 === 0 || nextFloor % 5 === 0) {
+      useGameStore.getState().setFloor(nextFloor)
+      await saveOnFloorEnter(saveState)
+      setCurrentScreen('reward')
+      return
+    }
+
+    useGameStore.getState().setFloor(nextFloor)
+    await saveOnFloorEnter(saveState)
+    setCurrentScreen('main')
+  }
+
+  const completeEventFlow = () => {
+    void proceedAfterEvent()
   }
 
   useEffect(() => {

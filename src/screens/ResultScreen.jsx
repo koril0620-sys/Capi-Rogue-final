@@ -69,34 +69,26 @@ export default function ResultScreen() {
     playSFX('nextfloor')
 
     const currentState = useGameStore.getState()
-    const currentResult = currentState.lastSettlementResult || settlementResult
-
-    if (!currentResult?.nextFloorEventHandled) {
-      const externalEvent = rollExternalEvent(
-        currentState.floor,
-        currentState.activeEffects,
-      )
-      const internalEvent = rollInternalEvent(currentState)
-      const stage = getCurrentStage(currentState.floor)
-      const rivalEvent = stage ? rollRivalEvent(stage.tier) : null
-
-      if (externalEvent || internalEvent || rivalEvent) {
-        useGameStore.setState({
-          currentExternalEvent: externalEvent || null,
-          currentInternalEvent: internalEvent || null,
-          currentRivalEvent: rivalEvent || null,
-          lastSettlementResult: {
-            ...currentResult,
-            nextFloorEventHandled: true,
-          },
-        })
-        setSaving(false)
-        setCurrentScreen('event')
-        return
-      }
-    }
-
     const nextFloor = currentState.floor + 1
+    const externalEvent = rollExternalEvent(
+      currentState.floor,
+      currentState.activeEffects,
+    )
+    const internalEvent = rollInternalEvent(currentState)
+    const stage = getCurrentStage(currentState.floor)
+    const rivalEvent = stage ? rollRivalEvent(stage.tier) : null
+
+    if (externalEvent || internalEvent || rivalEvent) {
+      useGameStore.setState({
+        currentExternalEvent: externalEvent || null,
+        currentInternalEvent: internalEvent || null,
+        currentRivalEvent: rivalEvent || null,
+        pendingNextFloor: nextFloor,
+      })
+      setSaving(false)
+      setCurrentScreen('event')
+      return
+    }
 
     if (nextFloor > 120) {
       const grade = getClearGrade(currentState)

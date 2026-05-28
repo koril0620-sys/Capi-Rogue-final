@@ -60,6 +60,7 @@ export const useGameStore = create((set) => ({
   currentExternalEvent: null,
   currentInternalEvent: null,
   currentRivalEvent: null,
+  pendingNextFloor: null,
   factoryActionThisTurn: null,
   lastSettlementResult: null,
 
@@ -180,6 +181,7 @@ export const useGameStore = create((set) => ({
       currentExternalEvent: null,
       currentInternalEvent: null,
       currentRivalEvent: null,
+      pendingNextFloor: null,
       factoryActionThisTurn: null,
       lastSettlementResult: null,
       rivalCapital: 0,
