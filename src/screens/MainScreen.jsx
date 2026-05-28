@@ -306,18 +306,20 @@ export default function MainScreen() {
 
             <div style={{
               display: 'flex',
-              gap: '2px',
-              flexWrap: 'wrap',
+              gap: '1px',
+              flexWrap: 'nowrap',
               justifyContent: 'center',
-              maxWidth: '80px',
+              maxWidth: '90px',
               marginTop: '2px',
+              overflowX: 'hidden',
             }}>
               {Array.from({ length: gameState.maxHealth || 10 }).map((_, i) => (
                 <div
                   key={i}
                   style={{
-                    width: '6px',
-                    height: '6px',
+                    width: '5px',
+                    height: '5px',
+                    flexShrink: 0,
                     background: i < (gameState.health || 0)
                       ? (gameState.health <= 3 ? 'var(--cr2-red)' : 'var(--cr2-lime)')
                       : 'rgba(255,255,255,0.1)',
