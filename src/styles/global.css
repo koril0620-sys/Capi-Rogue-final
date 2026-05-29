@@ -145,3 +145,27 @@ body {
 .cr2-scrollable::-webkit-scrollbar-thumb:hover {
   background: var(--cr2-lime);
 }
+
+/* 전체 스크롤바 커스텀 */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.3);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--cr2-green);
+  border-radius: 0;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--cr2-lime);
+  box-shadow: 0 0 4px var(--cr2-lime);
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
