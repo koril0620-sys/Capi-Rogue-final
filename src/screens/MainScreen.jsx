@@ -5,6 +5,7 @@ import { getRivalInitialCapital } from '../logic/monopolEngine'
 import { getCurrentStage, isNewStage } from '../constants/monopol'
 import { getLearningGoal } from '../constants/learningGoals'
 import { RIVALS } from '../constants/rivals'
+import { BASE_DEMAND } from '../constants/economy'
 import { saveAchievements } from '../logic/achievementEngine'
 import { playSFX, playBGM } from '../logic/audioEngine'
 import { getUpcomingMaturityLoans } from '../logic/loanEngine'
@@ -285,9 +286,14 @@ export default function MainScreen() {
             boxShadow: '0 0 12px rgba(0,255,65,0.2)',
             zIndex: 10,
           }}>
-            <div style={{ fontSize: '8px', color: 'var(--cr2-green)' }}>수요</div>
+            <div style={{ fontSize: '8px', color: 'var(--cr2-green)' }}>예상수요</div>
             <div style={{ fontSize: '13px', color: 'var(--cr2-lime)' }}>
-              {Math.floor(10000 * getDemandMultiplier(gameState.econPhase)).toLocaleString()}
+              {(() => {
+                const totalDemand = Math.floor(BASE_DEMAND * getDemandMultiplier(gameState.econPhase))
+                const lastShare = (gameState.playerShareHistory || []).slice(-1)[0] ?? 0.5
+                const myDemand = Math.floor(totalDemand * lastShare)
+                return myDemand.toLocaleString()
+              })()}
             </div>
           </div>
 
