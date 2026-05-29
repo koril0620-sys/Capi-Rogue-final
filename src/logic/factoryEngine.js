@@ -1,7 +1,9 @@
 export const QUALITY_UPGRADE = {
   cost: 500000,
-  minGain: 8,
-  maxGain: 15,
+  minGain: 1,
+  maxGain: 3,
+  jackpotGain: 10,
+  jackpotChance: 0.05,
   baseSuccessRate: 0.90,
 }
 
@@ -29,13 +31,17 @@ export function attemptQualityUpgrade(gameState) {
   const roll = Math.random()
 
   if (roll < successRate) {
-    const gain = Math.floor(
-      Math.random() * (QUALITY_UPGRADE.maxGain - QUALITY_UPGRADE.minGain + 1)
-      + QUALITY_UPGRADE.minGain,
-    )
+    const isJackpot = Math.random() < QUALITY_UPGRADE.jackpotChance
+    const gain = isJackpot
+      ? QUALITY_UPGRADE.jackpotGain
+      : Math.floor(
+        Math.random() * (QUALITY_UPGRADE.maxGain - QUALITY_UPGRADE.minGain + 1)
+        + QUALITY_UPGRADE.minGain,
+      )
 
     return {
       success: true,
+      isJackpot,
       type: 'quality',
       qualityGain: gain,
       newQuality: gameState.quality + gain,

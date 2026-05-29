@@ -447,6 +447,11 @@ function FactoryResultSection({ result }) {
         result.success ? (
           <>
             <div>품질 강화 성공</div>
+            {result.isJackpot && (
+              <div style={{ color: 'var(--cr2-gold)', fontSize: '11px' }}>
+                ✨ 대박! +{result.qualityGain}
+              </div>
+            )}
             <div className="cr2-positive">+{result.qualityGain} (→ {result.newQuality})</div>
           </>
         ) : (
