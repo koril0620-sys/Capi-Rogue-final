@@ -10,6 +10,7 @@ import { saveAchievements } from '../logic/achievementEngine'
 import { playSFX, playBGM } from '../logic/audioEngine'
 import { getUpcomingMaturityLoans } from '../logic/loanEngine'
 import { rollInternalEvent } from '../logic/eventEngine'
+import { requestStrategyAdvice } from '../logic/aiAdvisorEngine'
 import RightPanel from '../components/RightPanel'
 import RivalCapitalBar from '../components/RivalCapitalBar'
 import CheatPanel from '../components/CheatPanel'
@@ -24,11 +25,42 @@ export default function MainScreen() {
   const [stagePopup, setStagePopup] = useState(null)
   const [learningPopup, setLearningPopup] = useState(null)
   const [activeTab, setActiveTab] = useState('sale')
+  const [aiStrategyAdvice, setAiStrategyAdvice] = useState(null)
   const prevFloorRef = useRef(gameState.floor)
 
   useEffect(() => {
     playBGM(gameState.econPhase)
   }, [gameState.econPhase])
+
+  useEffect(() => {
+    const price = gameState.currentStrategy?.price || 0
+    if (!price) return
+
+    requestStrategyAdvice({
+      selectedAdvisor: gameState.selectedAdvisor,
+      econPhase: gameState.econPhase,
+      currentStrategy: {
+        price,
+        orderAmount: gameState.currentStrategy?.orderAmount || 0,
+        qualityMode: gameState.currentStrategy?.qualityMode || 'maintain',
+      },
+      cost: gameState.cost,
+      capital: gameState.capital,
+      rivalPrice: gameState.rivalPrice,
+    }, advice => {
+      setAiStrategyAdvice(advice)
+    })
+  }, [
+    gameState.currentStrategy,
+    gameState.currentStrategy?.orderAmount,
+    gameState.currentStrategy?.price,
+    gameState.currentStrategy?.qualityMode,
+    gameState.capital,
+    gameState.cost,
+    gameState.econPhase,
+    gameState.rivalPrice,
+    gameState.selectedAdvisor,
+  ])
 
   useEffect(() => {
     const prevFloor = prevFloorRef.current
@@ -395,6 +427,19 @@ export default function MainScreen() {
             <div className="cr2-strategy-content">
               {getStrategyWarning(gameState) || '전략 안정권'}
             </div>
+            {aiStrategyAdvice && (
+              <div style={{
+                fontSize: '8px',
+                color: 'var(--cr2-lime)',
+                marginTop: '3px',
+                fontFamily: "'Noto Sans KR', sans-serif",
+                lineHeight: '1.6',
+                borderTop: '1px solid rgba(0,255,65,0.2)',
+                paddingTop: '3px',
+              }}>
+                ✨ {aiStrategyAdvice}
+              </div>
+            )}
             {getLearningGoal(gameState.floor) && (
               <div className="cr2-learning-hint">
                 {getLearningGoal(gameState.floor).hint}

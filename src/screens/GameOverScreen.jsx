@@ -5,6 +5,7 @@ import { getCurrentStage } from '../constants/monopol'
 import { RIVALS } from '../constants/rivals'
 import { getGrade } from '../logic/creditEngine'
 import { playBGM, playSFX } from '../logic/audioEngine'
+import { generateEndingAnalysis } from '../logic/aiAdvisorEngine'
 import '../styles/gameOver.css'
 
 export default function GameOverScreen() {
@@ -13,10 +14,19 @@ export default function GameOverScreen() {
   const resetGame = useGameStore(state => state.resetGame)
   const [page, setPage] = useState(1)
   const [saved, setSaved] = useState(false)
+  const [endingAnalysis, setEndingAnalysis] = useState(null)
+  const [analysisLoading, setAnalysisLoading] = useState(true)
 
   useEffect(() => {
     playBGM('recession')
   }, [])
+
+  useEffect(() => {
+    generateEndingAnalysis(gameState, 'GAMEOVER').then(result => {
+      setEndingAnalysis(result)
+      setAnalysisLoading(false)
+    })
+  }, [gameState])
 
   const stage = getCurrentStage(gameState.floor)
   const currentRival = stage ? RIVALS.find(rival => rival.id === stage.rival) : null
@@ -116,6 +126,27 @@ export default function GameOverScreen() {
             <div className="cr2-gray">부채가 자본의 70%를 넘으면 이자 부담이 급격히 커집니다.</div>
             <div className="cr2-gray">MONOPOL 라이벌의 특수 능력에 대응하는 전략을 미리 준비하세요.</div>
           </div>
+
+          {analysisLoading ? (
+            <div style={{ color: 'var(--cr2-gray)', fontSize: '9px' }}>
+              AI 분석 중...
+            </div>
+          ) : endingAnalysis ? (
+            <div style={{
+              padding: '12px',
+              background: 'rgba(0,255,65,0.05)',
+              border: '1px solid rgba(0,255,65,0.3)',
+              fontSize: '10px',
+              color: 'var(--cr2-white)',
+              lineHeight: '1.8',
+              fontFamily: "'Noto Sans KR', sans-serif",
+            }}>
+              <div style={{ color: 'var(--cr2-lime)', fontSize: '9px', marginBottom: '6px' }}>
+                ✨ AI 경영 분석
+              </div>
+              {endingAnalysis}
+            </div>
+          ) : null}
         </div>
       )}
 

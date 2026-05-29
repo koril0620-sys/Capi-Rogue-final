@@ -7,6 +7,7 @@ import { getCurrentStage, isBossStage } from '../constants/monopol'
 import { playBGM, playSFX } from '../logic/audioEngine'
 import { rollExternalEvent, rollRivalEvent } from '../logic/eventEngine'
 import { getMaturedLoans } from '../logic/loanEngine'
+import { generateResultAnalysis } from '../logic/aiAdvisorEngine'
 import AchievementToast from '../components/AchievementToast'
 import LoanMaturityAlert from '../components/LoanMaturityAlert'
 import '../styles/result.css'
@@ -20,6 +21,8 @@ export default function ResultScreen() {
   const maturedLoans = getMaturedLoans(gameState.loans || [])
   const [showAlert, setShowAlert] = useState(maturedLoans.length > 0)
   const [alertLoan, setAlertLoan] = useState(maturedLoans[0] || null)
+  const [aiAnalysis, setAiAnalysis] = useState(null)
+  const [aiLoading, setAiLoading] = useState(false)
 
   useEffect(() => {
     if (!settlementResult) {
@@ -117,6 +120,17 @@ export default function ResultScreen() {
     await saveOnFloorEnter({ ...currentState, floor: nextFloor })
     setSaving(false)
     setCurrentScreen('main')
+  }
+
+  const handleAiAnalysis = async () => {
+    setAiLoading(true)
+    const result = await generateResultAnalysis(
+      gameState,
+      settlementResult,
+      gameState.selectedAdvisor,
+    )
+    setAiAnalysis(result)
+    setAiLoading(false)
   }
 
   return (
@@ -268,6 +282,44 @@ export default function ResultScreen() {
             {report.advisor?.warning && (
               <div className="cr2-advisor-warning cr2-negative">
                 {report.advisor.warning}
+              </div>
+            )}
+
+            {!aiAnalysis && (
+              <button
+                onClick={handleAiAnalysis}
+                disabled={aiLoading}
+                style={{
+                  width: '100%',
+                  padding: '8px',
+                  background: aiLoading ? 'rgba(0,255,65,0.1)' : 'transparent',
+                  border: '1px solid var(--cr2-lime)',
+                  color: 'var(--cr2-lime)',
+                  fontFamily: "'Press Start 2P', monospace",
+                  fontSize: '9px',
+                  cursor: aiLoading ? 'not-allowed' : 'pointer',
+                  marginTop: '8px',
+                }}
+              >
+                {aiLoading ? 'AI 분석 중...' : '✨ AI 분석 요청'}
+              </button>
+            )}
+
+            {aiAnalysis && (
+              <div style={{
+                marginTop: '8px',
+                padding: '10px',
+                background: 'rgba(0,255,65,0.05)',
+                border: '1px solid rgba(0,255,65,0.3)',
+                fontSize: '10px',
+                color: 'var(--cr2-white)',
+                lineHeight: '1.8',
+                fontFamily: "'Noto Sans KR', sans-serif",
+              }}>
+                <div style={{ color: 'var(--cr2-lime)', fontSize: '9px', marginBottom: '6px' }}>
+                  ✨ AI 분석
+                </div>
+                {aiAnalysis}
               </div>
             )}
           </div>
