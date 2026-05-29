@@ -59,7 +59,6 @@ export function settle(gameState) {
 
   const marketingLimit = getMarketingLimit(state.capital, state.settings?.marketingLimitMode || 'ratio')
   const validMarketing = Math.min(state.currentStrategy.marketingBudget || 0, marketingLimit)
-  state.capital -= validMarketing
   result.marketingCost = validMarketing
 
   const allAttractions = calcAllAttractions(state)
@@ -76,7 +75,8 @@ export function settle(gameState) {
     .reduce((multiplier, effect) => multiplier * effect.costMultiplier, 1)
   const finalCost = Math.floor(realCost * activeEffectCostMultiplier)
 
-  const maxAffordable = Math.floor(state.capital / Math.max(finalCost, 1))
+  const availableCapital = Math.max(state.capital - validMarketing, 0)
+  const maxAffordable = Math.floor(availableCapital / Math.max(finalCost, 1))
   const orderAmount = Math.min(state.currentStrategy.orderAmount || 0, maxAffordable)
   const myDemand = Math.floor(totalDemand * share)
   const actualSales = Math.min(orderAmount, myDemand)
@@ -100,7 +100,7 @@ export function settle(gameState) {
   result.interestPaid = interestPaid
 
   const netProfit = revenue - totalCost - validMarketing - totalOperatingCost - interestAmount
-  state.capital += revenue - totalCost - totalOperatingCost - interestAmount
+  state.capital += revenue - totalCost - validMarketing - totalOperatingCost - interestAmount
   result.revenue = revenue
   result.totalCost = totalCost
   result.operatingCost = totalOperatingCost
@@ -144,7 +144,13 @@ export function settle(gameState) {
 
   const forcePhaseEffect = state.activeEffects.find(effect => effect.forcePhase)
   if (forcePhaseEffect) {
+    const prevPhase = state.econPhase
     state.econPhase = forcePhaseEffect.forcePhase
+    if (prevPhase !== state.econPhase) {
+      import('./audioEngine').then(({ onPhaseChange }) => {
+        onPhaseChange(state.econPhase)
+      })
+    }
   } else {
     state.econPhase = transitionPhase(
       state.econPhase,
