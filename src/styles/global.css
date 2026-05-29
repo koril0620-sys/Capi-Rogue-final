@@ -16,6 +16,7 @@ body {
   height: 100%;
   overflow: hidden;
   background: #000000;
+  color: #E0E0E0;
   font-family: 'Press Start 2P', 'Noto Sans KR', 'Malgun Gothic', sans-serif;
 }
 
@@ -25,16 +26,33 @@ body {
   position: absolute;
   overflow: hidden;
   background: #000000;
+  color: #E0E0E0;
   transform-origin: top left;
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
   will-change: transform;
 }
 
-/* #root * {
-  border-width: 1px !important;
-  box-sizing: border-box;
-} */
+/* 기본 텍스트 색상 강제 지정 — 배경색에 묻히지 않도록 */
+#root {
+  color: #E0E0E0;
+}
+
+/* 색상이 명시적으로 지정되지 않은 텍스트는 부모 색상 상속 */
+:where(#root p,
+#root div,
+#root span,
+#root li,
+#root td,
+#root th,
+#root label) {
+  color: inherit;
+}
+
+/* Antigravity가 배경을 파랗게 바꿔도 텍스트는 항상 밝게 */
+:where(#root [style*="background"]) {
+  color: #E0E0E0;
+}
 
 #root {
   width: 1080px;
