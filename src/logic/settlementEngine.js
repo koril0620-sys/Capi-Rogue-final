@@ -68,6 +68,7 @@ export function settle(gameState) {
     .reduce((multiplier, effect) => multiplier * effect.demandMultiplier, 1)
   const totalDemand = Math.floor(rawDemand * activeEffectDemandMultiplier)
   result.totalDemand = totalDemand
+  state.lastTotalDemand = totalDemand
 
   const realCost = state.cost * (1 - (state.costReductionTotal || 0))
   const activeEffectCostMultiplier = state.activeEffects
@@ -176,6 +177,10 @@ export function settle(gameState) {
   state.rivalCapital = updatedRival.capital
   state.rivalConsecutiveLoss = updatedRival.consecutiveLoss
   state.rivalNetProfit = updatedRival.netProfit
+  state.rivalPrice = updatedRival.price
+  state.rivalQuality = updatedRival.quality
+  state.rivalOrderAmount = updatedRival.orderAmount
+  state.rivalActualSales = updatedRival.actualSales
   result.rivalNetProfit = updatedRival.netProfit
   result.rivalBankrupt = checkRivalBankrupt(updatedRival)
   state.rivalBankrupt = result.rivalBankrupt

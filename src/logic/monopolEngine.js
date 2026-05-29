@@ -1,4 +1,29 @@
 import { getCurrentStage } from '../constants/monopol'
+import { RIVALS } from '../constants/rivals'
+import { ECO_PHASES } from '../constants/economy'
+
+const PHASE_PRICE_MODIFIER = {
+  boom: 1.20,
+  growth: 1.10,
+  stable: 1.00,
+  contraction: 0.90,
+  recession: 0.75,
+}
+
+const PHASE_QUALITY_MODIFIER = {
+  boom: 3,
+  growth: 1,
+  stable: 0,
+  contraction: -1,
+  recession: -2,
+}
+
+const MARKETING_BUDGET_MAP = {
+  LOW: 0.02,
+  MID: 0.05,
+  HIGH: 0.10,
+  MAX: 0.15,
+}
 
 export function getRivalInitialCapital(floor, playerCapital) {
   const stage = getCurrentStage(floor)
@@ -7,20 +32,104 @@ export function getRivalInitialCapital(floor, playerCapital) {
   return Math.floor(playerCapital * stage.capitalMultiplier)
 }
 
-export function settleRival(rivalState, playerShare, gameState) {
-  const totalDemand = gameState.totalDemand || 10000
+export function calcRivalStrategy(rivalId, gameState, playerShare) {
+  const rival = RIVALS.find(item => item.id === rivalId)
+  if (!rival) return null
+
+  const phase = ECO_PHASES[gameState.econPhase] ? gameState.econPhase : 'stable'
+  const baseCost = gameState.rivalCost || 3000
+
+  let price = Math.floor(baseCost * rival.baseStrategy.priceMultiplier)
+  price = Math.floor(price * (PHASE_PRICE_MODIFIER[phase] || 1.0))
+
+  if (playerShare > 0.8) {
+    price = Math.floor(price * 0.70)
+  } else if (playerShare > 0.6) {
+    price = Math.floor(price * 0.85)
+  }
+
+  const playerPrice = gameState.currentStrategy?.price || 0
+  if (playerPrice > 0 && playerPrice < price * 0.80) {
+    price = Math.floor(price * 0.90)
+  }
+
+  let quality = rival.stats.quality
+  quality += PHASE_QUALITY_MODIFIER[phase] || 0
+
+  if ((gameState.quality || 0) > quality + 10) {
+    quality += 3
+  }
+
+  const totalDemand = gameState.lastTotalDemand || 1000
   const rivalShare = Math.max(1 - playerShare, 0)
-  const rivalSales = Math.floor(totalDemand * rivalShare)
-  const rivalRevenue = rivalSales * (rivalState.price || 10000)
-  const rivalCost = rivalSales * (rivalState.cost || 3000)
+  const expectedSales = Math.floor(totalDemand * rivalShare)
+  let orderAmount = Math.floor(expectedSales * rival.baseStrategy.orderMultiplier)
+
+  if (phase === 'boom' || phase === 'growth') {
+    orderAmount = Math.floor(orderAmount * 1.2)
+  } else if (phase === 'recession') {
+    orderAmount = Math.floor(orderAmount * 0.7)
+  }
+
+  if (rivalId === 'hyekyung') {
+    const playerOrder = gameState.currentStrategy?.orderAmount || 0
+    orderAmount = Math.floor(playerOrder * 1.2)
+    price = Math.floor(playerPrice * 0.85)
+  }
+
+  const marketingRate = MARKETING_BUDGET_MAP[rival.baseStrategy.marketingBudget] || 0.05
+  const marketingBudget = Math.floor((Number.isFinite(gameState.rivalCapital) ? gameState.rivalCapital : 0) * marketingRate)
+
+  return {
+    price,
+    quality,
+    orderAmount,
+    marketingBudget,
+    awareness: rival.stats.awareness,
+    brand: rival.stats.brand,
+  }
+}
+
+export function settleRival(rivalState, playerShare, gameState) {
+  const stage = getCurrentStage(gameState.floor)
+  const rivalId = stage?.rival
+  const strategy = rivalId
+    ? calcRivalStrategy(rivalId, gameState, playerShare)
+    : null
+
+  const price = strategy?.price || rivalState.price || 10000
+  const quality = strategy?.quality || 8
+  const orderAmount = strategy?.orderAmount || 100
+  const marketingBudget = strategy?.marketingBudget || 0
+
+  const totalDemand = gameState.lastTotalDemand || 1000
+  const rivalShare = Math.max(1 - playerShare, 0)
+  const maxSales = Math.floor(totalDemand * rivalShare)
+  const actualSales = Math.min(orderAmount, maxSales)
+  const unsoldAmount = Math.max(orderAmount - actualSales, 0)
+  const inventoryLoss = Math.floor(unsoldAmount * (rivalState.cost || 3000) * 0.3)
+
+  const rivalRevenue = actualSales * price
+  const rivalProductionCost = orderAmount * (rivalState.cost || 3000)
   const rivalFixedCost = rivalState.operatingCost || 1500000
   const rivalInterest = rivalState.debt
     ? Math.floor((rivalState.debt * 0.065) / 12)
     : 0
-  const rivalNetProfit = rivalRevenue - rivalCost - rivalFixedCost - rivalInterest
+  const rivalMarketingCost = marketingBudget
+  const rivalNetProfit = rivalRevenue
+    - rivalProductionCost
+    - rivalFixedCost
+    - rivalInterest
+    - rivalMarketingCost
+    - inventoryLoss
 
   return {
     ...rivalState,
+    price,
+    quality,
+    orderAmount,
+    actualSales,
+    unsoldAmount,
     capital: rivalState.capital + rivalNetProfit,
     netProfit: rivalNetProfit,
     consecutiveLoss: rivalNetProfit < 0
