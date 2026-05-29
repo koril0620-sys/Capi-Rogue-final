@@ -453,7 +453,7 @@ export default function MainScreen() {
               <div className="cr2-finance-cell">
                 <span className="cr2-finance-label">인지도</span>
                 <span className="cr2-finance-value">
-                  {gameState.awareness?.toFixed(0)}%
+                  {gameState.awareness?.toFixed(1)}%
                 </span>
               </div>
             </div>
