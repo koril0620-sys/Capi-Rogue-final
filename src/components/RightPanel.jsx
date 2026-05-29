@@ -56,8 +56,57 @@ function SaleTab({ gameState, setCurrentStrategy }) {
   const [qualError, setQualError] = useState('')
 
   const cost = gameState.cost || 3000
-  const maxOrder = getMaxOrderAmount(gameState.capital, cost, gameState.orderCap)
+  const getEffectiveCost = () => {
+    const base = gameState.cost || 3000
+    if (selectedQuality === 'reduce') return Math.floor(base * 0.8)
+    if (selectedQuality === 'upgrade') return Math.floor(base * 1.25)
+    if (selectedQuality === 'custom' && qualCustomVal) {
+      const multiplier = parseFloat(qualCustomVal)
+      if (!Number.isNaN(multiplier)) return Math.floor(base * multiplier)
+    }
+    return base
+  }
+  const getEffectiveQuality = () => {
+    const quality = gameState.quality || 8
+    if (selectedQuality === 'reduce') return Math.floor(quality * 0.8)
+    if (selectedQuality === 'upgrade') return Math.floor(quality * 1.2)
+    if (selectedQuality === 'custom' && qualCustomVal) {
+      const multiplier = parseFloat(qualCustomVal)
+      if (!Number.isNaN(multiplier)) return Math.floor(quality * multiplier)
+    }
+    return quality
+  }
+  const effectiveCost = getEffectiveCost()
+  const maxOrder = getMaxOrderAmount(gameState.capital, effectiveCost, gameState.orderCap)
   const rivalPrice = gameState.rivalPrice || null
+  const stage = getCurrentStage(gameState.floor)
+  const rivalInfos = (() => {
+    if (Array.isArray(gameState.rivals) && gameState.rivals.length > 0) {
+      return gameState.rivals.map((rival, index) => {
+        const rivalRecord = typeof rival === 'string' ? { id: rival } : rival || {}
+        const rivalId = rivalRecord.id || rivalRecord.rival || rivalRecord.rivalId
+        const rivalData = RIVALS.find(entry => entry.id === rivalId)
+        return {
+          key: rivalId || `rival-${index}`,
+          name: rivalRecord.rivalName || rivalRecord.name || rivalData?.name || `라이벌 ${index + 1}`,
+          company: rivalRecord.company || rivalData?.company || '',
+          price: rivalRecord.price || rivalRecord.rivalPrice || rivalPrice || 10000,
+          quality: rivalRecord.quality ?? rivalRecord.stats?.quality ?? rivalData?.stats?.quality ?? '?',
+          tier: rivalRecord.tier || rivalData?.tier || '',
+        }
+      })
+    }
+    if (!stage) return []
+    const rivalData = RIVALS.find(rival => rival.id === stage.rival)
+    return [{
+      key: stage.rival,
+      name: stage.rivalName,
+      company: stage.company,
+      price: rivalPrice || 10000,
+      quality: gameState.rivalQuality || rivalData?.stats?.quality || '?',
+      tier: stage.tier,
+    }]
+  })()
 
   const fixedCost = 1500000 + (gameState.loans || []).reduce(
     (sum, loan) => sum + Math.floor(loan.principal * (loan.interestRate || 0.065) / 12),
@@ -65,7 +114,7 @@ function SaleTab({ gameState, setCurrentStrategy }) {
   )
 
   const getBreakeven = (price) => {
-    const margin = price - cost
+    const margin = price - effectiveCost
     return margin > 0 ? Math.ceil(fixedCost / margin) : null
   }
 
@@ -79,8 +128,8 @@ function SaleTab({ gameState, setCurrentStrategy }) {
     const val = parseInt(raw, 10)
     if (isNaN(val)) return '숫자만 입력하세요.'
     if (val <= 0) return '0원보다 커야 합니다.'
-    if (val < cost) return `원가(${cost.toLocaleString()}원)보다 낮으면 적자입니다.`
-    if (val > cost * 10) return `원가의 10배(${(cost * 10).toLocaleString()}원) 이하로 입력하세요.`
+    if (val < effectiveCost) return `원가(${effectiveCost.toLocaleString()}원)보다 낮으면 적자입니다.`
+    if (val > effectiveCost * 10) return `원가의 10배(${(effectiveCost * 10).toLocaleString()}원) 이하로 입력하세요.`
     return ''
   }
 
@@ -103,10 +152,10 @@ function SaleTab({ gameState, setCurrentStrategy }) {
   }
 
   const priceOpts = [
-    { key: 'x13', label: '×1.3', price: Math.floor(cost * 1.3) },
-    { key: 'x2',  label: '×2',   price: Math.floor(cost * 2)   },
-    { key: 'x3',  label: '×3',   price: Math.floor(cost * 3)   },
-    { key: 'x4',  label: '×4',   price: Math.floor(cost * 4)   },
+    { key: 'x13', label: '×1.3', price: Math.floor(effectiveCost * 1.3) },
+    { key: 'x2',  label: '×2',   price: Math.floor(effectiveCost * 2)   },
+    { key: 'x3',  label: '×3',   price: Math.floor(effectiveCost * 3)   },
+    { key: 'x4',  label: '×4',   price: Math.floor(effectiveCost * 4)   },
   ]
 
   const orderOpts = [
@@ -182,24 +231,61 @@ function SaleTab({ gameState, setCurrentStrategy }) {
 
       <div style={{
         display: 'flex',
-        gap: '10px',
+        flexDirection: 'column',
+        gap: '4px',
         fontSize: '9px',
-        padding: '4px 8px',
-        background: 'rgba(220,20,60,0.08)',
-        border: '1px solid rgba(220,20,60,0.3)',
+        padding: '6px 8px',
+        background: 'rgba(0,0,0,0.5)',
+        border: '1px solid rgba(0,170,0,0.3)',
+        marginBottom: '6px',
       }}>
-        <span style={{ color: 'var(--cr2-gray)' }}>원가</span>
-        <span style={{ color: 'var(--cr2-white)' }}>{cost.toLocaleString()}원</span>
-        {rivalPrice && (
-          <>
-            <span style={{ color: 'var(--cr2-gray)' }}>·</span>
-            <span style={{ color: 'var(--cr2-gray)' }}>라이벌</span>
-            <span style={{ color: 'var(--cr2-red)' }}>{rivalPrice.toLocaleString()}원</span>
-          </>
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <span style={{ color: 'var(--cr2-gray)' }}>원가</span>
+          <span style={{ color: 'var(--cr2-white)' }}>
+            {effectiveCost.toLocaleString()}원
+          </span>
+          <span style={{ color: 'var(--cr2-gray)', fontSize: '8px' }}>
+            (품질 {getEffectiveQuality()} 기준)
+          </span>
+        </div>
+
+        {rivalInfos.length > 0 && (
+          <div style={{
+            borderTop: '1px solid rgba(220,20,60,0.3)',
+            paddingTop: '4px',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '4px',
+          }}>
+            {rivalInfos.map(rival => (
+              <div key={rival.key} style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                <div style={{ color: 'var(--cr2-red)', fontSize: '9px' }}>
+                  {rival.name} {rival.company && `(${rival.company})`}
+                </div>
+                <div style={{ display: 'flex', gap: '10px', fontSize: '8px', flexWrap: 'wrap' }}>
+                  <span style={{ color: 'var(--cr2-gray)' }}>
+                    가격 <span style={{ color: 'var(--cr2-red)' }}>
+                      {rival.price.toLocaleString()}원
+                    </span>
+                  </span>
+                  <span style={{ color: 'var(--cr2-gray)' }}>
+                    품질 <span style={{ color: 'var(--cr2-red)' }}>
+                      {rival.quality}
+                    </span>
+                  </span>
+                  {rival.tier && (
+                    <span style={{ color: 'var(--cr2-gray)' }}>
+                      [{rival.tier}]
+                    </span>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
         )}
       </div>
 
-      <div>
+      <div style={{ order: 2 }}>
         <div style={{ fontSize: '9px', color: 'var(--cr2-lime)', marginBottom: '5px' }}>
           가격 선택
         </div>
@@ -297,7 +383,7 @@ function SaleTab({ gameState, setCurrentStrategy }) {
           )}
         </div>
 
-        {selectedPrice !== 'custom' && currentPrice && currentPrice > cost && (
+        {selectedPrice !== 'custom' && currentPrice && currentPrice > effectiveCost && (
           <div style={{
             display: 'flex',
             gap: '8px',
@@ -323,7 +409,7 @@ function SaleTab({ gameState, setCurrentStrategy }) {
         )}
       </div>
 
-      <div>
+      <div style={{ order: 3 }}>
         <div style={{
           fontSize: '9px',
           color: 'var(--cr2-lime)',
@@ -422,13 +508,13 @@ function SaleTab({ gameState, setCurrentStrategy }) {
               color: 'var(--cr2-gold)',
               marginTop: '3px',
             }}>
-              생산비: {(parseInt(customOrder, 10) * cost * (1 - (gameState.costReductionTotal || 0)) / 10000).toFixed(0)}만원
+              생산비: {(parseInt(customOrder, 10) * effectiveCost * (1 - (gameState.costReductionTotal || 0)) / 10000).toFixed(0)}만원
             </div>
           )}
         </div>
       </div>
 
-      <div>
+      <div style={{ order: 1 }}>
         <div style={{
           fontSize: '9px',
           color: 'var(--cr2-lime)',
