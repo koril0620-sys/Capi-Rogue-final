@@ -202,31 +202,70 @@ export default function LoginScreen() {
       )}
 
       {import.meta.env.VITE_DEV_MODE === 'true' && (
-        <button
-          onClick={() => {
-            useGameStore.setState({
-              floor: 120,
-              capital: 50000000,
-              health: 5,
-              marketShare: 0.45,
-            })
-            useGameStore.getState().setCurrentScreen('ending')
-          }}
-          style={{
-            position: 'absolute',
-            bottom: '8px',
-            right: '8px',
-            fontSize: '9px',
-            color: 'var(--cr2-gray)',
-            background: 'transparent',
-            border: '1px solid var(--cr2-gray)',
-            padding: '2px 6px',
-            cursor: 'pointer',
-            zIndex: 999,
-          }}
-        >
-          DEV: 엔딩
-        </button>
+        <div style={{
+          position: 'absolute',
+          bottom: '8px',
+          right: '8px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '3px',
+          alignItems: 'flex-end',
+          zIndex: 999,
+        }}>
+          <input
+            id="dev-floor-input"
+            type="number"
+            min="1"
+            max="120"
+            defaultValue="1"
+            style={{
+              width: '60px',
+              fontSize: '9px',
+              padding: '2px 4px',
+              background: '#0A0A0F',
+              border: '1px solid var(--cr2-gray)',
+              color: 'var(--cr2-white)',
+              textAlign: 'center',
+            }}
+            placeholder="층 입력"
+          />
+          <button
+            onClick={() => {
+              const floor = parseInt(document.getElementById('dev-floor-input').value) || 1
+
+              const capitalByFloor = (f) => {
+                if (f <= 20) return 30000000 + f * 1500000
+                if (f <= 40) return 60000000 + (f - 20) * 3000000
+                if (f <= 60) return 120000000 + (f - 40) * 6000000
+                if (f <= 80) return 240000000 + (f - 60) * 12000000
+                if (f <= 100) return 480000000 + (f - 80) * 25000000
+                return 980000000 + (f - 100) * 50000000
+              }
+
+              useGameStore.setState({
+                floor,
+                capital: capitalByFloor(floor),
+                health: 8,
+                marketShare: 0.35,
+                momentum: 0,
+                creditScore: 70,
+              })
+              useGameStore.getState().setCurrentScreen(
+                floor >= 120 ? 'ending' : 'main',
+              )
+            }}
+            style={{
+              fontSize: '9px',
+              color: 'var(--cr2-gray)',
+              background: 'transparent',
+              border: '1px solid var(--cr2-gray)',
+              padding: '2px 6px',
+              cursor: 'pointer',
+            }}
+          >
+            DEV: 이동
+          </button>
+        </div>
       )}
     </div>
   )
