@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { useGameStore } from './store/useGameStore'
 import { loadSettings } from './logic/settingsEngine'
 import { tryAutoLogin } from './logic/authEngine'
+import { applyAudioSettings } from './logic/audioEngine'
 
 import LoginScreen from './screens/LoginScreen'
 import TitleScreen from './screens/TitleScreen'
@@ -56,6 +57,7 @@ export default function App() {
   useEffect(() => {
     const settings = loadSettings()
     setSettings(settings)
+    applyAudioSettings(settings)
 
     tryAutoLogin().then(success => {
       setCurrentScreen(success ? 'title' : 'login')
