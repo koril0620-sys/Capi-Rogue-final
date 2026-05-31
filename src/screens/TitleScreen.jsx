@@ -58,7 +58,10 @@ export default function TitleScreen() {
         {playerId && (
           <button
             className="cr2-title-menu-item"
-            onClick={() => setCurrentScreen('slotSelect')}
+            onClick={() => {
+              useGameStore.getState().setPreviousScreen('title')
+              setCurrentScreen('slotSelect')
+            }}
           >
             &gt; 계속하기
           </button>

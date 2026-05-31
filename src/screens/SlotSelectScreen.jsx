@@ -15,6 +15,8 @@ export default function SlotSelectScreen() {
   const [loading, setLoading] = useState(Boolean(playerId))
 
   useEffect(() => {
+    const previousScreen = useGameStore.getState().previousScreen
+    if (previousScreen === 'title') return
     if (!selectedAdvisor) {
       setCurrentScreen('advisorSelect')
       return
