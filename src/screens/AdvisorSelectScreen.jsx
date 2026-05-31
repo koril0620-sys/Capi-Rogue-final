@@ -16,7 +16,15 @@ export default function AdvisorSelectScreen() {
   const handleStart = () => {
     if (!selected) return
     setSelectedAdvisor(selected)
-    setCurrentScreen('slotSelect')
+    const state = useGameStore.getState()
+    if (state.playerId) {
+      setCurrentScreen('slotSelect')
+    } else {
+      state.setCurrentSlot(1)
+      state.resetGame(selected, state.playerProfile, 1)
+      const tutorialEnabled = state.settings?.tutorial !== false
+      setCurrentScreen(tutorialEnabled ? 'tutorialSlide' : 'main')
+    }
   }
 
   const selectedAdvisor = ADVISORS.find(advisor => advisor.id === selected) || ADVISORS[0]

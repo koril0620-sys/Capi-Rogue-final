@@ -32,9 +32,22 @@ let sfxEnabled = true
 export function applyAudioSettings(settings) {
   bgmVolume = ((settings.masterVolume ?? 100) / 100) * ((settings.bgmVolume ?? 100) / 100)
   sfxVolume = ((settings.masterVolume ?? 100) / 100) * ((settings.sfxVolume ?? 100) / 100)
+
+  const prevBgmEnabled = bgmEnabled
   bgmEnabled = settings.bgmOn !== false
   sfxEnabled = settings.sfxOn !== false
-  if (currentBGM) currentBGM.volume = bgmVolume
+
+  if (currentBGM) {
+    if (!bgmEnabled) {
+      currentBGM.pause()
+      currentBGM.currentTime = 0
+    } else if (!prevBgmEnabled && bgmEnabled) {
+      currentBGM.volume = bgmVolume
+      currentBGM.play().catch(() => {})
+    } else {
+      currentBGM.volume = bgmVolume
+    }
+  }
 }
 
 export function playBGM(key, volume = null) {
