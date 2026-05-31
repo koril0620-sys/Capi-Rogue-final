@@ -121,10 +121,73 @@ export default function GameSettings() {
         paddingTop: '12px',
       }}>
         <ToggleSetting
-          label="DEV 모드"
+          label="DEV MODE"
           value={devMode}
           onChange={v => useGameStore.getState().setDevMode(v)}
         />
+        {devMode && (
+          <div style={{
+            marginTop: '8px',
+            display: 'flex',
+            gap: '4px',
+            alignItems: 'center',
+            justifyContent: 'flex-end',
+          }}>
+            <input
+              id="dev-floor-input-settings"
+              type="number"
+              min="1"
+              max="120"
+              defaultValue="1"
+              style={{
+                width: '60px',
+                fontSize: '9px',
+                padding: '2px 4px',
+                background: '#0A0A0F',
+                border: '1px solid var(--cr2-gray)',
+                color: 'var(--cr2-white)',
+                textAlign: 'center',
+              }}
+              placeholder="층"
+            />
+            <button
+              onClick={() => {
+                const floor = parseInt(document.getElementById('dev-floor-input-settings').value) || 1
+                const capitalByFloor = (f) => {
+                  if (f <= 20) return 30000000 + f * 1500000
+                  if (f <= 40) return 60000000 + (f - 20) * 3000000
+                  if (f <= 60) return 120000000 + (f - 40) * 6000000
+                  if (f <= 80) return 240000000 + (f - 60) * 12000000
+                  if (f <= 100) return 480000000 + (f - 80) * 25000000
+                  return 980000000 + (f - 100) * 50000000
+                }
+                useGameStore.setState({
+                  floor,
+                  capital: capitalByFloor(floor),
+                  health: 8,
+                  marketShare: 0.35,
+                  momentum: 0,
+                  creditScore: 70,
+                })
+                if (floor >= 120) {
+                  useGameStore.getState().setCurrentScreen('ending')
+                } else {
+                  useGameStore.getState().setCurrentScreen('main')
+                }
+              }}
+              style={{
+                fontSize: '9px',
+                color: 'var(--cr2-gray)',
+                background: 'transparent',
+                border: '1px solid var(--cr2-gray)',
+                padding: '2px 6px',
+                cursor: 'pointer',
+              }}
+            >
+              DEV: 이동
+            </button>
+          </div>
+        )}
       </div>
     </div>
   )
