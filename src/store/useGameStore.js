@@ -2,8 +2,10 @@ import { create } from 'zustand'
 
 export const useGameStore = create((set) => ({
   currentScreen: 'login',
+  previousScreen: 'main',
   isPaused: false,
   setCurrentScreen: (screen) => set({ currentScreen: screen }),
+  setPreviousScreen: (screen) => set({ previousScreen: screen }),
   setIsPaused: (value) => set({ isPaused: value }),
 
   playerId: null,
@@ -97,6 +99,9 @@ export const useGameStore = create((set) => ({
     rivalDominated: 0,
     profitStreak: 0,
     shareFirstStreak: 0,
+    dictionaryViewCount: 0,
+    dictionaryAllViewed: false,
+    dictionaryViewedTerms: [],
   },
 
   unlockedAchievements: [],
@@ -146,6 +151,14 @@ export const useGameStore = create((set) => ({
     aiMessages: [...(state.aiMessages || []), msg].slice(-20),
   })),
   clearAiMessages: () => set({ aiMessages: [] }),
+  updateDictionaryCount: (count, isAll, viewedTerms = null) => set(state => ({
+    stats: {
+      ...(state.stats || {}),
+      dictionaryViewCount: count,
+      dictionaryAllViewed: isAll,
+      dictionaryViewedTerms: viewedTerms || state.stats?.dictionaryViewedTerms || [],
+    },
+  })),
   setRivalState: (data) => set({ ...data }),
   updateBossShareHistory: (share) => set(state => ({
     bossShareHistory: [...state.bossShareHistory.slice(-2), share],
@@ -225,6 +238,9 @@ export const useGameStore = create((set) => ({
         rivalDominated: 0,
         profitStreak: 0,
         shareFirstStreak: 0,
+        dictionaryViewCount: 0,
+        dictionaryAllViewed: false,
+        dictionaryViewedTerms: [],
       },
       unlockedAchievements: [],
       newAchievements: [],

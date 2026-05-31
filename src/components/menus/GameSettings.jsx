@@ -24,7 +24,16 @@ export default function GameSettings() {
     <div className="cr2-settings-screen cr2-scrollable">
       <div className="cr2-settings-header">
         <div className="cr2-settings-title">설정</div>
-        <button className="cr2-btn cr2-back-btn" onClick={() => setCurrentScreen('main')}>←</button>
+        <button
+          className="cr2-btn cr2-back-btn"
+          onClick={() => {
+            const prev = useGameStore.getState().previousScreen
+            console.log('[settings-debug] GameSettings back previousScreen:', prev)
+            setCurrentScreen(prev || 'main')
+          }}
+        >
+          ←
+        </button>
       </div>
 
       <div className="cr2-settings-section">

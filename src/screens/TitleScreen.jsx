@@ -26,13 +26,13 @@ export default function TitleScreen() {
       setIntroStep(prev => prev + 1)
     } else {
       setShowIntro(false)
-      setCurrentScreen('advisorSelect')
+      setCurrentScreen('characterCreate')
     }
   }
 
   const handleIntroSkip = () => {
     setShowIntro(false)
-    setCurrentScreen('advisorSelect')
+    setCurrentScreen('characterCreate')
   }
 
   return (
@@ -71,7 +71,12 @@ export default function TitleScreen() {
         </button>
         <button
           className="cr2-title-menu-item"
-          onClick={() => setCurrentScreen('settings')}
+          onClick={() => {
+            console.log('[settings-debug] title settings click: setPreviousScreen(title)')
+            useGameStore.getState().setPreviousScreen('title')
+            console.log('[settings-debug] previousScreen after set:', useGameStore.getState().previousScreen)
+            setCurrentScreen('settings')
+          }}
         >
           &gt; 설정
         </button>

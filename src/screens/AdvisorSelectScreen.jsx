@@ -16,14 +16,7 @@ export default function AdvisorSelectScreen() {
   const handleStart = () => {
     if (!selected) return
     setSelectedAdvisor(selected)
-    const state = useGameStore.getState()
-    if (!state.playerProfile || !state.currentSlot) {
-      setCurrentScreen('characterCreate')
-      return
-    }
-
-    const tutorialEnabled = state.settings?.tutorial !== false
-    setCurrentScreen(tutorialEnabled ? 'tutorialSlide' : 'main')
+    setCurrentScreen('slotSelect')
   }
 
   const selectedAdvisor = ADVISORS.find(advisor => advisor.id === selected) || ADVISORS[0]

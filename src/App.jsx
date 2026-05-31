@@ -17,6 +17,7 @@ import GameOverScreen from './screens/GameOverScreen'
 import EndingScreen from './screens/EndingScreen'
 import BossScreen from './screens/BossScreen'
 import AchievementScreen from './screens/AchievementScreen'
+import EconomyDictionary from './screens/EconomyDictionary'
 import PauseMenu from './components/menus/PauseMenu'
 import GameSettings from './components/menus/GameSettings'
 import PlayRecord from './components/menus/PlayRecord'
@@ -76,6 +77,7 @@ export default function App() {
     ending: <EndingScreen />,
     boss: <BossScreen />,
     achievement: <AchievementScreen />,
+    dictionary: <EconomyDictionary />,
     settings: <GameSettings />,
     playRecord: <PlayRecord />,
     advisorInfo: <AdvisorInfo />,

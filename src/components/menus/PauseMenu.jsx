@@ -38,6 +38,7 @@ export default function PauseMenu() {
     { label: '▶ 게임 설정', screen: 'settings' },
     { label: '플레이 기록', screen: 'playRecord' },
     { label: '업적', screen: 'achievement' },
+    { label: '경제용어 사전', screen: 'dictionary' },
     { label: '어드바이저 정보', screen: 'advisorInfo' },
     { label: '라이벌 도감', screen: 'rivalDex' },
   ]
@@ -54,7 +55,12 @@ export default function PauseMenu() {
           <button
             key={item.label}
             className="cr2-pause-item"
-            onClick={() => handleNavigate(item.screen)}
+            onClick={() => {
+              if (item.screen === 'settings') {
+                useGameStore.getState().setPreviousScreen('main')
+              }
+              handleNavigate(item.screen)
+            }}
           >
             {item.label}
           </button>

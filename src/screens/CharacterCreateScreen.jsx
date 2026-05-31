@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useGameStore } from '../store/useGameStore'
 import { playSFX } from '../logic/audioEngine'
 
@@ -32,16 +32,11 @@ const AVATARS = [
 export default function CharacterCreateScreen() {
   const setCurrentScreen = useGameStore(s => s.setCurrentScreen)
   const setPlayerProfile = useGameStore(s => s.setPlayerProfile)
-  const selectedAdvisor = useGameStore(s => s.selectedAdvisor)
 
   const [avatar, setAvatar] = useState('male_a')
   const [ceoName, setCeoName] = useState('')
   const [companyName, setCompanyName] = useState('')
   const [error, setError] = useState('')
-
-  useEffect(() => {
-    if (!selectedAdvisor) setCurrentScreen('advisorSelect')
-  }, [selectedAdvisor, setCurrentScreen])
 
   const handleStart = () => {
     if (!ceoName.trim()) {
@@ -64,14 +59,14 @@ export default function CharacterCreateScreen() {
     }
 
     setPlayerProfile(profile)
-    setCurrentScreen('slotSelect')
+    setCurrentScreen('advisorSelect')
   }
 
   return (
     <div className="cr2-character-screen">
       <button
         className="cr2-btn cr2-back-btn"
-        onClick={() => setCurrentScreen('advisorSelect')}
+        onClick={() => setCurrentScreen('title')}
       >
         이전으로
       </button>

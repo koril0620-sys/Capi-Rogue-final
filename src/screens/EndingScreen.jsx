@@ -184,8 +184,8 @@ export default function EndingScreen() {
               className="cr2-btn"
               onClick={() => {
                 playSFX('click')
-                resetGame(gameState.selectedAdvisor, gameState.playerProfile, gameState.currentSlot)
-                setCurrentScreen('advisorSelect')
+                resetGame()
+                setCurrentScreen('characterCreate')
               }}
             >
               새 게임

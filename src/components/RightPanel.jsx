@@ -829,19 +829,27 @@ function FactorySection({ gameState, setFactoryAction }) {
 }
 
 function BankSection({ gameState }) {
+  const [toastMessage, setToastMessage] = useState(null)
   const grade = getGrade(gameState.creditScore)
   const loanLimit = getLoanLimit(gameState.creditScore, gameState.capital)
+  const loans = gameState.loans || []
+  const hasLoan = typeId => loans.some(loan => (loan.typeId || loan.type) === typeId)
+  const isMaxLoans = loans.length >= 3
 
   const handleTakeLoan = (loanTypeId) => {
-    const result = takeLoan(loanTypeId, gameState)
-    if (result.success) {
-      useGameStore.setState({
-        capital: result.newCapital,
-        debt: result.newDebt,
-        loans: [...(gameState.loans || []), result.newLoan],
-      })
-      playSFX('click')
+    const result = takeLoan(loanTypeId, useGameStore.getState())
+    if (!result.success) {
+      setToastMessage(result.reason || result.error || '대출 신청에 실패했습니다.')
+      return
     }
+
+    setToastMessage(null)
+    useGameStore.setState(state => ({
+      capital: state.capital + result.newLoan.principal,
+      debt: state.debt + result.newLoan.principal,
+      loans: [...(state.loans || []), result.newLoan],
+    }))
+    playSFX('click')
   }
 
   const handleRepayLoan = (loanId) => {
@@ -869,17 +877,33 @@ function BankSection({ gameState }) {
 
   return (
     <div className="cr2-bank-section">
+      {toastMessage && (
+        <div
+          style={{
+            fontSize: '10px',
+            color: 'var(--cr2-red)',
+            marginBottom: '6px',
+            padding: '4px 8px',
+            border: '1px solid var(--cr2-red)',
+            background: 'rgba(220,20,60,0.1)',
+          }}
+          onClick={() => setToastMessage(null)}
+        >
+          {toastMessage}
+        </div>
+      )}
+
       <div className="cr2-bank-grade">
         신용등급 <span style={{ color: getGradeColor(grade) }}>{grade}</span>
         ({gameState.creditScore}점)
       </div>
 
-      {(gameState.loans || []).length > 0 && (
+      {loans.length > 0 && (
         <div className="cr2-loan-list">
           <div className="cr2-loan-list-title">현재 대출</div>
-          {gameState.loans.map(loan => (
+          {loans.map(loan => (
             <div key={loan.id} className="cr2-loan-item">
-              <div className="cr2-loan-type">{LOAN_TYPES.find(type => type.id === loan.type)?.label}</div>
+              <div className="cr2-loan-type">{LOAN_TYPES.find(type => type.id === (loan.typeId || loan.type))?.label}</div>
               <div>원금 {(loan.principal / 10000).toFixed(0)}만원</div>
               <div className={loan.remainingTurns <= 1 ? 'cr2-negative cr2-blink' : loan.remainingTurns <= 3 ? 'cr2-gold' : ''}>
                 ⏳ 만기 {loan.remainingTurns}턴 후
@@ -907,9 +931,34 @@ function BankSection({ gameState }) {
         <div className="cr2-loan-new">
           <div className="cr2-loan-limit">대출 한도: {(loanLimit / 10000).toFixed(0)}만원</div>
           <div className="cr2-loan-new-btns">
-            <button className="cr2-btn cr2-btn-small" onClick={() => handleTakeLoan('short')}>단기</button>
-            <button className="cr2-btn cr2-btn-small" onClick={() => handleTakeLoan('normal')}>일반</button>
-            <button className="cr2-btn cr2-btn-small" onClick={() => handleTakeLoan('long')}>장기</button>
+            {LOAN_TYPES.map(loanType => (
+              <div
+                key={loanType.id}
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                }}
+              >
+                <button
+                  className="cr2-btn cr2-btn-small"
+                  disabled={hasLoan(loanType.id) || isMaxLoans}
+                  onClick={() => handleTakeLoan(loanType.id)}
+                >
+                  {loanType.label.replace(' 대출', '')}
+                </button>
+                {hasLoan(loanType.id) && (
+                  <div style={{ fontSize: '9px', color: 'var(--cr2-gray)', marginTop: '2px' }}>
+                    보유 중
+                  </div>
+                )}
+                {!hasLoan(loanType.id) && isMaxLoans && (
+                  <div style={{ fontSize: '9px', color: 'var(--cr2-gray)', marginTop: '2px' }}>
+                    한도 초과
+                  </div>
+                )}
+              </div>
+            ))}
           </div>
         </div>
       )}

@@ -2,14 +2,32 @@ import { LOAN_TYPES } from '../constants/creditScore'
 import { getGrade, getLoanLimit, getInterestRate } from './creditEngine'
 
 export function takeLoan(loanTypeId, gameState) {
+  const loans = gameState.loans || []
+  const fail = reason => ({ success: false, reason, error: reason })
+
+  const alreadyHas = loans.some(loan => (loan.typeId || loan.type) === loanTypeId)
+  if (alreadyHas) {
+    return fail('같은 종류의 대출이 이미 있습니다.')
+  }
+
+  if (loans.length >= 3) {
+    return fail('대출은 최대 3건까지 가능합니다.')
+  }
+
   const grade = getGrade(gameState.creditScore)
-  if (grade === 'D') return { success: false, error: '신용등급 D — 대출 불가합니다.' }
+  if (grade === 'D') return fail('신용등급 D — 대출 불가합니다.')
 
   const loanType = LOAN_TYPES.find(loan => loan.id === loanTypeId)
-  if (!loanType) return { success: false, error: '대출 종류 오류' }
+  if (!loanType) return fail('대출 종류 오류')
 
-  const limit = getLoanLimit(gameState.creditScore, gameState.capital)
-  if (limit <= 0) return { success: false, error: '대출 한도가 없습니다.' }
+  const existingDebt = loans.reduce((sum, loan) => sum + loan.principal, 0)
+  const totalLimit = getLoanLimit(gameState.creditScore, gameState.capital)
+  const loanAmount = totalLimit - existingDebt
+
+  if (totalLimit <= 0 || loanAmount <= 0) return fail('대출 한도가 없습니다.')
+  if (existingDebt + loanAmount > totalLimit) {
+    return fail('총 부채 한도를 초과합니다.')
+  }
 
   const interestRate = getInterestRate(
     gameState.creditScore,
@@ -19,16 +37,17 @@ export function takeLoan(loanTypeId, gameState) {
 
   return {
     success: true,
-    capitalIncrease: limit,
-    newCapital: gameState.capital + limit,
+    capitalIncrease: loanAmount,
+    newCapital: gameState.capital + loanAmount,
     newLoan: {
-      id: `loan_${Date.now()}`,
+      id: `loan_${loanTypeId}_${Date.now()}`,
       type: loanTypeId,
-      principal: limit,
+      typeId: loanTypeId,
+      principal: loanAmount,
       interestRate,
       remainingTurns: loanType.duration,
     },
-    newDebt: gameState.debt + limit,
+    newDebt: gameState.debt + loanAmount,
   }
 }
 

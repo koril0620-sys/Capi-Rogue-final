@@ -35,14 +35,14 @@ export async function saveOnFloorEnter(gameState = useGameStore.getState()) {
 
   try {
     const { error } = await supabase
-      .from('game_saves')
+      .from('save_slots')
       .upsert({
-        user_id: playerId,
+        player_id: playerId,
         slot_number: currentSlot,
         game_state_json: serialized,
         updated_at: new Date().toISOString(),
       }, {
-        onConflict: 'user_id,slot_number',
+        onConflict: 'player_id,slot_number',
       })
 
     return !error
@@ -56,9 +56,9 @@ export async function loadSaveSlots(userId) {
 
   try {
     const { data, error } = await supabase
-      .from('game_saves')
+      .from('save_slots')
       .select('slot_number, game_state_json, updated_at')
-      .eq('user_id', userId)
+      .eq('player_id', userId)
       .order('slot_number')
 
     if (error) return []
@@ -73,9 +73,9 @@ export async function loadSaveSlot(userId, slotNumber) {
 
   try {
     const { data, error } = await supabase
-      .from('game_saves')
+      .from('save_slots')
       .select('game_state_json')
-      .eq('user_id', userId)
+      .eq('player_id', userId)
       .eq('slot_number', slotNumber)
       .single()
 
@@ -91,9 +91,9 @@ export async function deleteSaveSlot(userId, slotNumber) {
 
   try {
     const { error } = await supabase
-      .from('game_saves')
+      .from('save_slots')
       .delete()
-      .eq('user_id', userId)
+      .eq('player_id', userId)
       .eq('slot_number', slotNumber)
 
     return !error

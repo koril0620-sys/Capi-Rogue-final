@@ -15,11 +15,11 @@ export default function SlotSelectScreen() {
   const [loading, setLoading] = useState(Boolean(playerId))
 
   useEffect(() => {
-    if (!selectedAdvisor && !playerId) {
+    if (!selectedAdvisor) {
       setCurrentScreen('advisorSelect')
       return
     }
-    if (!playerProfile && !playerId) setCurrentScreen('characterCreate')
+    if (!playerProfile) setCurrentScreen('characterCreate')
   }, [playerId, playerProfile, selectedAdvisor, setCurrentScreen])
 
   useEffect(() => {
@@ -44,8 +44,12 @@ export default function SlotSelectScreen() {
 
   const startNewGame = (slotNumber) => {
     const state = useGameStore.getState()
-    if (!state.selectedAdvisor || !state.playerProfile) {
+    if (!state.selectedAdvisor) {
       setCurrentScreen('advisorSelect')
+      return
+    }
+    if (!state.playerProfile) {
+      setCurrentScreen('characterCreate')
       return
     }
     setCurrentSlot(slotNumber)
@@ -157,7 +161,7 @@ export default function SlotSelectScreen() {
 
       <button
         className="cr2-btn cr2-back-btn"
-        onClick={() => setCurrentScreen('characterCreate')}
+        onClick={() => setCurrentScreen('advisorSelect')}
       >
         뒤로가기
       </button>

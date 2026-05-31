@@ -67,8 +67,8 @@ export default function GameOverScreen() {
 
   const handleRetry = () => {
     playSFX('click')
-    resetGame(gameState.selectedAdvisor, gameState.playerProfile, gameState.currentSlot)
-    setCurrentScreen('advisorSelect')
+    resetGame()
+    setCurrentScreen('characterCreate')
   }
 
   const handleTitle = () => {
