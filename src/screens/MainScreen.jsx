@@ -279,53 +279,43 @@ export default function MainScreen() {
         <div className="cr2-game-area">
           <div style={{
             position: 'absolute',
-            top: '110px',
-            left: '12px',
-            background: 'rgba(0,0,0,0.85)',
-            border: '2px solid var(--cr2-red)',
-            padding: '8px 10px',
+            top: '8px',
+            left: '8px',
             display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: '3px',
-            width: '100px',
-            maxHeight: '220px',
-            overflow: 'hidden',
-            backdropFilter: 'blur(4px)',
-            boxShadow: '0 0 10px rgba(220,20,60,0.3)',
+            flexDirection: 'row',
+            gap: '6px',
             zIndex: 4,
           }}>
-            {stage ? (
-              <>
+            {(gameState.rivals?.length > 0 ? gameState.rivals : stage ? [stage] : []).map((rival, idx) => (
+              <div
+                key={rival.id || idx}
+                style={{
+                  border: '2px solid var(--cr2-red)',
+                  background: 'rgba(0,0,0,0.7)',
+                  padding: '4px',
+                  width: '80px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  gap: '2px',
+                }}
+              >
                 <img
-                  src={getRivalProfileImage(stage.rival)}
-                  alt={stage.rivalName}
-                  style={{
-                    width: '72px',
-                    height: '100px',
-                    objectFit: 'contain',
-                    objectPosition: 'top center',
-                  }}
+                  src={getRivalProfileImage(rival.rivalId || rival.rival || rival.id || stage?.rival)}
+                  alt={rival.name || stage?.rivalName}
+                  style={{ width: '48px', height: '48px', objectFit: 'cover' }}
                 />
-                <div style={{ fontSize: '10px', color: 'var(--cr2-red)', textAlign: 'center' }}>
-                  {stage.rivalName}
+                <div style={{ fontSize: '9px', color: 'var(--cr2-red)', textAlign: 'center' }}>
+                  {rival.name || stage?.rivalName}
                 </div>
-                <div style={{ fontSize: '7px', color: 'var(--cr2-gray)', textAlign: 'center' }}>
-                  {stage.company}
+                <div style={{ fontSize: '8px', color: 'var(--cr2-gray)', textAlign: 'center' }}>
+                  {rival.company || stage?.company}
                 </div>
-                <div style={{
-                  fontSize: '7px',
-                  color: getTierColor(stage.tier),
-                  textAlign: 'center',
-                }}>
-                  [{stage.tier}]
+                <div style={{ fontSize: '8px', color: 'var(--cr2-white)', textAlign: 'center' }}>
+                  [{rival.tier || stage?.tier}]
                 </div>
-              </>
-            ) : (
-              <div style={{ fontSize: '9px', color: 'var(--cr2-gray)', padding: '16px 8px' }}>
-                라이벌 없음
               </div>
-            )}
+            ))}
           </div>
 
           <div style={{
@@ -346,18 +336,24 @@ export default function MainScreen() {
             boxShadow: '0 0 12px rgba(0,255,65,0.2)',
             zIndex: 10,
           }}>
-            <div style={{ fontSize: '8px', color: 'var(--cr2-green)' }}>예상수요</div>
-            <div style={{ fontSize: '13px', color: 'var(--cr2-lime)' }}>
-              {(() => {
-                const totalDemand = Math.floor(
-                  getCurrentTier(gameState.floor).baseDemand
-                    * getDemandMultiplier(gameState.econPhase),
-                )
-                const lastShare = (gameState.playerShareHistory || []).slice(-1)[0] ?? 0.5
-                const myDemand = Math.floor(totalDemand * lastShare)
-                return myDemand.toLocaleString()
-              })()}
-            </div>
+            {(() => {
+              const totalDemand = Math.floor(
+                getCurrentTier(gameState.floor).baseDemand
+                  * getDemandMultiplier(gameState.econPhase),
+              )
+              const lastShare = (gameState.playerShareHistory || []).slice(-1)[0] ?? 0.5
+              const myDemand = Math.floor(totalDemand * lastShare)
+              return (
+                <>
+                  <div style={{ fontSize: '8px', color: 'var(--cr2-green)' }}>
+                    예상 수요 {totalDemand.toLocaleString()}
+                  </div>
+                  <div style={{ fontSize: '9px', color: 'var(--cr2-lime)' }}>
+                    내 예상 {myDemand.toLocaleString()}
+                  </div>
+                </>
+              )
+            })()}
           </div>
 
           <div style={{

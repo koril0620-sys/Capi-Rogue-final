@@ -59,7 +59,6 @@ export function calcTotalDemand(gameState, allAttractions) {
       tierBaseDemand
         * phase.demandMultiplier
         * groupRatio
-        * share
         * momentumMultiplier
         * random,
     )

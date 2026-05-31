@@ -81,8 +81,8 @@ export function settle(gameState) {
   const availableCapital = Math.max(state.capital - validMarketing, 0)
   const maxAffordable = Math.floor(availableCapital / Math.max(finalCost, 1))
   const orderAmount = Math.min(state.currentStrategy.orderAmount || 0, maxAffordable)
-  const myDemand = Math.floor(totalDemand * share)
-  const actualSales = Math.min(orderAmount, myDemand)
+  const playerDemand = Math.floor(totalDemand * share)
+  const actualSales = Math.min(orderAmount, playerDemand)
   const unitPrice = state.currentStrategy.price || state.cost * 2
   const revenue = actualSales * unitPrice
   const totalCost = orderAmount * finalCost
@@ -111,7 +111,7 @@ export function settle(gameState) {
   result.shareAfter = share
   result.prevShare = (state.playerShareHistory || []).at(-1) || 0
   result.isProfit = netProfit > 0
-  result.myDemand = myDemand
+  result.myDemand = playerDemand
   result.actualSales = actualSales
   result.orderAmount = orderAmount
 

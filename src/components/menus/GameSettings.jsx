@@ -1,6 +1,7 @@
 import { useGameStore } from '../../store/useGameStore'
 import { updateSetting, resetSettings } from '../../logic/settingsEngine'
 import { applyAudioSettings, playSFX } from '../../logic/audioEngine'
+import { getCurrentTier } from '../../constants/productTiers'
 
 export default function GameSettings() {
   const settings = useGameStore(s => s.settings)
@@ -153,6 +154,10 @@ export default function GameSettings() {
             <button
               onClick={() => {
                 const floor = parseInt(document.getElementById('dev-floor-input-settings').value) || 1
+                const tier = getCurrentTier(floor)
+                const costReductionRate = useGameStore.getState().costReductionTotal || 0
+                const newCost = Math.floor(tier.baseCost * (1 - costReductionRate))
+
                 const capitalByFloor = (f) => {
                   if (f <= 20) return 30000000 + f * 1500000
                   if (f <= 40) return 60000000 + (f - 20) * 3000000
@@ -164,10 +169,18 @@ export default function GameSettings() {
                 useGameStore.setState({
                   floor,
                   capital: capitalByFloor(floor),
+                  cost: newCost,
+                  rivalCost: tier.baseCost,
                   health: 8,
                   marketShare: 0.35,
                   momentum: 0,
                   creditScore: 70,
+                  awareness: Math.min(floor * 0.5, 50),
+                  loans: [],
+                  debt: 0,
+                  activeEffects: [],
+                  costReductionTotal: 0,
+                  qualityBoostTotal: 0,
                 })
                 if (floor >= 120) {
                   useGameStore.getState().setCurrentScreen('ending')

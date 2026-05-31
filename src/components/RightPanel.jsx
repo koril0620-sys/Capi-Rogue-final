@@ -971,6 +971,9 @@ function BankSection({ gameState }) {
 
 function RivalTab({ gameState }) {
   const stage = getCurrentStage(gameState.floor)
+  const [selectedRivalIdx, setSelectedRivalIdx] = useState(0)
+  const rivals = gameState.rivals?.length > 0 ? gameState.rivals : []
+  const selectedRival = rivals[selectedRivalIdx] || rivals[0]
 
   if (!stage) {
     return (
@@ -983,60 +986,111 @@ function RivalTab({ gameState }) {
     )
   }
 
-  const capitalRatio = gameState.rivalInitialCapital > 0
-    ? Math.max(gameState.rivalCapital / gameState.rivalInitialCapital, 0)
-    : 0
-
-  const getCapitalBarColor = () => {
-    if (capitalRatio <= 0.3) return 'var(--cr2-red)'
-    if (capitalRatio <= 0.7) return 'var(--cr2-gold)'
-    return 'var(--cr2-green)'
+  const displayedRival = selectedRival || {
+    id: stage.rival,
+    name: stage.rivalName,
+    company: stage.company,
+    tier: stage.tier,
+    capital: gameState.rivalCapital,
+    initialCapital: gameState.rivalInitialCapital,
+    netProfit: gameState.rivalNetProfit,
+    consecutiveLoss: gameState.rivalConsecutiveLoss,
   }
+  const capitalRatio = Math.max(0, Math.min(1,
+    (displayedRival?.capital || 0) / (displayedRival?.initialCapital || 1),
+  ))
+  const capitalColor = capitalRatio > 0.5
+    ? 'var(--cr2-lime)'
+    : capitalRatio > 0.25
+      ? 'orange'
+      : 'var(--cr2-red)'
 
   return (
     <div className="cr2-panel-content">
-      <div className="cr2-panel-title">라이벌 정보</div>
+      <div className="cr2-panel-title" style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        gap: '8px',
+      }}>
+        <span>라이벌 정보</span>
+        {rivals.length > 1 && (
+          <select
+            value={selectedRivalIdx}
+            onChange={event => setSelectedRivalIdx(Number(event.target.value))}
+            style={{
+              background: '#0A0A0F',
+              border: '1px solid var(--cr2-red)',
+              color: 'var(--cr2-white)',
+              fontSize: '9px',
+              padding: '2px 4px',
+            }}
+          >
+            {rivals.map((rival, idx) => (
+              <option key={rival.id || idx} value={idx}>
+                {rival.name || `라이벌 ${idx + 1}`}
+              </option>
+            ))}
+          </select>
+        )}
+      </div>
 
       <div className="cr2-rival-tab-profile">
         <img
-          src={getRivalProfileImage(stage.rival)}
-          alt={stage.rivalName}
+          src={getRivalProfileImage(displayedRival.rivalId || displayedRival.rival || displayedRival.id || stage.rival)}
+          alt={displayedRival.name || stage.rivalName}
           className="cr2-rival-tab-img"
         />
         <div className="cr2-rival-tab-info">
-          <div className="cr2-rival-tab-name cr2-negative">{stage.rivalName}</div>
-          <div className="cr2-rival-tab-company cr2-gray">{stage.company}</div>
-          <div className="cr2-rival-tab-tier" style={{ color: getTierColor(stage.tier) }}>
-            [{stage.tier}] MONOPOL
+          <div className="cr2-rival-tab-name cr2-negative">{displayedRival.name || stage.rivalName}</div>
+          <div className="cr2-rival-tab-company cr2-gray">{displayedRival.company || stage.company}</div>
+          <div className="cr2-rival-tab-tier" style={{ color: getTierColor(displayedRival.tier || stage.tier) }}>
+            [{displayedRival.tier || stage.tier}] MONOPOL
           </div>
         </div>
       </div>
 
       <div className="cr2-rival-tab-section">
         <div className="cr2-rival-tab-section-title">자본 현황</div>
-        <div className="cr2-rival-cap-bar-track">
-          <div
-            className={`cr2-rival-cap-bar ${capitalRatio <= 0.1 ? 'cr2-blink' : ''}`}
-            style={{
-              width: `${Math.min(capitalRatio * 100, 100)}%`,
-              background: getCapitalBarColor(),
-            }}
-          />
-        </div>
-        <div className="cr2-rival-tab-cap-info">
-          <span style={{ color: gameState.rivalCapital < 0 ? 'var(--cr2-red)' : 'var(--cr2-white)' }}>
-            {(gameState.rivalCapital / 10000).toFixed(0)}만원
-          </span>
-          {gameState.rivalNetProfit !== 0 && (
-            <span className={gameState.rivalNetProfit < 0 ? 'cr2-positive' : 'cr2-negative'}>
-              이번달 {gameState.rivalNetProfit < 0 ? '▼' : '▲'}
-              {Math.abs(gameState.rivalNetProfit / 10000).toFixed(0)}만원
+        <div style={{ marginBottom: '8px' }}>
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            fontSize: '9px',
+            color: 'var(--cr2-gray)',
+            marginBottom: '3px',
+          }}>
+            <span>자본</span>
+            <span style={{ color: capitalColor }}>
+              {((displayedRival?.capital || 0) / 10000).toFixed(0)}만원
             </span>
-          )}
+          </div>
+          <div style={{
+            width: '100%',
+            height: '6px',
+            background: 'rgba(255,255,255,0.1)',
+            borderRadius: '2px',
+          }}>
+            <div style={{
+              width: `${capitalRatio * 100}%`,
+              height: '100%',
+              background: capitalColor,
+              borderRadius: '2px',
+              transition: 'width 0.3s ease',
+            }} />
+          </div>
         </div>
-        {capitalRatio <= 0.1 && (
-          <div className="cr2-positive cr2-blink" style={{ fontSize: 9 }}>
-            파산 임박! 압박을 유지하라.
+        {(displayedRival?.netProfit || 0) !== 0 && (
+          <div className="cr2-rival-tab-cap-info">
+            <span className={(displayedRival?.netProfit || 0) < 0 ? 'cr2-positive' : 'cr2-negative'}>
+              이번달 {(displayedRival?.netProfit || 0) < 0 ? '▼' : '▲'}
+              {Math.abs((displayedRival?.netProfit || 0) / 10000).toFixed(0)}만원
+            </span>
+          </div>
+        )}
+        {displayedRival?.consecutiveLoss >= 2 && (
+          <div style={{ fontSize: '9px', color: 'var(--cr2-red)' }}>
+            ⚠️ 파산압박 {displayedRival.consecutiveLoss}턴 유지중
           </div>
         )}
       </div>
@@ -1068,11 +1122,11 @@ function RivalTab({ gameState }) {
         <div className="cr2-rival-tab-hint">{stage.hint}</div>
       </div>
 
-      {gameState.rivalNetProfit < 0 && gameState.rivalCapital > 0 && (
+      {(displayedRival?.netProfit || 0) < 0 && (displayedRival?.capital || 0) > 0 && (
         <div className="cr2-rival-tab-section">
           <div className="cr2-rival-tab-section-title">예상 파산</div>
           <div className="cr2-positive" style={{ fontSize: 10 }}>
-            약 {Math.ceil(gameState.rivalCapital / Math.abs(gameState.rivalNetProfit))}턴 후
+            약 {Math.ceil(displayedRival.capital / Math.abs(displayedRival.netProfit))}턴 후
           </div>
         </div>
       )}
