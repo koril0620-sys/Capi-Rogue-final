@@ -50,7 +50,7 @@ export default function SlotSelectScreen() {
     }
     setCurrentSlot(slotNumber)
     resetGame(state.selectedAdvisor, state.playerProfile, slotNumber)
-    setCurrentScreen('main')
+    setCurrentScreen(state.settings?.tutorial !== false ? 'tutorialSlide' : 'main')
   }
 
   const handleSlotClick = (slotNumber) => {

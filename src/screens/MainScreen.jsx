@@ -4,7 +4,7 @@ import { settle } from '../logic/settlementEngine'
 import { getRivalInitialCapital } from '../logic/monopolEngine'
 import { getCurrentStage, isNewStage } from '../constants/monopol'
 import { getCurrentTier, isNewTier } from '../constants/productTiers'
-import { getLearningGoal } from '../constants/learningGoals'
+import { getLearningGoals } from '../constants/learningGoals'
 import { RIVALS } from '../constants/rivals'
 import { saveAchievements } from '../logic/achievementEngine'
 import { playSFX, playBGM } from '../logic/audioEngine'
@@ -25,9 +25,10 @@ export default function MainScreen() {
   const [stagePopup, setStagePopup] = useState(null)
   const [tierPopup, setTierPopup] = useState(null)
   const [learningPopup, setLearningPopup] = useState(null)
+  const [learningPopupQueue, setLearningPopupQueue] = useState([])
   const [activeTab, setActiveTab] = useState('sale')
   const [aiStrategyAdvice, setAiStrategyAdvice] = useState(null)
-  const prevFloorRef = useRef(gameState.floor)
+  const prevFloorRef = useRef(Math.max((gameState.floor || 1) - 1, 0))
 
   useEffect(() => {
     playBGM(gameState.econPhase)
@@ -112,10 +113,10 @@ export default function MainScreen() {
         playSFX('rival')
       }
 
-      const goal = getLearningGoal(currentFloor)
-      const hideGoal = localStorage.getItem('cr2_hide_goal')
-      if (goal && !hideGoal && gameState.settings?.tutorial !== false) {
-        setLearningPopup(goal)
+      const goals = getLearningGoals(currentFloor)
+      if (goals.length > 0 && gameState.settings?.tutorial !== false) {
+        setLearningPopupQueue(goals)
+        setLearningPopup(goals[0])
       }
 
       playBGM(gameState.econPhase)
@@ -189,6 +190,17 @@ export default function MainScreen() {
     setTimeout(() => {
       setCurrentScreen('result')
     }, 0)
+  }
+
+  const handlePopupConfirm = () => {
+    const next = learningPopupQueue.slice(1)
+    setLearningPopupQueue(next)
+    setLearningPopup(next[0] || null)
+  }
+
+  const handlePopupHide = () => {
+    setLearningPopupQueue([])
+    setLearningPopup(null)
   }
 
   const background = getBackground(gameState.econPhase)
@@ -459,9 +471,9 @@ export default function MainScreen() {
                 ✨ {aiStrategyAdvice}
               </div>
             )}
-            {getLearningGoal(gameState.floor) && (
+            {getLearningGoals(gameState.floor)[0] && (
               <div className="cr2-learning-hint">
-                {getLearningGoal(gameState.floor).hint}
+                {getLearningGoals(gameState.floor)[0].title}
               </div>
             )}
           </div>
@@ -681,19 +693,17 @@ export default function MainScreen() {
       {learningPopup && (
         <div className="cr2-popup-overlay">
           <div className="cr2-learning-popup">
-            <div className="cr2-learning-popup-title">이번 구간</div>
-            <div className="cr2-learning-popup-hint">{learningPopup.hint}</div>
-            <div className="cr2-learning-popup-monopol">{learningPopup.monopolContext}</div>
+            <div className="cr2-learning-popup-title">{learningPopup.title}</div>
+            <div className="cr2-learning-popup-hint" style={{ whiteSpace: 'pre-line' }}>
+              {learningPopup.content}
+            </div>
             <div className="cr2-learning-popup-btns">
-              <button className="cr2-btn" onClick={() => setLearningPopup(null)}>
-                확인
+              <button className="cr2-btn" onClick={handlePopupConfirm}>
+                {learningPopupQueue.length > 1 ? '다음' : '확인'}
               </button>
               <button
                 className="cr2-btn cr2-btn-ghost"
-                onClick={() => {
-                  localStorage.setItem('cr2_hide_goal', 'true')
-                  setLearningPopup(null)
-                }}
+                onClick={handlePopupHide}
               >
                 다시 보지 않기
               </button>

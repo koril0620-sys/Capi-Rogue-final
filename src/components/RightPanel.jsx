@@ -45,7 +45,8 @@ export default function RightPanel({ activeTab, onSettle }) {
 
 function SaleTab({ gameState, setCurrentStrategy }) {
   const [selectedPrice, setSelectedPrice] = useState(null)
-  const [selectedOrder, setSelectedOrder] = useState(null)
+  const [selectedOrder, setSelectedOrder] = useState(0)
+  const [selectedOrderKey, setSelectedOrderKey] = useState(null)
   const [selectedQuality, setSelectedQuality] = useState('maintain')
   const [customPrice, setCustomPrice] = useState('')
   const [customOrder, setCustomOrder] = useState('')
@@ -202,7 +203,8 @@ function SaleTab({ gameState, setCurrentStrategy }) {
   }
 
   const handleOrder = (amount, key) => {
-    setSelectedOrder(key)
+    setSelectedOrder(amount)
+    setSelectedOrderKey(key)
     setCustomOrder('')
     setOrderError('')
     setCurrentStrategy({ orderAmount: amount })
@@ -432,6 +434,21 @@ function SaleTab({ gameState, setCurrentStrategy }) {
           )}
         </div>
 
+        {selectedOrder > 0 && (
+          <div style={{
+            fontSize: '10px',
+            color: 'var(--cr2-lime)',
+            marginBottom: '6px',
+            letterSpacing: '0.5px',
+          }}>
+            생산비용: {selectedOrder.toLocaleString()}개 × {gameState.cost.toLocaleString()}원
+            {' = '}
+            <span style={{ color: 'var(--cr2-white)', fontWeight: 'bold' }}>
+              {(selectedOrder * gameState.cost).toLocaleString()}원
+            </span>
+          </div>
+        )}
+
         <div style={{
           display: 'grid',
           gridTemplateColumns: '1fr 1fr',
@@ -443,9 +460,9 @@ function SaleTab({ gameState, setCurrentStrategy }) {
               key={opt.key}
               onClick={() => handleOrder(opt.amount, opt.key)}
               style={{
-                background: selectedOrder === opt.key
+                background: selectedOrderKey === opt.key
                   ? 'rgba(0,255,65,0.15)' : 'var(--cr2-bg2)',
-                border: `1px solid ${selectedOrder === opt.key
+                border: `1px solid ${selectedOrderKey === opt.key
                   ? 'var(--cr2-lime)' : 'var(--cr2-green)'}`,
                 color: 'var(--cr2-white)',
                 fontFamily: "'Press Start 2P', 'Noto Sans KR', monospace",
@@ -455,7 +472,7 @@ function SaleTab({ gameState, setCurrentStrategy }) {
                 flexDirection: 'column',
                 alignItems: 'center',
                 gap: '3px',
-                boxShadow: selectedOrder === opt.key
+                boxShadow: selectedOrderKey === opt.key
                   ? '0 0 6px rgba(0,255,65,0.25)' : 'none',
               }}
             >
@@ -480,20 +497,24 @@ function SaleTab({ gameState, setCurrentStrategy }) {
               const err = validateOrder(raw)
               setOrderError(err)
               if (!err && raw !== '') {
-                setSelectedOrder('custom')
-                setCurrentStrategy({ orderAmount: parseInt(raw, 10) })
+                const num = parseInt(raw, 10)
+                if (!isNaN(num) && num > 0) {
+                  setSelectedOrder(num)
+                  setSelectedOrderKey('custom')
+                  setCurrentStrategy({ orderAmount: num })
+                }
                 playSFX('click')
               }
             }}
             style={{
               width: '100%',
-              background: selectedOrder === 'custom'
+              background: selectedOrderKey === 'custom'
                 ? 'rgba(0,255,65,0.08)'
                 : orderError ? 'rgba(220,20,60,0.08)'
                   : 'rgba(0,0,0,0.5)',
               border: `1px solid ${
                 orderError ? 'var(--cr2-red)'
-                  : selectedOrder === 'custom' ? 'var(--cr2-lime)'
+                  : selectedOrderKey === 'custom' ? 'var(--cr2-lime)'
                     : 'rgba(0,170,0,0.4)'
               }`,
               color: 'var(--cr2-white)',
@@ -513,7 +534,7 @@ function SaleTab({ gameState, setCurrentStrategy }) {
               ⚠️ {orderError}
             </div>
           )}
-          {!orderError && selectedOrder === 'custom' && customOrder && (
+          {!orderError && selectedOrderKey === 'custom' && customOrder && (
             <div style={{
               fontSize: '8px',
               color: 'var(--cr2-gold)',

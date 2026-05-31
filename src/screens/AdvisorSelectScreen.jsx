@@ -13,10 +13,17 @@ export default function AdvisorSelectScreen() {
     setSelected(advisorId)
   }
 
-  const handleConfirm = () => {
+  const handleStart = () => {
     if (!selected) return
     setSelectedAdvisor(selected)
-    setCurrentScreen('characterCreate')
+    const state = useGameStore.getState()
+    if (!state.playerProfile || !state.currentSlot) {
+      setCurrentScreen('characterCreate')
+      return
+    }
+
+    const tutorialEnabled = state.settings?.tutorial !== false
+    setCurrentScreen(tutorialEnabled ? 'tutorialSlide' : 'main')
   }
 
   const selectedAdvisor = ADVISORS.find(advisor => advisor.id === selected) || ADVISORS[0]
@@ -123,7 +130,7 @@ export default function AdvisorSelectScreen() {
 
           <button
             className="cr2-btn cr2-advisor-confirm-btn"
-            onClick={handleConfirm}
+            onClick={handleStart}
           >
             이 어드바이저로 시작
           </button>

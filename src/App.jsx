@@ -9,6 +9,7 @@ import CharacterCreateScreen from './screens/CharacterCreateScreen'
 import AdvisorSelectScreen from './screens/AdvisorSelectScreen'
 import SlotSelectScreen from './screens/SlotSelectScreen'
 import MainScreen from './screens/MainScreen'
+import TutorialSlideScreen from './screens/TutorialSlideScreen'
 import EventScreen from './screens/EventScreen'
 import ResultScreen from './screens/ResultScreen'
 import RewardScreen from './screens/RewardScreen'
@@ -66,6 +67,7 @@ export default function App() {
     characterCreate: <CharacterCreateScreen />,
     advisorSelect: <AdvisorSelectScreen />,
     slotSelect: <SlotSelectScreen />,
+    tutorialSlide: <TutorialSlideScreen />,
     main: <MainScreen />,
     event: <EventScreen />,
     result: <ResultScreen />,
