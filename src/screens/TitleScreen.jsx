@@ -115,6 +115,34 @@ export default function TitleScreen() {
           </div>
         </div>
       )}
+
+      {import.meta.env.VITE_DEV_MODE === 'true' && (
+        <button
+          onClick={() => {
+            useGameStore.setState({
+              floor: 120,
+              capital: 50000000,
+              health: 5,
+              marketShare: 0.45,
+            })
+            useGameStore.getState().setCurrentScreen('ending')
+          }}
+          style={{
+            position: 'absolute',
+            bottom: '8px',
+            right: '8px',
+            fontSize: '9px',
+            color: 'var(--cr2-gray)',
+            background: 'transparent',
+            border: '1px solid var(--cr2-gray)',
+            padding: '2px 6px',
+            cursor: 'pointer',
+            zIndex: 999,
+          }}
+        >
+          DEV: 엔딩
+        </button>
+      )}
     </div>
   )
 }
