@@ -4,6 +4,7 @@ import { applyAudioSettings, playSFX } from '../../logic/audioEngine'
 
 export default function GameSettings() {
   const settings = useGameStore(s => s.settings)
+  const devMode = useGameStore(s => s.devMode)
   const updateSettingStore = useGameStore(s => s.updateSetting)
   const setCurrentScreen = useGameStore(s => s.setCurrentScreen)
 
@@ -114,6 +115,17 @@ export default function GameSettings() {
       <button className="cr2-btn cr2-settings-reset-btn" onClick={handleReset}>
         설정 초기화
       </button>
+      <div style={{
+        marginTop: '16px',
+        borderTop: '1px solid rgba(0,255,65,0.15)',
+        paddingTop: '12px',
+      }}>
+        <ToggleSetting
+          label="DEV 모드"
+          value={devMode}
+          onChange={v => useGameStore.getState().setDevMode(v)}
+        />
+      </div>
     </div>
   )
 }

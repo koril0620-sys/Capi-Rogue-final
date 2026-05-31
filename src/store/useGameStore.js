@@ -4,9 +4,11 @@ export const useGameStore = create((set) => ({
   currentScreen: 'login',
   previousScreen: 'main',
   isPaused: false,
+  devMode: false,
   setCurrentScreen: (screen) => set({ currentScreen: screen }),
   setPreviousScreen: (screen) => set({ previousScreen: screen }),
   setIsPaused: (value) => set({ isPaused: value }),
+  setDevMode: (value) => set({ devMode: value }),
 
   playerId: null,
   userType: 'general',

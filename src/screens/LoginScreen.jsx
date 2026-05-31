@@ -5,6 +5,7 @@ import '../styles/login.css'
 
 export default function LoginScreen() {
   const setCurrentScreen = useGameStore(state => state.setCurrentScreen)
+  const devMode = useGameStore(state => state.devMode)
   const [mode, setMode] = useState('login')
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
@@ -201,7 +202,7 @@ export default function LoginScreen() {
         </div>
       )}
 
-      {import.meta.env.VITE_DEV_MODE === 'true' && (
+      {devMode && (
         <div style={{
           position: 'absolute',
           bottom: '8px',
