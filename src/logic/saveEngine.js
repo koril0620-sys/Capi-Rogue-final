@@ -45,8 +45,14 @@ export async function saveOnFloorEnter(gameState = useGameStore.getState()) {
         onConflict: 'player_id,slot_number',
       })
 
-    return !error
-  } catch {
+    if (error) {
+      console.error('[saveEngine] saveOnFloorEnter 오류:', error.message, error.details, error.hint)
+      return false
+    }
+
+    return true
+  } catch (e) {
+    console.error('[saveEngine] saveOnFloorEnter 예외:', e)
     return false
   }
 }
@@ -61,7 +67,10 @@ export async function loadSaveSlots(userId) {
       .eq('player_id', userId)
       .order('slot_number')
 
-    if (error) return []
+    if (error) {
+      console.error('[saveEngine] loadSaveSlots 오류:', error.message)
+      return []
+    }
     return data || []
   } catch {
     return []

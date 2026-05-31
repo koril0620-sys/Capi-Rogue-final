@@ -163,7 +163,14 @@ export default function SlotSelectScreen() {
 
       <button
         className="cr2-btn cr2-back-btn"
-        onClick={() => setCurrentScreen('advisorSelect')}
+        onClick={() => {
+          const prev = useGameStore.getState().previousScreen
+          if (prev === 'title') {
+            setCurrentScreen('title')
+          } else {
+            setCurrentScreen('advisorSelect')
+          }
+        }}
       >
         뒤로가기
       </button>
