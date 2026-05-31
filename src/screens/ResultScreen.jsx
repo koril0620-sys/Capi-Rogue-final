@@ -8,6 +8,11 @@ import { playBGM, playSFX } from '../logic/audioEngine'
 import { rollExternalEvent, rollRivalEvent } from '../logic/eventEngine'
 import { getMaturedLoans } from '../logic/loanEngine'
 import { generateResultAnalysis } from '../logic/aiAdvisorEngine'
+import {
+  evaluateRivalPerformance,
+  generateNewRival,
+  getNextRival,
+} from '../logic/monopolEngine'
 import AchievementToast from '../components/AchievementToast'
 import LoanMaturityAlert from '../components/LoanMaturityAlert'
 import '../styles/result.css'
@@ -73,6 +78,19 @@ export default function ResultScreen() {
 
     const currentState = useGameStore.getState()
     const stage = getCurrentStage(currentState.floor)
+    const monopolEval = evaluateRivalPerformance(currentState)
+    if (monopolEval) {
+      const updates = { monopolEvaluation: monopolEval }
+      if (monopolEval.action === 'replace_rival') {
+        const nextRival = getNextRival(currentState)
+        if (nextRival) updates.rivals = [nextRival]
+      } else if (monopolEval.action === 'add_rival' && (currentState.rivals || []).length < 2) {
+        const newRival = generateNewRival(currentState)
+        if (newRival) updates.rivals = [...(currentState.rivals || []), newRival]
+      }
+      useGameStore.setState(updates)
+    }
+
     const externalEvent = rollExternalEvent(
       currentState.floor,
       currentState.activeEffects,

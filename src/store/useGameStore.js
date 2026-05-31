@@ -39,7 +39,7 @@ export const useGameStore = create((set) => ({
   creditScore: 70,
   quality: 8,
   cost: 3000,
-  orderCap: 1000,
+  orderCap: null,
   costReductionTotal: 0,
   qualityUpgradeCount: 0,
   costReductionCount: 0,
@@ -62,6 +62,7 @@ export const useGameStore = create((set) => ({
   currentInternalEvent: null,
   currentRivalEvent: null,
   pendingNextFloor: null,
+  monopolEvaluation: null,
   factoryActionThisTurn: null,
   lastSettlementResult: null,
 
@@ -100,6 +101,7 @@ export const useGameStore = create((set) => ({
 
   unlockedAchievements: [],
   newAchievements: [],
+  aiMessages: [],
 
   currentStrategy: {
     price: null,
@@ -140,6 +142,10 @@ export const useGameStore = create((set) => ({
     unlockedAchievements: [...state.unlockedAchievements, ...ids],
   })),
   setNewAchievements: (ids) => set({ newAchievements: ids }),
+  appendAiMessage: (msg) => set(state => ({
+    aiMessages: [...(state.aiMessages || []), msg].slice(-20),
+  })),
+  clearAiMessages: () => set({ aiMessages: [] }),
   setRivalState: (data) => set({ ...data }),
   updateBossShareHistory: (share) => set(state => ({
     bossShareHistory: [...state.bossShareHistory.slice(-2), share],
@@ -166,7 +172,7 @@ export const useGameStore = create((set) => ({
       creditScore: 70,
       quality: 8,
       cost: 3000,
-      orderCap: 1000,
+      orderCap: null,
       costReductionTotal: 0,
       qualityUpgradeCount: 0,
       costReductionCount: 0,
@@ -187,6 +193,7 @@ export const useGameStore = create((set) => ({
       currentInternalEvent: null,
       currentRivalEvent: null,
       pendingNextFloor: null,
+      monopolEvaluation: null,
       factoryActionThisTurn: null,
       lastSettlementResult: null,
       rivalCapital: 0,
@@ -221,6 +228,7 @@ export const useGameStore = create((set) => ({
       },
       unlockedAchievements: [],
       newAchievements: [],
+      aiMessages: [],
       currentStrategy: {
         price: null,
         orderAmount: null,

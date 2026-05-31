@@ -1,4 +1,5 @@
-import { ECO_PHASES, BASE_DEMAND } from '../constants/economy'
+import { ECO_PHASES } from '../constants/economy'
+import { getCurrentTier } from '../constants/productTiers'
 
 export function calcAttraction(entity, group, econPhase, rivalRate = 0) {
   const { quality, brand, awareness, price } = entity
@@ -41,18 +42,26 @@ export function getMomentumMultiplier(momentum) {
 }
 
 export function calcTotalDemand(gameState, allAttractions) {
+  const currentTier = getCurrentTier(gameState.floor)
   const groups = ['quality', 'brand', 'price', 'general']
+  const consumerRatio = currentTier.consumerRatio
+  const tierBaseDemand = currentTier.baseDemand
   const phase = ECO_PHASES[gameState.econPhase] || ECO_PHASES.stable
   const playerAttr = allAttractions.find(attraction => attraction.id === 'player')?.value || 0.001
   const share = calcShare(playerAttr, allAttractions.map(attraction => attraction.value))
   const momentumMultiplier = getMomentumMultiplier(gameState.momentum)
 
   const totalDemand = groups.reduce((sum, group) => {
-    const groupRatio = phase.consumerRatio[group]
+    const groupRatio = consumerRatio[group]
     const random = 0.9 + Math.random() * 0.2
 
     return sum + Math.floor(
-      BASE_DEMAND * phase.demandMultiplier * groupRatio * share * momentumMultiplier * random,
+      tierBaseDemand
+        * phase.demandMultiplier
+        * groupRatio
+        * share
+        * momentumMultiplier
+        * random,
     )
   }, 0)
 

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useGameStore } from '../store/useGameStore'
 import { saveRecord } from '../logic/saveEngine'
 import { getCurrentStage } from '../constants/monopol'
@@ -16,17 +16,22 @@ export default function GameOverScreen() {
   const [saved, setSaved] = useState(false)
   const [endingAnalysis, setEndingAnalysis] = useState(null)
   const [analysisLoading, setAnalysisLoading] = useState(true)
+  const analysisRequestedRef = useRef(false)
 
   useEffect(() => {
     playBGM('recession')
   }, [])
 
   useEffect(() => {
-    generateEndingAnalysis(gameState, 'GAMEOVER').then(result => {
+    if (analysisRequestedRef.current) return
+    analysisRequestedRef.current = true
+    const currentState = useGameStore.getState()
+    currentState.clearAiMessages()
+    generateEndingAnalysis(currentState, 'GAMEOVER').then(result => {
       setEndingAnalysis(result)
       setAnalysisLoading(false)
     })
-  }, [gameState])
+  }, [])
 
   const stage = getCurrentStage(gameState.floor)
   const currentRival = stage ? RIVALS.find(rival => rival.id === stage.rival) : null

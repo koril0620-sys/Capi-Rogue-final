@@ -1,3 +1,5 @@
+import { useGameStore } from '../store/useGameStore'
+
 const OPENAI_API_KEY = import.meta.env.VITE_OPENAI_API_KEY
 
 export async function callOpenAI(systemPrompt, userPrompt) {
@@ -5,6 +7,11 @@ export async function callOpenAI(systemPrompt, userPrompt) {
     console.warn('OpenAI API 키 없음')
     return null
   }
+
+  const store = useGameStore.getState()
+  const history = store.aiMessages || []
+  const recentHistory = history.slice(-10)
+  const newUserMsg = { role: 'user', content: userPrompt }
 
   const response = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
@@ -18,7 +25,8 @@ export async function callOpenAI(systemPrompt, userPrompt) {
       temperature: 0.7,
       messages: [
         { role: 'system', content: systemPrompt },
-        { role: 'user', content: userPrompt },
+        ...recentHistory,
+        newUserMsg,
       ],
     }),
   })
@@ -29,5 +37,14 @@ export async function callOpenAI(systemPrompt, userPrompt) {
   }
 
   const data = await response.json()
-  return data.choices?.[0]?.message?.content || null
+  const responseText = data.choices?.[0]?.message?.content || null
+  if (responseText) {
+    const latestStore = useGameStore.getState()
+    latestStore.appendAiMessage(newUserMsg)
+    latestStore.appendAiMessage({
+      role: 'assistant',
+      content: responseText,
+    })
+  }
+  return responseText
 }

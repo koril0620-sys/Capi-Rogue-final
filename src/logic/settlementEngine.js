@@ -1,5 +1,5 @@
 import { calcAllAttractions } from './marketEngine'
-import { calcTotalDemand } from './demandEngine'
+import { calcShare, calcTotalDemand } from './demandEngine'
 import { updateAwareness, updateBrand, getMarketingLimit } from './brandQualityEngine'
 import { updateMomentum } from './momentumEngine'
 import { updateCreditScore } from './creditEngine'
@@ -14,9 +14,10 @@ import {
   checkMarketIntervention,
   checkSpecialAbility,
   checkBossClearCondition,
+  createRivalState,
 } from './monopolEngine'
-import { OPERATING_COSTS } from '../constants/economy'
 import { getCurrentStage, isBossStage } from '../constants/monopol'
+import { getCurrentTier } from '../constants/productTiers'
 
 export function settle(gameState) {
   const state = {
@@ -29,6 +30,7 @@ export function settle(gameState) {
     unlockedAchievements: gameState.unlockedAchievements || [],
   }
   const result = {}
+  const currentTier = getCurrentTier(state.floor)
 
   if (state.factoryActionThisTurn) {
     const { type } = state.factoryActionThisTurn
@@ -57,20 +59,20 @@ export function settle(gameState) {
     result.factoryResult = factoryResult
   }
 
+  const tierBaseCost = currentTier.baseCost
+  const costReductionRate = state.costReductionTotal || 0
+  state.cost = Math.floor(tierBaseCost * (1 - costReductionRate))
+
   const marketingLimit = getMarketingLimit(state.capital, state.settings?.marketingLimitMode || 'ratio')
   const validMarketing = Math.min(state.currentStrategy.marketingBudget || 0, marketingLimit)
   result.marketingCost = validMarketing
 
   const allAttractions = calcAllAttractions(state)
-  const { totalDemand: rawDemand, share } = calcTotalDemand(state, allAttractions)
-  const activeEffectDemandMultiplier = state.activeEffects
-    .filter(effect => effect.demandMultiplier)
-    .reduce((multiplier, effect) => multiplier * effect.demandMultiplier, 1)
-  const totalDemand = Math.floor(rawDemand * activeEffectDemandMultiplier)
+  const { totalDemand, share } = calcTotalDemand(state, allAttractions)
   result.totalDemand = totalDemand
   state.lastTotalDemand = totalDemand
 
-  const realCost = state.cost * (1 - (state.costReductionTotal || 0))
+  const realCost = state.cost
   const activeEffectCostMultiplier = state.activeEffects
     .filter(effect => effect.costMultiplier)
     .reduce((multiplier, effect) => multiplier * effect.costMultiplier, 1)
@@ -85,7 +87,7 @@ export function settle(gameState) {
   const revenue = actualSales * unitPrice
   const totalCost = orderAmount * finalCost
 
-  const totalOperatingCost = Object.values(OPERATING_COSTS).reduce((sum, value) => sum + value, 0)
+  const totalOperatingCost = currentTier.operatingCost
 
   const interestRateBonus = state.activeEffects
     .filter(effect => effect.interestRateChange)
@@ -162,33 +164,59 @@ export function settle(gameState) {
   }
   state.activeEffects = tickActiveEffects(state.activeEffects)
 
-  const updatedRival = settleRival(
-    {
-      capital: state.rivalCapital,
-      consecutiveLoss: state.rivalConsecutiveLoss,
-      price: state.rivalPrice || 10000,
-      cost: state.rivalCost || 3000,
-      operatingCost: totalOperatingCost,
-      debt: 0,
-    },
-    share,
-    state,
+  const attractionValues = allAttractions.map(attraction => attraction.value)
+  const rivalShareById = new Map(
+    allAttractions
+      .filter(attraction => attraction.id !== 'player')
+      .map(attraction => [attraction.id, calcShare(attraction.value, attractionValues)]),
   )
-  state.rivalCapital = updatedRival.capital
-  state.rivalConsecutiveLoss = updatedRival.consecutiveLoss
-  state.rivalNetProfit = updatedRival.netProfit
-  state.rivalPrice = updatedRival.price
-  state.rivalQuality = updatedRival.quality
-  state.rivalOrderAmount = updatedRival.orderAmount
-  state.rivalActualSales = updatedRival.actualSales
-  result.rivalNetProfit = updatedRival.netProfit
-  result.rivalBankrupt = checkRivalBankrupt(updatedRival)
+  const stage = getCurrentStage(state.floor)
+  const activeRivals = Array.isArray(state.rivals) && state.rivals.length > 0
+    ? state.rivals
+    : stage
+      ? [createRivalState(stage.rival, state, {
+        capital: state.rivalCapital,
+        initialCapital: state.rivalInitialCapital,
+        price: state.rivalPrice || 10000,
+        cost: state.rivalCost || 3000,
+        quality: state.rivalQuality || 8,
+      })]
+      : []
+  const updatedRivals = activeRivals
+    .filter(Boolean)
+    .map(rival => settleRival(
+      {
+        ...rival,
+        operatingCost: totalOperatingCost,
+        debt: rival.debt || 0,
+      },
+      share,
+      state,
+      rivalShareById.get(rival.id) ?? rival.marketShare ?? null,
+    ))
+  const primaryRival = updatedRivals[0] || null
+
+  if (Array.isArray(state.rivals) && state.rivals.length > 0) {
+    state.rivals = updatedRivals
+  }
+
+  state.rivalCapital = primaryRival?.capital ?? 0
+  state.rivalConsecutiveLoss = primaryRival?.consecutiveLoss ?? 0
+  state.rivalNetProfit = updatedRivals.reduce((sum, rival) => sum + (rival.netProfit || 0), 0)
+  state.rivalPrice = primaryRival?.price ?? state.rivalPrice
+  state.rivalQuality = primaryRival?.quality ?? state.rivalQuality
+  state.rivalOrderAmount = primaryRival?.orderAmount ?? 0
+  state.rivalActualSales = primaryRival?.actualSales ?? 0
+  result.rivalNetProfit = state.rivalNetProfit
+  result.rivalBankrupt = updatedRivals.length > 0 && updatedRivals.every(rival => checkRivalBankrupt(rival))
   state.rivalBankrupt = result.rivalBankrupt
 
   if (result.rivalBankrupt) {
-    const stage = getCurrentStage(state.floor)
-    if (stage && !state.metRivals?.includes(stage.rival)) {
-      state.metRivals = [...(state.metRivals || []), stage.rival]
+    const defeatedIds = updatedRivals.map(rival => rival.id).filter(Boolean)
+    if (stage?.rival) defeatedIds.push(stage.rival)
+    const newDefeated = defeatedIds.filter(id => !state.metRivals?.includes(id))
+    if (newDefeated.length > 0) {
+      state.metRivals = [...(state.metRivals || []), ...newDefeated]
     }
   }
 
@@ -206,7 +234,7 @@ export function settle(gameState) {
     result.monopolIntervention = intervention
   }
 
-  const specialAbility = checkSpecialAbility(state.floor, state.stageTurn, updatedRival)
+  const specialAbility = checkSpecialAbility(state.floor, state.stageTurn, primaryRival)
   if (specialAbility) {
     result.rivalSpecialAbility = specialAbility
   }
@@ -308,15 +336,13 @@ function updateStats(stats, result, state) {
 }
 
 export function getMaxOrderAmount(capital, cost, orderCap) {
-  let safeCost = cost
-  let safeOrderCap = orderCap
-
-  if (!safeCost || safeCost <= 0) safeCost = 3000
-  if (!capital || capital <= 0) return 0
-  if (!safeOrderCap || safeOrderCap <= 0) safeOrderCap = 1000
+  const safeCost = Math.max(cost || 3000, 1)
 
   const capitalBased = Math.floor(capital / safeCost)
-  const result = Math.min(capitalBased, safeOrderCap)
-  if (capital >= safeCost && result <= 0) return 1
-  return Math.max(result, 0)
+
+  if (orderCap && orderCap > 0) {
+    return Math.min(capitalBased, orderCap)
+  }
+
+  return capitalBased
 }

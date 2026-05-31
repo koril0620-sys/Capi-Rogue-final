@@ -4,7 +4,9 @@ import { RIVALS } from '../constants/rivals'
 
 export function calcAllAttractions(gameState) {
   const stage = getCurrentStage(gameState.floor)
-  const rival = stage ? getRivalFromStage(stage) : null
+  const activeRivals = Array.isArray(gameState.rivals) && gameState.rivals.length > 0
+    ? gameState.rivals
+    : stage ? [{ id: stage.rival }] : []
 
   const playerAttractions = ['quality', 'brand', 'price', 'general'].map(group =>
     calcAttraction(
@@ -22,14 +24,17 @@ export function calcAllAttractions(gameState) {
 
   const result = [{ id: 'player', value: playerAvg }]
 
-  if (rival) {
+  activeRivals.forEach((activeRival) => {
+    const rival = getRivalById(activeRival.id)
+    if (!rival) return
+
     const rivalAttractions = ['quality', 'brand', 'price', 'general'].map(group =>
       calcAttraction(
         {
-          quality: rival.stats.quality,
-          brand: rival.stats.brand,
-          awareness: rival.stats.awareness || 20,
-          price: gameState.rivalPrice || gameState.cost * 2,
+          quality: activeRival.quality || rival.stats.quality,
+          brand: activeRival.brand || rival.stats.brand,
+          awareness: activeRival.awareness || rival.stats.awareness || 20,
+          price: activeRival.price || gameState.rivalPrice || gameState.cost * 2,
         },
         group,
         gameState.econPhase,
@@ -37,13 +42,13 @@ export function calcAllAttractions(gameState) {
     )
     const rivalAvg = rivalAttractions.reduce((sum, attraction) => sum + attraction, 0) / 4
     result.push({ id: rival.id, value: rivalAvg })
-  }
+  })
 
   return result
 }
 
-function getRivalFromStage(stage) {
-  return RIVALS.find(rival => rival.id === stage.rival) || null
+function getRivalById(id) {
+  return RIVALS.find(rival => rival.id === id) || null
 }
 
 export function calcPlayerShare(gameState) {

@@ -32,6 +32,85 @@ export function getRivalInitialCapital(floor, playerCapital) {
   return Math.floor(playerCapital * stage.capitalMultiplier)
 }
 
+export function evaluateRivalPerformance(gameState) {
+  const floor = gameState.floor
+  if (floor % 10 !== 0) return null
+
+  const primaryRival = gameState.rivals?.[0] || null
+  const rivalCapital = primaryRival?.capital ?? gameState.rivalCapital ?? 0
+  const rivalInitialCapital = primaryRival?.initialCapital ?? gameState.rivalInitialCapital ?? 1
+  const rivalShare = primaryRival?.marketShare ?? (1 - (gameState.playerShareHistory?.slice(-1)[0] || 0))
+  const capitalRatio = rivalCapital / rivalInitialCapital
+  const isPoorPerformance = rivalShare < 0.20 || capitalRatio < 0.50
+
+  if (isPoorPerformance) {
+    return {
+      type: 'REPLACE',
+      message: `"${primaryRival?.name || getCurrentStage(floor)?.rivalName || '라이벌'}... 실망이군. 퇴출한다. 더 강한 자를 보내겠다."`,
+      action: 'replace_rival',
+    }
+  }
+
+  return {
+    type: 'REINFORCE',
+    message: '"거슬리는군. 지원을 더 붙이겠다."',
+    action: 'add_rival',
+  }
+}
+
+export function createRivalState(rivalId, gameState, overrides = {}) {
+  const rival = RIVALS.find(item => item.id === rivalId)
+  if (!rival) return null
+
+  const baseCapital = Number.isFinite(gameState.rivalInitialCapital)
+    ? gameState.rivalInitialCapital
+    : Math.floor((gameState.capital || 5000000) * 0.5)
+  const initialCapital = overrides.initialCapital || Math.max(baseCapital, gameState.rivalCost * 50 || 150000)
+
+  return {
+    id: rival.id,
+    name: rival.name,
+    company: rival.company,
+    tier: rival.tier,
+    capital: overrides.capital ?? initialCapital,
+    initialCapital,
+    consecutiveLoss: 0,
+    marketShare: 0,
+    price: overrides.price || gameState.rivalPrice || gameState.rivalCost * rival.baseStrategy.priceMultiplier || 10000,
+    cost: overrides.cost || gameState.rivalCost || 3000,
+    quality: overrides.quality || rival.stats.quality,
+    orderAmount: 0,
+    actualSales: 0,
+    netProfit: 0,
+  }
+}
+
+export function getNextRival(gameState) {
+  const stage = getCurrentStage(gameState.floor)
+  const currentId = gameState.rivals?.[0]?.id || stage?.rival
+  const currentIndex = RIVALS.findIndex(rival => rival.id === currentId)
+  const next = RIVALS[Math.min(currentIndex + 1, RIVALS.length - 1)] || RIVALS[0]
+  return createRivalState(next.id, gameState)
+}
+
+export function generateNewRival(gameState) {
+  const stage = getCurrentStage(gameState.floor)
+  const usedIds = new Set([
+    stage?.rival,
+    ...(gameState.rivals || []).map(rival => rival.id),
+  ].filter(Boolean))
+  const fallbackIndex = Math.max(RIVALS.findIndex(rival => rival.id === stage?.rival), 0)
+  const candidate =
+    RIVALS.find((rival, index) => index >= fallbackIndex && !usedIds.has(rival.id)) ||
+    RIVALS.find(rival => !usedIds.has(rival.id)) ||
+    RIVALS[fallbackIndex] ||
+    RIVALS[0]
+
+  return createRivalState(candidate.id, gameState, {
+    initialCapital: Math.floor((gameState.rivalInitialCapital || gameState.capital || 5000000) * 0.75),
+  })
+}
+
 export function calcRivalStrategy(rivalId, gameState, playerShare) {
   const rival = RIVALS.find(item => item.id === rivalId)
   if (!rival) return null
@@ -90,11 +169,16 @@ export function calcRivalStrategy(rivalId, gameState, playerShare) {
   }
 }
 
-export function settleRival(rivalState, playerShare, gameState) {
+export function settleRival(rivalState, playerShare, gameState, rivalShareOverride = null) {
   const stage = getCurrentStage(gameState.floor)
-  const rivalId = stage?.rival
+  const rivalId = rivalState.id || stage?.rival
+  const strategyState = {
+    ...gameState,
+    rivalCapital: rivalState.capital ?? gameState.rivalCapital,
+    rivalCost: rivalState.cost ?? gameState.rivalCost,
+  }
   const strategy = rivalId
-    ? calcRivalStrategy(rivalId, gameState, playerShare)
+    ? calcRivalStrategy(rivalId, strategyState, playerShare)
     : null
 
   const price = strategy?.price || rivalState.price || 10000
@@ -103,7 +187,7 @@ export function settleRival(rivalState, playerShare, gameState) {
   const marketingBudget = strategy?.marketingBudget || 0
 
   const totalDemand = gameState.lastTotalDemand || 1000
-  const rivalShare = Math.max(1 - playerShare, 0)
+  const rivalShare = rivalShareOverride ?? Math.max(1 - playerShare, 0)
   const maxSales = Math.floor(totalDemand * rivalShare)
   const actualSales = Math.min(orderAmount, maxSales)
   const unsoldAmount = Math.max(orderAmount - actualSales, 0)
@@ -127,6 +211,7 @@ export function settleRival(rivalState, playerShare, gameState) {
     ...rivalState,
     price,
     quality,
+    marketShare: rivalShare,
     orderAmount,
     actualSales,
     unsoldAmount,

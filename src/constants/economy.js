@@ -53,3 +53,5 @@ export const OPERATING_COSTS = {
   labor: 800000,
   misc: 200000,
 }
+
+export { getCurrentTier, PRODUCT_TIERS } from './productTiers'

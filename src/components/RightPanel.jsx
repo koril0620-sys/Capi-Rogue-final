@@ -158,11 +158,14 @@ function SaleTab({ gameState, setCurrentStrategy }) {
     { key: 'x4',  label: '×4',   price: Math.floor(effectiveCost * 4)   },
   ]
 
+  const lastShare = (gameState.playerShareHistory || []).slice(-1)[0] ?? 0.5
+  const myDemand = Math.floor((gameState.lastTotalDemand || 1000) * lastShare)
+
   const orderOpts = [
-    { key: 'con', label: '보수적', amount: Math.floor(maxOrder * 0.5) },
-    { key: 'std', label: '표준',   amount: Math.floor(maxOrder * 0.7) },
-    { key: 'agg', label: '공격적', amount: Math.floor(maxOrder * 0.9) },
-    { key: 'max', label: '최대',   amount: maxOrder                   },
+    { key: 'con', label: '보수적', amount: Math.floor(myDemand * 0.7) },
+    { key: 'std', label: '표준',   amount: myDemand                    },
+    { key: 'agg', label: '공격적', amount: Math.floor(myDemand * 1.3) },
+    { key: 'max', label: '자본MAX', amount: maxOrder                   },
   ]
 
   const currentQuality = gameState.quality || 8
@@ -416,9 +419,17 @@ function SaleTab({ gameState, setCurrentStrategy }) {
           marginBottom: '5px',
           display: 'flex',
           gap: '6px',
+          flexWrap: 'wrap',
         }}>
           <span>발주량</span>
-          <span style={{ color: 'var(--cr2-gray)' }}>최대 {maxOrder.toLocaleString()}개</span>
+          <span style={{ color: 'var(--cr2-gray)' }}>
+            최대 {maxOrder.toLocaleString()}개 (자본 기준)
+          </span>
+          {myDemand > 0 && (
+            <span style={{ color: 'var(--cr2-gold)' }}>
+              예상 수요 {myDemand.toLocaleString()}개
+            </span>
+          )}
         </div>
 
         <div style={{

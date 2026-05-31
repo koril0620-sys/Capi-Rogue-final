@@ -3,9 +3,9 @@ import { useGameStore } from '../store/useGameStore'
 import { settle } from '../logic/settlementEngine'
 import { getRivalInitialCapital } from '../logic/monopolEngine'
 import { getCurrentStage, isNewStage } from '../constants/monopol'
+import { getCurrentTier, isNewTier } from '../constants/productTiers'
 import { getLearningGoal } from '../constants/learningGoals'
 import { RIVALS } from '../constants/rivals'
-import { BASE_DEMAND } from '../constants/economy'
 import { saveAchievements } from '../logic/achievementEngine'
 import { playSFX, playBGM } from '../logic/audioEngine'
 import { getUpcomingMaturityLoans } from '../logic/loanEngine'
@@ -23,6 +23,7 @@ export default function MainScreen() {
   const setIsPaused = useGameStore(state => state.setIsPaused)
 
   const [stagePopup, setStagePopup] = useState(null)
+  const [tierPopup, setTierPopup] = useState(null)
   const [learningPopup, setLearningPopup] = useState(null)
   const [activeTab, setActiveTab] = useState('sale')
   const [aiStrategyAdvice, setAiStrategyAdvice] = useState(null)
@@ -80,6 +81,7 @@ export default function MainScreen() {
             rivalInitialCapital: rivalCapital,
             rivalConsecutiveLoss: 0,
             rivalBankrupt: false,
+            rivals: [],
             stageTurn: 1,
             currentStageId: nextStage.id,
           })
@@ -94,6 +96,20 @@ export default function MainScreen() {
           })
           playSFX('rival')
         }
+      }
+
+      if (isNewTier(prevFloor, currentFloor)) {
+        const tier = getCurrentTier(currentFloor)
+        setTierPopup({
+          name: tier.name,
+          category: tier.category,
+          baseCost: tier.baseCost,
+          operatingCost: tier.operatingCost,
+          baseDemand: tier.baseDemand,
+          message: tier.entryMessage,
+        })
+        useGameStore.setState({ rivalCost: tier.baseCost })
+        playSFX('rival')
       }
 
       const goal = getLearningGoal(currentFloor)
@@ -321,7 +337,10 @@ export default function MainScreen() {
             <div style={{ fontSize: '8px', color: 'var(--cr2-green)' }}>예상수요</div>
             <div style={{ fontSize: '13px', color: 'var(--cr2-lime)' }}>
               {(() => {
-                const totalDemand = Math.floor(BASE_DEMAND * getDemandMultiplier(gameState.econPhase))
+                const totalDemand = Math.floor(
+                  getCurrentTier(gameState.floor).baseDemand
+                    * getDemandMultiplier(gameState.econPhase),
+                )
                 const lastShare = (gameState.playerShareHistory || []).slice(-1)[0] ?? 0.5
                 const myDemand = Math.floor(totalDemand * lastShare)
                 return myDemand.toLocaleString()
@@ -597,6 +616,68 @@ export default function MainScreen() {
         </div>
       )}
 
+      {tierPopup && (
+        <div className="cr2-popup-overlay">
+          <div style={{
+            background: 'var(--cr2-bg2)',
+            border: '2px solid var(--cr2-gold)',
+            padding: '24px',
+            maxWidth: '400px',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '12px',
+            alignItems: 'center',
+            textAlign: 'center',
+          }}>
+            <div style={{ fontSize: '10px', color: 'var(--cr2-gold)' }}>
+              📦 새로운 시장
+            </div>
+            <div style={{ fontSize: '18px', color: 'var(--cr2-lime)' }}>
+              {tierPopup.name}
+            </div>
+            <div style={{ fontSize: '10px', color: 'var(--cr2-gray)' }}>
+              {tierPopup.category}
+            </div>
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: '1fr 1fr',
+              gap: '8px',
+              width: '100%',
+              fontSize: '9px',
+            }}>
+              <div style={{ background: 'rgba(0,0,0,0.4)', padding: '8px' }}>
+                <div style={{ color: 'var(--cr2-gray)' }}>기본 원가</div>
+                <div style={{ color: 'var(--cr2-white)' }}>
+                  {tierPopup.baseCost.toLocaleString()}원
+                </div>
+              </div>
+              <div style={{ background: 'rgba(0,0,0,0.4)', padding: '8px' }}>
+                <div style={{ color: 'var(--cr2-gray)' }}>월 운영비</div>
+                <div style={{ color: 'var(--cr2-red)' }}>
+                  {(tierPopup.operatingCost / 10000).toFixed(0)}만원
+                </div>
+              </div>
+              <div style={{ background: 'rgba(0,0,0,0.4)', padding: '8px' }}>
+                <div style={{ color: 'var(--cr2-gray)' }}>시장 수요</div>
+                <div style={{ color: 'var(--cr2-lime)' }}>
+                  {tierPopup.baseDemand.toLocaleString()}개
+                </div>
+              </div>
+            </div>
+            <div style={{ fontSize: '10px', color: 'var(--cr2-white)', lineHeight: '1.8' }}>
+              {tierPopup.message}
+            </div>
+            <button
+              className="cr2-btn"
+              style={{ borderColor: 'var(--cr2-gold)', color: 'var(--cr2-gold)' }}
+              onClick={() => setTierPopup(null)}
+            >
+              확인
+            </button>
+          </div>
+        </div>
+      )}
+
       {learningPopup && (
         <div className="cr2-popup-overlay">
           <div className="cr2-learning-popup">
@@ -617,6 +698,50 @@ export default function MainScreen() {
                 다시 보지 않기
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {gameState.monopolEvaluation && (
+        <div className="cr2-popup-overlay">
+          <div style={{
+            background: '#0A0A0F',
+            border: '2px solid var(--cr2-red)',
+            padding: '24px',
+            maxWidth: '400px',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '14px',
+            alignItems: 'center',
+            textAlign: 'center',
+            boxShadow: '0 0 30px rgba(220,20,60,0.3)',
+          }}>
+            <div style={{ fontSize: '11px', color: 'var(--cr2-red)' }}>
+              ⚠️ MONOPOL 통보
+            </div>
+            <div style={{
+              fontSize: '13px',
+              color: 'var(--cr2-white)',
+              lineHeight: '1.8',
+              fontFamily: "'Noto Sans KR', sans-serif",
+            }}>
+              {gameState.monopolEvaluation.message}
+            </div>
+            <div style={{ fontSize: '9px', color: 'var(--cr2-gray)' }}>
+              {gameState.monopolEvaluation.type === 'REPLACE'
+                ? '새로운 라이벌이 시장에 투입됩니다.'
+                : '추가 라이벌이 시장에 투입됩니다.'}
+            </div>
+            <button
+              className="cr2-btn"
+              style={{ borderColor: 'var(--cr2-red)', color: 'var(--cr2-red)' }}
+              onClick={() => {
+                useGameStore.setState({ monopolEvaluation: null })
+                playSFX('rival')
+              }}
+            >
+              확인
+            </button>
           </div>
         </div>
       )}
