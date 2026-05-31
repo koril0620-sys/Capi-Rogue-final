@@ -92,7 +92,7 @@ export default function TutorialSlideScreen() {
 
       <div style={{
         width: 'min(760px, 80%)',
-        minHeight: '360px',
+        height: '360px',
         border: '2px solid var(--cr2-green)',
         background: 'rgba(0,0,0,0.72)',
         boxShadow: '0 0 24px rgba(0,255,65,0.18)',

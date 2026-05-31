@@ -64,13 +64,18 @@ export default function EconomyDictionary() {
   const setNewAchievements = useGameStore(state => state.setNewAchievements)
   const addAchievement = useGameStore(state => state.addAchievement)
   const storedViewedTerms = useGameStore(state => state.stats?.dictionaryViewedTerms || [])
+  const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('전체')
   const [viewedTerms, setViewedTerms] = useState(storedViewedTerms)
   const [openTerm, setOpenTerm] = useState(null)
 
-  const filteredTerms = selectedCategory === '전체'
-    ? DICTIONARY_TERMS
-    : DICTIONARY_TERMS.filter(item => item.category === selectedCategory)
+  const filteredTerms = DICTIONARY_TERMS.filter(term => {
+    const matchCategory = selectedCategory === '전체' || term.category === selectedCategory
+    const matchSearch = searchQuery === ''
+      || term.term.includes(searchQuery)
+      || term.definition.includes(searchQuery)
+    return matchCategory && matchSearch
+  })
 
   const handleClose = () => {
     playSFX('click')
@@ -104,10 +109,8 @@ export default function EconomyDictionary() {
 
   return (
     <div style={{
-      width: '100vw',
-      height: '100vh',
-      minWidth: '1080px',
-      minHeight: '720px',
+      width: '1080px',
+      height: '720px',
       background: 'var(--cr2-bg)',
       color: 'var(--cr2-white)',
       fontFamily: "'Press Start 2P', 'Noto Sans KR', monospace",
@@ -168,6 +171,32 @@ export default function EconomyDictionary() {
       </div>
 
       <div style={{
+        padding: '8px 16px',
+        borderBottom: '1px solid rgba(0,255,65,0.15)',
+      }}>
+        <input
+          type="text"
+          value={searchQuery}
+          onChange={(e) => {
+            setSearchQuery(e.target.value)
+            setOpenTerm(null)
+          }}
+          placeholder="용어 또는 설명 검색..."
+          style={{
+            width: '100%',
+            background: '#0A0A0F',
+            border: '1px solid var(--cr2-lime)',
+            color: 'var(--cr2-white)',
+            fontSize: '11px',
+            padding: '6px 10px',
+            outline: 'none',
+            fontFamily: 'inherit',
+            boxSizing: 'border-box',
+          }}
+        />
+      </div>
+
+      <div style={{
         fontSize: '9px',
         color: 'var(--cr2-gray)',
         marginBottom: '8px',
@@ -185,6 +214,17 @@ export default function EconomyDictionary() {
         flexDirection: 'column',
         gap: '8px',
       }}>
+        {filteredTerms.length === 0 && (
+          <div style={{
+            textAlign: 'center',
+            color: 'var(--cr2-gray)',
+            fontSize: '11px',
+            marginTop: '20px',
+          }}>
+            검색 결과가 없습니다.
+          </div>
+        )}
+
         {filteredTerms.map(item => {
           const isOpen = openTerm === item.id
           const isViewed = viewedTerms.includes(item.id)
