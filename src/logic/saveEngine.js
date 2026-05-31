@@ -39,8 +39,8 @@ export async function saveOnFloorEnter(gameState = useGameStore.getState()) {
       .upsert({
         player_id: playerId,
         slot_number: currentSlot,
-        game_state_json: serialized,
-        updated_at: new Date().toISOString(),
+        game_state: serialized,
+        saved_at: new Date().toISOString(),
       }, {
         onConflict: 'player_id,slot_number',
       })
@@ -63,7 +63,7 @@ export async function loadSaveSlots(userId) {
   try {
     const { data, error } = await supabase
       .from('save_slots')
-      .select('slot_number, game_state_json, updated_at')
+      .select('slot_number, game_state, saved_at')
       .eq('player_id', userId)
       .order('slot_number')
 
@@ -83,13 +83,13 @@ export async function loadSaveSlot(userId, slotNumber) {
   try {
     const { data, error } = await supabase
       .from('save_slots')
-      .select('game_state_json')
+      .select('game_state')
       .eq('player_id', userId)
       .eq('slot_number', slotNumber)
       .single()
 
     if (error || !data) return null
-    return hydrateGameState(data.game_state_json)
+    return hydrateGameState(data.game_state)
   } catch {
     return null
   }

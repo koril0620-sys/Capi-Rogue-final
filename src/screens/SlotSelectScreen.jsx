@@ -110,7 +110,8 @@ export default function SlotSelectScreen() {
       <div className="cr2-slot-list">
         {[1, 2, 3, 4, 5].map(slotNumber => {
           const slotData = getSlotData(slotNumber)
-          const gameState = slotData?.game_state_json
+          const gameState = slotData?.game_state || slotData?.game_state_json
+          const savedAt = slotData?.saved_at || slotData?.updated_at
 
           return (
             <div
@@ -127,7 +128,7 @@ export default function SlotSelectScreen() {
                     {gameState?.capital ? `${Math.floor(gameState.capital / 10000)}만원` : '???'}
                   </div>
                   <div className="cr2-slot-date">
-                    {new Date(slotData.updated_at).toLocaleDateString('ko-KR')}
+                    {savedAt ? new Date(savedAt).toLocaleDateString('ko-KR') : '-'}
                   </div>
                 </div>
               ) : (
